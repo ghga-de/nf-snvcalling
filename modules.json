@@ -1,0 +1,23 @@
+{
+    "name": "nf/snvcalling",
+    "homePage": "https://github.com/nf/snvcalling",
+    "repos": {
+        "nf-core/modules": {
+            "git_url": "https://github.com/nf-core/modules.git",
+            "modules": {
+                "custom/dumpsoftwareversions": {
+                    "branch": "master",
+                    "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
+                },
+                "multiqc": {
+                    "branch": "master",
+                    "git_sha": "e745e167c1020928ef20ea1397b6b4d230681b4d"
+                },
+                "nf-core/bcftools/mpileup": {
+                    "branch": "master",
+                    "git_sha": "bb14352a3a16391c76ee955c424ca4977e8174c5"
+                }
+            }
+        }
+    }
+}
