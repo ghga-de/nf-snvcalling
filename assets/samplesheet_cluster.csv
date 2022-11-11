@@ -1,0 +1,3 @@
+sample,tumor,control
+HCC1187,/omics/odcf/project/test_project/sequencing/whole_genome_sequencing/view-by-pid/HCC1187/tumor/paired/merged-alignment/.merging_0/tumor_HCC1187_merged.mdup.bam,/omics/odcf/project/test_project/sequencing/whole_genome_sequencing/view-by-pid/HCC1187/blood/paired/merged-alignment/.merging_0/blood_HCC1187_merged.mdup.bam
+HCC1187_2,/omics/odcf/project/test_project/sequencing/whole_genome_sequencing/view-by-pid/HCC1187/tumor/paired/merged-alignment/.merging_0/tumor_HCC1187_merged.mdup.bam,
