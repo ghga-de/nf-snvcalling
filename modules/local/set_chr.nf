@@ -18,9 +18,6 @@ process SET_CHR {
     def prefix     = task.ext.prefix ?: "${meta.id}"
     
     """
-    #!/bin/bash
-    set -o pipefail
-
     x=`samtools view -H $tumor | grep "^@SQ" | grep "SN:chr" | wc -l`
 
     if [[ x -gt 0 ]]; then
