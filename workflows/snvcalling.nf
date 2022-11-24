@@ -14,8 +14,12 @@ WorkflowSnvcalling.initialise(params, log)
 def checkPathParamList = [ params.input, params.multiqc_config, params.fasta ]
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
+//
 // Check mandatory parameters
-if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+//
+
+if (params.input)         { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+if (params.annovar_path)  { annodb = Channel.fromPath(params.annovar_path + '/humandb/', checkIfExists: true ) } else { annodb = Channel.empty() }
 
 // Set up reference depending on the genome choice
 // NOTE: link will be defined by aoutomatic reference generation when the pipeline ready!
@@ -23,26 +27,30 @@ if (params.ref_type)
     {
     if (params.ref_type == 'hg37')
         { 
-        def fa_file = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/1KGRef_Phix/hs37d5_PhiX.fa"
-        ref = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect() 
+        def fa_file  = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/1KGRef_Phix/hs37d5_PhiX.fa"
+        ref          = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect() 
         def chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hs37d5.fa.chrLenOnlyACGT_realChromosomes.tab'
-        chrlength = Channel.fromPath(chr_file, checkIfExists: true)
-        interval_ch=Channel.of('1','2','3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y') 
+        chrlength    = Channel.fromPath(chr_file, checkIfExists: true)
+        chr_prefix   = Channel.value("")
+        interval_ch  = Channel.fromList(['X','Y']) 
         }
     if (params.ref_type == 'hg19') 
         { 
-        def fa_file = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/hg19_chr/hg19_1-22_X_Y_M.fa"
-        ref = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect()
+        def fa_file  = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/hg19_chr/hg19_1-22_X_Y_M.fa"
+        ref          = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect()
         def chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hg19_1-22_X_Y_M.fa.chrLenOnlyACGT.tab'
-        chrlength = Channel.fromPath(chr_file, checkIfExists: true)
-        interval_ch=Channel.of('chr1','chr2','chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY') 
+        chrlength    = Channel.fromPath(chr_file, checkIfExists: true)
+        chr_prefix   = Channel.value("chr")
+        interval_ch  = Channel.value('chr1','chr2','chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY')  
         }
     }
 else
 {
     if (params.reference)      { ref = Channel.fromPath([params.reference,params.reference +'.fai'], checkIfExists: true).collect() } else { exit 1, 'Input reference file does not exist' }
-    if (params.chrlength_file) { chrlength = Channel.fromPath(params.chrlength_file, checkIfExists: true) } else { chrlength = Channel.empty() }
-    // we have to find a solution for intervals!
+    if (params.chrlength_file) { chrlength = Channel.fromPath(params.chrlength_file, checkIfExists: true) } else { exit 1, 'Chromosome length file does not exist'  }
+    if (params.chr_prefix)     {chr_prefix= Channel.of(params.chr_prefix)} else {chr_prefix= Channel.of("")}
+    interval_ch=Channel.of('1','2','3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', 'X', 'Y') 
+
 }
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -81,7 +89,6 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/
 // MODULE: Local Modules
 //
 
-include { SET_CHR           } from '../modules/local/set_chr.nf'
 include { GREP_SAMPLENAME   } from '../modules/local/grep_samplename.nf'
 
 /*
@@ -106,13 +113,6 @@ workflow SNVCALLING {
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
     sample_ch = INPUT_CHECK.out.ch_sample
-
-    //
-    // MODULE: Set chr_prefix using sample BAM
-    //
-    //SET_CHR(
-    //    sample_ch
-    //    )
 
     //
     // MODULE: Extract sample name from BAM
