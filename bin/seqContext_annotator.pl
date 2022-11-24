@@ -9,22 +9,22 @@ use strict;
 use warnings;
 use v5.10;
 
-my $file = $ARGV[0];
-my $refGenome = $ARGV[1];
-my $pad = $ARGV[2];
+my $fastaBinary = $ARGV[0];
+my $file = $ARGV[1];
+my $refGenome = $ARGV[2];
+my $pad = $ARGV[3];
 my %fields;
-my $newcol = defined($ARGV[3]) ? $ARGV[3] : 'SEQUENCE_CONTEXT';
+my $newcol = defined($ARGV[5]) ? $ARGV[5] : 'SEQUENCE_CONTEXT';
 my $header;
 my @cols;
-my $bash = '/bin/bash';
 my $ffb_cmd;
 my $seq;
 my $ffb_line;
 my ($ref, $alt);
 
 # POSSIBLE_ERROR: Check on anno error, if this is the reason.
-$ffb_cmd = "fastaFromBed -fi $refGenome -bed <(perl vcf2padded_bed.pl $pad $file) -tab -fo stdout";
-open(my $ffb_fh, '-|', $bash, '-c', "$ffb_cmd") || die "Could not open ffb with command $ffb_cmd ($!)";
+$ffb_cmd = "$fastaBinary -fi $refGenome -bed <(vcf2padded_bed.pl $pad $file) -tab -fo stdout";
+open(my $ffb_fh, '-|', 'bash', '-c', "$ffb_cmd") || die "Could not open ffb with command $ffb_cmd ($!)";
 open(my $snv_fh, "$file") || die "Could not open $file ($!)";
 
 while ($header = <$snv_fh>) {
