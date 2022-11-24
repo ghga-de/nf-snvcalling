@@ -1,23 +1,17 @@
-process MPILEUP_COMPARE {
+process FILE_CONCATENATOR {
     tag "$meta.id"
-    label 'process_intermediate'
+    label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::bcftools=1.9" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'kubran/odcf_snvcalling:v0':'odcf_snvcalling_v0.sif' }"
-
-    publishDir params.outdir+'/mpileup' , mode: 'copy'
-
-    debug true
+        'kubran/odcf_snvcalling:v2':'odcf_snvcalling_v2.sif' }"
 
     input:
-    tuple val(meta),  val(intervals), path(vcf)
-    tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai), val(tumorname), val(controlname), val(intervals)
-    tuple path(fasta), path(fai) 
+    tuple val(meta), path(vcfs)
 
     output:
-    tuple val(meta), path("*.tmp")     , emit: vcf
-    path  "versions.yml"               , emit: versions
+    tuple val(meta), path("*.vcf.gz"), path("*.vcf.gz.tbi")      , emit: vcf
+    path  "versions.yml"                                         , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -25,38 +19,16 @@ process MPILEUP_COMPARE {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    if (meta.iscontrol == '1' && params.runCompareGermline)
-    {
-  
-        """
-        firstline=`cat $vcf | grep -v "^#" | head -n1`
 
-        if [[ -n "$firstLineVCF" ]]; then
-            samtools mpileup $args -r $intervals -l $vcf -f $fasta $control > \\              
-                NP_MPILEUP${intervals} & \\
-                vcf_pileup_compare_allin1_basecount.pl $vcf NP_MPILEUP${intervals} "Header" > \\
-                ${prefix}.nppileup.${intervals}.vcf
-        else
-            mv $vcf ${prefix}.${intervals}.empty.vcf
-        fi          
+    """
+    headeredFileConcatenator.pl $vcfs > snv_${prefix}.vcf
 
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-        END_VERSIONS
+    bgzip snv_${prefix}.vcf && tabix -p vcf snv_${prefix}.vcf.gz 
 
-        """
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+    END_VERSIONS
 
-    }
-    else {
-        """
-        controlname='dummy'
-        tumorname=`samtools view -H $meta.tumor_bam | grep '^@RG' | sed "s/.*SM:\\([^\\t]*\\).*/\\1/g" | uniq`
-        
-        cat <<-END_VERSIONS > versions.yml
-        "${task.process}":
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
-        END_VERSIONS
-        """
-    }
+    """ 
 }

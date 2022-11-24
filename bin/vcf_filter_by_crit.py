@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #
 # Copyright (c) 2018 German Cancer Research Center (DKFZ).
 #
-# Distributed under the MIT License (https://opensource.org/licenses/MIT).
+# Distributed under the MIT License (license terms are at https://github.com/DKFZ-ODCF/IndelCallingWorkflow).
 #
+
 # Author: Jeongbin Park
 # Purpose: Filter out rows from VCF files based on column values
 # Usage: vcf_filter_by_crit.py input.vcf[.gz] output.vcf HEADER1 KEY1 CRIT1 HEADER2 KEY2 CRIT2 ...
@@ -58,11 +59,8 @@ def main(argv=sys.argv):
                     filtered_per_crit = [ False ] * len(filter_keys)
                     for idx, (filter_key, crit) in enumerate(zip(filter_keys, crits)):
                         if crit == "nonexist" or crit == "exist":
-                            if filter_key == ".":
-                                is_exist = entry != "."
-                            else:
-                                keys = [splitted_value.split('=')[0] for splitted_value in entry.split(';')]
-                                is_exist = filter_key in keys
+                            keys = [splitted_value.split('=')[0] for splitted_value in entry.split(';')]
+                            is_exist = filter_key in keys
                             if (not is_exist and crit == "nonexist") or (is_exist and crit == "exist"):
                                 filtered_per_crit[idx] = True
                         else: # Numeric

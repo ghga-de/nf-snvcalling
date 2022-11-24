@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-#
+#!/usr/bin/env python2.7
 # Copyright (c) 2018 German Cancer Research Center (DKFZ).
 #
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
-#MS, 2015-01
-#Adapted from MB,11.2014 and OE,11.2014
+
 import sys
 import optparse
 import pysam
