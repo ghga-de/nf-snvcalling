@@ -8,17 +8,12 @@ process BCFTOOLS_MPILEUP {
         'quay.io/biocontainers/bcftools:1.16--hfe4b78e_1' }"
 
     input:
-    tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai), val(tumorname), val(controlname)
+    tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai), val(tumorname), val(controlname), val(intervals)
     tuple path(fasta), path(fai) 
-    val(intervals)
-
 
     output:
-    tuple val(meta), path("*.gz")      , emit: vcf
-    tuple val(meta), path("*.tbi")     , emit: tbi
-    tuple val(meta), path("*stats.txt"), emit: stats
-    tuple val(meta), path("*.mpileup") , emit: mpileup, optional: true
-    path  "versions.yml"               , emit: versions
+    tuple val(meta), val(intervals), path("*.vcf"), emit: vcf
+    path  "versions.yml"                          , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -35,12 +30,7 @@ process BCFTOOLS_MPILEUP {
         $args \\
         $tumor \\
         -r $intervals \\
-        | bcftools call --output-type v $args2 \\
-        | bcftools view --output-file ${prefix}.vcf.gz --output-type z $args3
-
-    tabix -p vcf -f ${prefix}.vcf.gz
-
-    bcftools stats ${prefix}.vcf.gz > ${prefix}.bcftools_stats.txt
+        | bcftools call --output-type v $args2 > ${prefix}.${intervals}.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
