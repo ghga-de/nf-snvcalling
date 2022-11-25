@@ -5,7 +5,7 @@ process ANNOTATE_VCF {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'odcf_indelcalling_v7.sif' :'kubran/odcf_indelcalling:v7' }"
+    'kubran/odcf_snvcalling:v2':'odcf_snvcalling_v2.sif' }"
 
     input:
     tuple val(meta)            , file(vcf)     , file(vcf_tbi), val(tumorname), val(controlname)
@@ -17,12 +17,12 @@ process ANNOTATE_VCF {
     tuple path(localcontrolwes), path(localcontrolwes_i)
     tuple path(gnomadgenomes)  , path(gnomadgenomes_i)
     tuple path(gnomadexomes)   , path(gnomadexomes_i)
-    tuple path(recurrance)     , path(recurrance_i)
     val (chrprefix)
 
     output:
     tuple val(meta), path('*.ForAnnovar.bed')                         , emit: forannovar
     tuple val(meta), path('*.vcf')                                    , emit: unziped_vcf
+    path("*.vcf_control_median.txt")                                  , optional: true
     path  "versions.yml"                                              , emit: versions
 
     when:
@@ -31,14 +31,12 @@ process ANNOTATE_VCF {
     script:
     def args        = task.ext.args ?: ''
     def prefix      = task.ext.prefix ?: "${meta.id}"
-    def chr_prefix  = chrprefix == "dummy" ? "" : chrprefix
-    def cmdfilter   = ${meta.id} == "1" ? "zcat < ${vcf}" : "zcat ${vcf} | median.pl ${prefix}.vcf_control_median.txt" 
-    def cmdfilter2  = recurrance.baseName !='input' ? "| annotate_vcf.pl -a - -b ${recurrance} --columnName 'RecurrenceInPIDs' --bFileType vcf" : ""
+    def cmdfilter   = meta.iscontrol == "1" ? "| median.pl - ${prefix}.vcf_control_median.txt" : ""
 
     """
-    $cmdfilter \\
+    zcat < $vcf $cmdfilter | \\
     annotate_vcf.pl -a - -b $dbsnpindel --columnName='DBSNP' \\
-        --reportMatchType --bAdditionalColumn=2 --reportlevel 4 | \\
+        --reportMatchType --bAdditionalColumn=2 --reportLevel 4 | \\
     annotate_vcf.pl -a - -b $kgenome --columnName='1K_GENOMES' \\
         --reportMatchType --bAdditionalColumn=2 --reportLevel 4 | \\
     annotate_vcf.pl -a - -b $exac --columnName='ExAC' \\
@@ -46,18 +44,14 @@ process ANNOTATE_VCF {
     annotate_vcf.pl -a - -b $evs --columnName='EVS' \\
         --bFileType vcf --reportLevel 4 --reportMatchType | \\
     annotate_vcf.pl -a - -b $gnomadexomes --columnName='GNOMAD_EXOMES' \\
-        --bFileType vcf --reportLevel 4 --reportMatchType| \\
-    annotate_vcf.pl -a - -b $gnomadgenomes --columnName='GNOMAD_GENOMES' \\
-        --bFileType vcf --reportLevel 4 --reportMatchType| \\
-    annotate_vcf.pl -a - -b $localcontrolwgs --columnName='LocalControlAF_WGS' \\
         --bFileType vcf --reportLevel 4 --reportMatchType | \\
+    annotate_vcf.pl -a - -b $gnomadgenomes --columnName='GNOMAD_GENOMES' \\
+        --bFileType vcf --reportLevel 4 --reportMatchType | \\
+    annotate_vcf.pl -a - -b $localcontrolwgs --columnName='LocalControlAF_WGS' \\
+        --minOverlapFraction 1 --bFileType vcf --reportLevel 4 --reportMatchType | \\
     annotate_vcf.pl -a - -b $localcontrolwes --columnName='LocalControlAF_WES' \\
-        --bFileType vcf --reportLevel 4 --reportMatchType \\
-    $cmdfilter2 \\
-    tee ${prefix}.tmp | vcf_to_annovar.pl $chr_prefix "" > ${prefix}.ForAnnovar.bed
-
-    mv ${prefix}.tmp ${prefix}.vcf
-
+        --minOverlapFraction 1 --bFileType vcf --reportLevel 4 --reportMatchType | \\
+    tee ${prefix}.vcf | vcf_to_annovar.pl $chrprefix "" > ${prefix}.ForAnnovar.bed
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
