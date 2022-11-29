@@ -1,17 +1,17 @@
 //
-// PLATYPUS INDEL ANNOTATION: USES A CUSTOM PERL SCRIPT TO ANNOTATE VCFS AND ANNOVAR
+// SNV ANNOTATION: USES A CUSTOM PERL SCRIPT TO ANNOTATE VCFS AND ANNOVAR
 //
 
 params.options = [:]
 
 include { ANNOTATE_VCF           } from '../../modules/local/annotate_vcf.nf'            addParams( options: params.options )
 include { ANNOVAR                } from '../../modules/local/annovar.nf'                 addParams( options: params.options )
-include { INDEL_RELIABILITY_PIPE } from '../../modules/local/indel_reliability_pipe.nf'  addParams( options: params.options )
+include { SNV_RELIABILITY_PIPE   } from '../../modules/local/snv_reliability_pipe.nf'  addParams( options: params.options )
 include { CONFIDENCE_ANNOTATION  } from '../../modules/local/confidence_annotation.nf'   addParams( options: params.options )
-include { ANNOTATION_PIPES       } from '../../modules/local/annotation_pipes.nf'        addParams( options: params.options )
+//include { ANNOTATION_PIPES       } from '../../modules/local/annotation_pipes.nf'        addParams( options: params.options )
 
 
-workflow INDEL_ANNOTATION {
+workflow SNV_ANNOTATION {
     take:
     vcf_ch               // channel: [val(meta), , vcf.gz, vcf.gz.tbi ,val(tumorname), val(controlname) ]
     kgenome              // channel: [file.vcf.gz, file.vcf.gz.tbi]
@@ -41,7 +41,6 @@ workflow INDEL_ANNOTATION {
     cgi_mountains        // channel: [file.bed.gz, file.bed.gz.tbi]
     phastconselem        // channel: [file.bed.gz, file.bed.gz.tbi]
     encode_tfbs          // channel: [file.bed.gz, file.bed.gz.tbi]
-    recurrance           // channel: [file.bed.gz, file.bed.gz.tbi] optional 
     chr_prefix           // val channel: [prefix]
 
     main:
@@ -51,45 +50,47 @@ workflow INDEL_ANNOTATION {
 
     // RUN annotate_vcf.pl: Uses various databases (all mandatory exept recurrance) to annotate variants
     ANNOTATE_VCF (
-    vcf_ch, kgenome, dbsnpindel, exac, evs, localcontrolwgs,
-    localcontrolwes, gnomadgenomes, gnomadexomes, recurrance, chr_prefix
+        vcf_ch, kgenome, dbsnpindel, exac, evs, localcontrolwgs,
+        localcontrolwes, gnomadgenomes, gnomadexomes, chr_prefix
     )
     versions  = versions.mix(ANNOTATE_VCF.out.versions)
 
     // RUN annovar, processAnnovarOutput.pl and newCols2vcf.pl: annovar annotates and classifies the variants, 
     // perl scripts re-creates vcfs. 
     ANNOVAR(
-    ANNOTATE_VCF.out.forannovar, ANNOTATE_VCF.out.unziped_vcf, annodb, chr_prefix
+        ANNOTATE_VCF.out.forannovar, ANNOTATE_VCF.out.unziped_vcf, annodb, chr_prefix
     )
     logs     = logs.mix(ANNOVAR.out.log)
     versions = versions.mix(ANNOVAR.out.versions)
 
     // RUN annotate_vcf.pl : BED files are used to annotate variants
-    INDEL_RELIABILITY_PIPE(
-    ANNOVAR.out.vcf, repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats
+    SNV_RELIABILITY_PIPE(
+        ANNOVAR.out.vcf, repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats
     )
-    versions = versions.mix(INDEL_RELIABILITY_PIPE.out.versions)
+    versions = versions.mix(SNV_RELIABILITY_PIPE.out.versions)
 
-    // RUN: confidenceAnnotation_Indels.py : Confidence annotation will be added to the variants
+    // RUN: confidenceAnnotation_SNVs.py : Confidence annotation will be added to the variants
     CONFIDENCE_ANNOTATION(
-    INDEL_RELIABILITY_PIPE.out.vcf, vcf_ch
+    SNV_RELIABILITY_PIPE.out.vcf, vcf_ch
     )
     ann_vcf_ch  = CONFIDENCE_ANNOTATION.out.vcf_ann
     versions    = versions.mix(CONFIDENCE_ANNOTATION.out.versions)
 
-    // RUN annotate_vcf.pl : Uses optional databases to annotate variants, only given databases will be used. 
-    if (params.runIndelDeepAnnotation)
-    {
-        ANNOTATION_PIPES (
-        ann_vcf_ch, enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets,
-        cgi_mountains, phastconselem, encode_tfbs
-        )
-        ann_vcf_ch  = ANNOTATION_PIPES.out.vcf 
-        versions    = versions.mix(ANNOTATION_PIPES.out.versions)
+    //# If this is for the pancancer workflow, then also create a DKFZ specific file.// ask this
 
-    }
+
+    // RUN annotate_vcf.pl : Uses optional databases to annotate variants, only given databases will be used. 
+    //if (params.runIndelDeepAnnotation)
+    //{
+    //    ANNOTATION_PIPES (
+    //    ann_vcf_ch, enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets,
+    //    cgi_mountains, phastconselem, encode_tfbs
+    //    )
+    //    ann_vcf_ch  = ANNOTATION_PIPES.out.vcf 
+    //    versions    = versions.mix(ANNOTATION_PIPES.out.versions)
+
+    //}
 emit:
 logs
-ann_vcf_ch
 versions
 }
