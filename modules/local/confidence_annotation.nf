@@ -5,14 +5,14 @@ process CONFIDENCE_ANNOTATION {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'library://kubran/odcf/odcf_platypusindelcalling:v0' :'kubran/odcf_platypusindelcalling:v0' }"
+    'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
     
     input:
-    tuple val(meta), file(a), file(b), val(tumorname), val(controlname), file(vcfgz), file(vcf_tbi)
+    tuple val(meta), file(vcfgz), file(vcf_tbi)
 
     output:
-    tuple val(meta), path('*.vcf.gz') ,   path('*.vcf.gz.tbi')    , emit: vcf_ann
-    path  "versions.yml"                                          , emit: versions
+    tuple val(meta),path('*.vcf.gz') ,path('*.vcf.gz.tbi')    , emit: vcf_ann
+    path  "versions.yml"                                                                        , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -22,7 +22,6 @@ process CONFIDENCE_ANNOTATION {
     def prefix     = task.ext.prefix ?: "${meta.id}"
     def controlflag    = meta.iscontrol == "1" ? "" : "--nocontrol"
     def ref_hg38   = params.ref_type == "hg38" ? "--refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz": "" 
-    def samples    = meta.iscontrol == "1" ? "--controlColName=$controlname --tumorColName=$tumorname" : "--nocontrol --tumorColName=$tumorname"
     def ref_spec   = params.ref_type == "hg38" ? "--gnomAD_WGS_maxMAF=${params.crit_gnomad_genomes_maxmaf} --gnomAD_WES_maxMAF=${params.crit_gnomad_exomes_maxmaf} --localControl_WGS_maxMAF=${params.crit_localcontrol_maxmaf} --localControl_WES_maxMAF=${params.crit_localcontrol_maxmaf} --1000genome_maxMAF=${params.crit_1kgenomes_maxmaf}" : ""
     """
     cat > $vcfgz | confidenceAnnotation_SNVs.py $controlflag -i - $args $ref_hg38 -a 0 $ref_spec > snv_${prefix}.conf.vcf
