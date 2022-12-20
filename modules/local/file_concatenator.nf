@@ -4,7 +4,7 @@ process FILE_CONCATENATOR {
 
     conda (params.enable_conda ? "bioconda::bcftools=1.9" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'kubran/odcf_snvcalling:v2':'odcf_snvcalling_v2.sif' }"
+        'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
 
     input:
     tuple val(meta), path(vcfs)

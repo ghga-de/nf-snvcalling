@@ -6,14 +6,17 @@ params.options = [:]
 
 include { ANNOTATE_VCF           } from '../../modules/local/annotate_vcf.nf'            addParams( options: params.options )
 include { ANNOVAR                } from '../../modules/local/annovar.nf'                 addParams( options: params.options )
-include { SNV_RELIABILITY_PIPE   } from '../../modules/local/snv_reliability_pipe.nf'  addParams( options: params.options )
+include { SNV_RELIABILITY_PIPE   } from '../../modules/local/snv_reliability_pipe.nf'    addParams( options: params.options )
 include { CONFIDENCE_ANNOTATION  } from '../../modules/local/confidence_annotation.nf'   addParams( options: params.options )
-//include { ANNOTATION_PIPES       } from '../../modules/local/annotation_pipes.nf'        addParams( options: params.options )
+include { FILTER_PEOVERLAP       } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
+include { ERROR_PLOTS            } from '../../modules/local/error_plots.nf'             addParams( options: params.options )
+
 
 
 workflow SNV_ANNOTATION {
     take:
     vcf_ch               // channel: [val(meta), , vcf.gz, vcf.gz.tbi ,val(tumorname), val(controlname) ]
+    ref                  // channel: [path(fasta), path(fai)]
     kgenome              // channel: [file.vcf.gz, file.vcf.gz.tbi]
     dbsnpindel           // channel: [file.vcf.gz, file.vcf.gz.tbi]
     exac                 // channel: [file.vcf.gz, file.vcf.gz.tbi]
@@ -77,12 +80,28 @@ workflow SNV_ANNOTATION {
     input_ch = vcf_ch.join(SNV_RELIABILITY_PIPE.out.vcf)
 
     CONFIDENCE_ANNOTATION(
-        input_ch
+        SNV_RELIABILITY_PIPE.out.vcf
     )
     ann_vcf_ch  = CONFIDENCE_ANNOTATION.out.vcf_ann
     versions    = versions.mix(CONFIDENCE_ANNOTATION.out.versions)
 
-    //# If this is for the pancancer workflow, then also create a DKFZ specific file.// ask this
+    // ASK: If this is for the pancancer workflow, then also create a DKFZ specific file.// ask this
+    // mkfifo is not implemented! If true runArtifactFilter creates a bias file will be used to plot errors
+    FILTER_PEOVERLAP(
+        ann_vcf_ch, ref
+    )
+    versions = versions.mix(FILTER_PEOVERLAP.out.versions)
+
+    // createErrorPlots.py! works only if there is a bias file produced 
+    ERROR_PLOTS(
+        FILTER_PEOVERLAP.out.somatic_snvs_for_bias 
+    )
+    versions = versions.mix(ERROR_PLOTS.out.versions)
+
+    // plotBaseScoreDistribution.R That will work only if it is true
+    PLOT_BASESCORE_BIAS(
+        ERROR_PLOTS.out.error_matrix
+    )
 
 
     // RUN annotate_vcf.pl : Uses optional databases to annotate variants, only given databases will be used. 
