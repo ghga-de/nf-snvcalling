@@ -13,8 +13,8 @@ include { FILE_CONCATENATOR  } from '../../modules/local/file_concatenator.nf'  
 workflow MPILEUP_SNV_CALL {
     take:
     sample_ch     // channel: [val(meta), tumor,tumor_bai, control, control_bai, tumorname, controlname]
-    ref
-    intervals
+    ref           // channel: [path(fasta), path(fai)]
+    intervals     // channel: [[chr, region], [chr, region], ...]
 
     main:
     versions = Channel.empty()
