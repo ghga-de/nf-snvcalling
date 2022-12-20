@@ -31,21 +31,41 @@ workflow MPILEUP_SNV_CALL {
     versions = versions.mix(BCFTOOLS_MPILEUP.out.versions)
 
     BCFTOOLS_MPILEUP.out.vcf
-                    .join(BCFTOOLS_MPILEUP.out.stat)
-                    .filter{meta, intervals, vcf, tbi, stat -> WorkflowCommons.getNumVariantsFromBCFToolsStats(stat) > 0 }
-                    .set{ch_vcf}
-    ch_vcf.view()
+                    .join(BCFTOOLS_MPILEUP.out.intervals)
+                    .join(BCFTOOLS_MPILEUP.out.stats)
+                    .filter{meta, vcf, intervals, stats -> WorkflowCommons.getNumVariantsFromBCFToolsStats(stats) > 0 }
+                    .set{ch_vcf_stats}
+    ch_vcf_stats
+        .map { meta, vcf, intervals, stats -> [meta, vcf]} 
+        .set {ch_vcf}
+
+    ch_vcf_stats
+        .map { meta, vcf, intervals, stats -> [meta, intervals]} 
+        .set {ch_intervals} 
 
     // RUN seqContext_annotator.pl and filterVcfForBias.py
     FILTER_STRAND_BIAS(
-        BCFTOOLS_MPILEUP.out.vcf, ref
+        ch_vcf.join(ch_intervals, by: [0]), ref
     )
     versions = versions.mix(FILTER_STRAND_BIAS.out.versions) 
+
+    FILTER_STRAND_BIAS.out.vcf
+                    .join(FILTER_STRAND_BIAS.out.intervals)
+                    .join(FILTER_STRAND_BIAS.out.stats)
+                    .filter{meta, vcf, intervals, stats -> WorkflowCommons.getNumVariantsFromBCFToolsStats(stats) > 0 }
+                    .set{ch_vcf_stats}
+    ch_vcf_stats
+        .map { meta, vcf, intervals, stats -> [meta, vcf]} 
+        .set {ch_vcf}
+
+    ch_vcf_stats
+        .map { meta, vcf, intervals, stats -> [meta, intervals]} 
+        .set {ch_intervals} 
 
     // RUN bcftools mpileup and vcf_pileup_compare_allin1_basecount.pl to compare germline variants.
     // This process only applies of there is control and runCompareGermline is true
     MPILEUP_COMPARE(
-        FILTER_STRAND_BIAS.out.vcf, ref
+        ch_vcf.join(ch_intervals, by: [0]), ref
     )
     versions = versions.mix(MPILEUP_COMPARE.out.versions) 
 
