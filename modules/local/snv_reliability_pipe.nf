@@ -6,7 +6,7 @@ process SNV_RELIABILITY_PIPE {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'library://kubran/odcf/odcf_platypusindelcalling:v0' :'kubran/odcf_platypusindelcalling:v0' }"
+    'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
     
     input:
     tuple val(meta),                 file(ch_vcf),               file(ch_vcf_i)
