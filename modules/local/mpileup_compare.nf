@@ -9,7 +9,7 @@ process MPILEUP_COMPARE {
     debug true
 
     input:
-    tuple val(meta),  val(intervals), path(vcf)
+    tuple val(meta), path(vcf), val(intervals)
     tuple path(fasta), path(fai) 
 
     output:
