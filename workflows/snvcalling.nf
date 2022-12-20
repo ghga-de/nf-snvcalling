@@ -52,7 +52,7 @@ if (params.ref_type)
     }
 
 // prepare interval channel
-interval_ch = chrlength.splitCsv(sep: '\t', by:1) 
+interval_ch = chrlength.splitCsv(sep: '\t', by:1)
 
 // Annotation databases
 if (params.k_genome)             { kgenome = Channel.fromPath([params.k_genome,params.k_genome +'.tbi'], checkIfExists: true).collect() } else { kgenome = Channel.of([],[]) }
