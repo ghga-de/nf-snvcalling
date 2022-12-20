@@ -8,13 +8,14 @@ process BCFTOOLS_MPILEUP {
         'quay.io/biocontainers/bcftools:1.16--hfe4b78e_1' }"
 
     input:
-    tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai), val(tumorname), val(controlname), val(intervals)
+    tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai), val(tumorname), val(controlname), val(intervals), val(region)
     tuple path(fasta), path(fai) 
 
     output:
-    tuple val(meta), val(intervals), path("*.vcf")               , emit: vcf
-    tuple val(meta), val(intervals), path("*.bcftools_stats.txt"), emit: stat 
-    path  "versions.yml"                                         , emit: versions
+    tuple val(meta), path("*.vcf")               , emit: vcf
+    tuple val(meta), path("*.bcftools_stats.txt"), emit: stats 
+    tuple val(meta), val(intervals)              , emit: intervals 
+    path  "versions.yml"                         , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -22,8 +23,8 @@ process BCFTOOLS_MPILEUP {
     script:
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
-    def args3 = task.ext.args3 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def ref_spec = params.ref_type == "hg38" ? "$args2 --ploidy GRCh38": "$args2"
     """
     bcftools \\
         mpileup \\
@@ -31,7 +32,7 @@ process BCFTOOLS_MPILEUP {
         $args \\
         $tumor \\
         -r $intervals \\
-        | bcftools call --output-type v $args2 > ${prefix}.${intervals}.vcf
+        | bcftools call --output-type v $ref_spec > ${prefix}.${intervals}.vcf
 
     bcftools stats ${prefix}.${intervals}.vcf > ${prefix}.${intervals}.bcftools_stats.txt
 

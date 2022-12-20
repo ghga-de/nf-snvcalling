@@ -4,17 +4,17 @@ process FILTER_STRAND_BIAS {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'kubran/odcf_snvcalling:v1':'odcf_snvcalling_v1.sif' }"
-
-    debug true
+        'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
 
     input:
-    tuple val(meta), val(intervals), path(vcf)
+    tuple val(meta), path(vcf), val(intervals)
     tuple path(fasta), path(fai) 
 
     output:
-    tuple val(meta), val(intervals), path("*.bias.vcf")     , emit: vcf
-    path  "versions.yml"                                    , emit: versions
+    tuple val(meta), path("*.bias.vcf")                , emit: vcf
+    tuple val(meta), path("*.bias.bcftools_stats.txt") , emit: stats 
+    tuple val(meta), val(intervals)                    , emit: intervals 
+    path  "versions.yml"                               , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -26,6 +26,8 @@ process FILTER_STRAND_BIAS {
     """
     seqContext_annotator.pl fastaFromBed $vcf $fasta 10 | \\
         rawSnvFilter.py --outf=${prefix}.${intervals}.bias.vcf $args
+
+    bcftools stats ${prefix}.${intervals}.bias.vcf > ${prefix}.${intervals}.bias.bcftools_stats.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
