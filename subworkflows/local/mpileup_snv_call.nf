@@ -19,7 +19,7 @@ workflow MPILEUP_SNV_CALL {
     main:
     versions = Channel.empty()
 
-    // Prepare channels for intervals 
+    // Combine intervals with samples to create 'interval x sample' number of parallel run
     sample_ch
         .combine(intervals)
         .set { combined_inputs }
@@ -28,9 +28,13 @@ workflow MPILEUP_SNV_CALL {
     BCFTOOLS_MPILEUP (
         combined_inputs, ref
     )
-
     versions = versions.mix(BCFTOOLS_MPILEUP.out.versions)
 
+    BCFTOOLS_MPILEUP.out.vcf
+                    .join(BCFTOOLS_MPILEUP.out.stat)
+                    .filter{meta, intervals, vcf, tbi, stat -> WorkflowCommons.getNumVariantsFromBCFToolsStats(stat) > 0 }
+                    .set{ch_vcf}
+    ch_vcf.view()
 
     // RUN seqContext_annotator.pl and filterVcfForBias.py
     FILTER_STRAND_BIAS(
@@ -52,9 +56,9 @@ workflow MPILEUP_SNV_CALL {
         .groupTuple()
         .set { combined_vcf }
 
-    combined_vcf.view()
     // MERGE interval VCF files
     // RUN: headeredFileConcatenator.pl
+    
     FILE_CONCATENATOR(
         combined_vcf
     )

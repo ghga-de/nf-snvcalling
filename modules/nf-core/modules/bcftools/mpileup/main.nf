@@ -12,8 +12,9 @@ process BCFTOOLS_MPILEUP {
     tuple path(fasta), path(fai) 
 
     output:
-    tuple val(meta), val(intervals), path("*.vcf"), emit: vcf
-    path  "versions.yml"                          , emit: versions
+    tuple val(meta), val(intervals), path("*.vcf")               , emit: vcf
+    tuple val(meta), val(intervals), path("*.bcftools_stats.txt"), emit: stat 
+    path  "versions.yml"                                         , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -31,6 +32,8 @@ process BCFTOOLS_MPILEUP {
         $tumor \\
         -r $intervals \\
         | bcftools call --output-type v $args2 > ${prefix}.${intervals}.vcf
+
+    bcftools stats ${prefix}.${intervals}.vcf > ${prefix}.${intervals}.bcftools_stats.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
