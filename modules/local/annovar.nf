@@ -13,8 +13,7 @@ process ANNOVAR {
     'library://kubran/odcf/odcf_platypusindelcalling:v0' :'kubran/odcf_platypusindelcalling:v0' }"
     
     input:
-    tuple val(meta)           ,file(annovar_bed)
-    tuple val(meta)           , file(ch_vcf)
+    tuple val(meta)         , file(ch_vcf),  file(annovar_bed)
     each file(annovar_table)
     val(chrprefix)
 
