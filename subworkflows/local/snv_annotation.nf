@@ -77,6 +77,8 @@ workflow SNV_ANNOTATION {
     versions = versions.mix(SNV_RELIABILITY_PIPE.out.versions)
 
     // RUN: confidenceAnnotation_SNVs.py : Confidence annotation will be added to the variants
+    input_ch = vcf_ch.join(SNV_RELIABILITY_PIPE.out.vcf)
+
     CONFIDENCE_ANNOTATION(
         SNV_RELIABILITY_PIPE.out.vcf
     )
