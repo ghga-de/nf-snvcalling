@@ -9,14 +9,14 @@ process ANNOTATE_VCF {
 
     input:
     tuple val(meta)            , file(vcf)     , file(vcf_tbi), val(tumorname), val(controlname)
-    tuple path(kgenome)        , path(kgenome_i)
-    tuple path(dbsnpindel)     , path(dbsnpindel_i)
-    tuple path(exac)           , path(exac_i)
-    tuple path(evs)            , path(evs_i)
-    tuple path(localcontrolwgs), path(localcontrolwgs_i)
-    tuple path(localcontrolwes), path(localcontrolwes_i)
-    tuple path(gnomadgenomes)  , path(gnomadgenomes_i)
-    tuple path(gnomadexomes)   , path(gnomadexomes_i)
+    tuple file(kgenome)        , file(kgenome_i)
+    tuple file(dbsnpindel)     , file(dbsnpindel_i)
+    tuple file(exac)           , file(exac_i)
+    tuple file(evs)            , file(evs_i)
+    tuple file(localcontrolwgs), file(localcontrolwgs_i)
+    tuple file(localcontrolwes), file(localcontrolwes_i)
+    tuple file(gnomadgenomes)  , file(gnomadgenomes_i)
+    tuple file(gnomadexomes)   , file(gnomadexomes_i)
     val (chrprefix)
 
     output:
@@ -32,26 +32,20 @@ process ANNOTATE_VCF {
     def args        = task.ext.args ?: ''
     def prefix      = task.ext.prefix ?: "${meta.id}"
     def cmdfilter   = meta.iscontrol == "1" ? "| median.pl - ${prefix}.vcf_control_median.txt" : ""
+    def pipe  = ["${cmdfilter}",
+                kgenome.baseName !='input' ? " | annotate_vcf.pl -a - -b ${dbsnpindel} --columnName='DBSNP' --reportMatchType --bAdditionalColumn=2  --reportLevel 4" : '',
+                dbsnpindel.baseName !='input' ? " | annotate_vcf.pl -a - -b ${kgenome} --columnName='1K_GENOMES' --reportMatchType --bAdditionalColumn=2 --reportLevel 4" : '',
+                exac.baseName !='input' ? " | annotate_vcf.pl -a - -b ${exac} --columnName='ExAC' --bFileType vcf --reportLevel 4 --reportMatchType" : '',
+                evs.baseName !='input' ? " | annotate_vcf.pl -a - -b ${evs} --columnName='EVS' --bFileType vcf --reportLevel 4 --reportMatchType" : '',
+                localcontrolwgs.baseName !='input' ? " | annotate_vcf.pl -a - -b ${localcontrolwgs} --columnName='LocalControlAF_WGS' --bFileType vcf --reportLevel 4 --reportMatchType" : '',
+                localcontrolwes.baseName !='input' ? " | annotate_vcf.pl -a - -b ${localcontrolwes} --columnName='LocalControlAF_WES' --bFileType vcf --reportLevel 4 --reportMatchType" : '',
+                gnomadgenomes.baseName !='input' ? " | annotate_vcf.pl -a - -b ${gnomadgenomes} --columnName='GNOMAD_GENOMES' --bFileType vcf --reportLevel 4 --reportMatchType" : '',
+                gnomadexomes.baseName !='input' ? " | annotate_vcf.pl -a - -b ${gnomadexomes} --columnName='GNOMAD_EXOMES' --bFileType vcf --reportLevel 4 --reportMatchType" : ''
+                ].join(' ').trim()
 
     """
-    zcat < $vcf $cmdfilter | \\
-    annotate_vcf.pl -a - -b $dbsnpindel --columnName='DBSNP' \\
-        --reportMatchType --bAdditionalColumn=2 --reportLevel 4 | \\
-    annotate_vcf.pl -a - -b $kgenome --columnName='1K_GENOMES' \\
-        --reportMatchType --bAdditionalColumn=2 --reportLevel 4 | \\
-    annotate_vcf.pl -a - -b $exac --columnName='ExAC' \\
-        --bFileType vcf --reportLevel 4 --reportMatchType | \\
-    annotate_vcf.pl -a - -b $evs --columnName='EVS' \\
-        --bFileType vcf --reportLevel 4 --reportMatchType | \\
-    annotate_vcf.pl -a - -b $gnomadexomes --columnName='GNOMAD_EXOMES' \\
-        --bFileType vcf --reportLevel 4 --reportMatchType | \\
-    annotate_vcf.pl -a - -b $gnomadgenomes --columnName='GNOMAD_GENOMES' \\
-        --bFileType vcf --reportLevel 4 --reportMatchType | \\
-    annotate_vcf.pl -a - -b $localcontrolwgs --columnName='LocalControlAF_WGS' \\
-        --minOverlapFraction 1 --bFileType vcf --reportLevel 4 --reportMatchType | \\
-    annotate_vcf.pl -a - -b $localcontrolwes --columnName='LocalControlAF_WES' \\
-        --minOverlapFraction 1 --bFileType vcf --reportLevel 4 --reportMatchType | \\
-    tee ${prefix}.vcf | vcf_to_annovar.pl $chrprefix "" > ${prefix}.ForAnnovar.bed
+    zcat < $vcf $pipe |\\
+        tee ${prefix}.vcf | vcf_to_annovar.pl $chrprefix "" > ${prefix}.ForAnnovar.bed
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
