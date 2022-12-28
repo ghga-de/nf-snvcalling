@@ -44,7 +44,7 @@ process ANNOTATE_VCF {
                 ].join(' ').trim()
 
     """
-    zcat < $vcf $pipe |\\
+    zcat < $vcf $pipe | \\
         tee ${prefix}.vcf | vcf_to_annovar.pl $chrprefix "" > ${prefix}.ForAnnovar.bed
 
     cat <<-END_VERSIONS > versions.yml
