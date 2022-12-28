@@ -187,7 +187,7 @@ workflow SNVCALLING {
 
     if (params.runSNVAnnotation){ 
         SNV_ANNOTATION(
-            ch_vcf,kgenome, dbsnpindel, exac, evs, localcontrolwgs,
+            ch_vcf, ref, kgenome, dbsnpindel, exac, evs, localcontrolwgs,
         localcontrolwes, gnomadgenomes, gnomadexomes, annodb, repeatmasker, dacblacklist,
         dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats, enchangers,
         cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets,
