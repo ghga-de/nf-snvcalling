@@ -18,9 +18,9 @@ process ANNOVAR {
     val(chrprefix)
 
     output:
-    tuple val(meta),path('*.temp.vcf.gz'), path('*.temp.vcf.gz.tbi')   , emit: vcf
-    tuple val(meta), path('*.log')                                     , emit: log
-    path  "versions.yml"                                               , emit: versions
+    tuple val(meta),path('*.temp.vcf')                    , emit: vcf
+    tuple val(meta), path('*.log')                        , emit: log
+    path  "versions.yml"                                  , emit: versions
     tuple val(meta), path('*_genomicSuperDups')                         
     tuple val(meta), path('*_cytoBand')                                 
     tuple val(meta), path('*variant_function')                          
@@ -65,9 +65,6 @@ process ANNOVAR {
         --chrPrefix=$chrprefix \\
         --chrSuffix="" \\
         --reportColumns="1" --bChrPosEnd="2,7,8" > ${prefix}.temp.vcf
-
-    bgzip -c ${prefix}.temp.vcf > ${prefix}.temp.vcf.gz
-    tabix ${prefix}.temp.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
