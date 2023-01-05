@@ -11,15 +11,35 @@ WorkflowSnvcalling.initialise(params, log)
 
 // TODO nf-core: Add all file path parameters for the pipeline to the list below
 // Check input path parameters to see if they exist
-def checkPathParamList = [ params.input, params.multiqc_config, params.fasta ]
+def checkPathParamList = [ params.input, params.multiqc_config]
+
+def checkPathParamList_annotation = [params.k_genome,
+                                    params.dbsnp_snv,
+                                    params.mapability_file,
+                                    params.repeat_masker,
+                                    params.simple_tandemrepeats]
+
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
+
+// for annotate_vcf.pl 
+if (params.runSNVAnnotation){
+    for (param in checkPathParamList_annotation) { if (param) { file(param, checkIfExists: true) } }
+}
+
+
+// If runIndelDeepAnnotation is true; at least one of the annotation files must be provided
+if ((params.runSNVDeepAnnotation) && (!params.enchancer_file && !params.cpgislands_file && !params.tfbscons_file && !params.encode_dnase_file && !params.mirnas_snornas_file && !params.mirna_sncrnas_file && !params.mirbase_file && !params.cosmic_file && !params.mir_targets_file && !params.cgi_mountains_file && !params.phastconselem_file && !params.encode_tfbs_file)) { 
+    log.error "Please specify at least one annotation file to perform INDEL Deep Annotation"
+    exit 1
+}
 
 //
 // Check mandatory parameters
 //
 
 if (params.input)         { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
-if (params.annovar_path)  { annodb = Channel.fromPath(params.annovar_path + '/humandb/', checkIfExists: true ) } else { annodb = Channel.empty() }
+// Annovar only be checked if runGeneAnnovar is true
+if ((params.runCytoband ) &&(params.runGeneAnnovar) &&(params.annovar_path))  { annodb = Channel.fromPath(params.annovar_path + '/humandb/', checkIfExists: true ) } else { annodb = Channel.empty() }
 
 // Set up reference depending on the genome choice
 // NOTE: link will be defined by aoutomatic reference generation when the pipeline ready!
@@ -56,10 +76,7 @@ interval_ch = chrlength.splitCsv(sep: '\t', by:1)
 
 // Annotation databases
 if (params.k_genome)             { kgenome = Channel.fromPath([params.k_genome,params.k_genome +'.tbi'], checkIfExists: true).collect() } else { kgenome = Channel.of([],[]) }
-if (params.dbsnp_indel)          { dbsnpindel = Channel.fromPath([params.dbsnp_indel, params.dbsnp_indel + '.tbi'], checkIfExists: true).collect() } else { dbsnpindel = Channel.of([],[]) }
 if (params.dbsnp_snv)            { dbsnpsnv = Channel.fromPath([params.dbsnp_snv,params.dbsnp_snv +'.tbi' ], checkIfExists: true).collect() } else { dbsnpsnv = Channel.of([],[]) }
-if (params.exac_file)            { exac = Channel.fromPath([params.exac_file, params.exac_file + '.tbi'], checkIfExists: true).collect() } else { exac = Channel.of([],[]) }
-if (params.evs_file)             { evs = Channel.fromPath([params.evs_file, params.evs_file + '.tbi'], checkIfExists: true).collect() } else { evs = Channel.of([],[]) }
 if (params.local_control_wgs)    { localcontrolwgs = Channel.fromPath([params.local_control_wgs,params.local_control_wgs + '.tbi' ], checkIfExists: true).collect() } else { localcontrolwgs = Channel.of([],[]) }
 if (params.local_control_wes)    { localcontrolwes = Channel.fromPath([params.local_control_wes,params.local_control_wes + '.tbi' ], checkIfExists: true).collect() } else { localcontrolwes = Channel.of([],[]) }
 if (params.gnomad_genomes)       { gnomadgenomes = Channel.fromPath([params.gnomad_genomes, params.gnomad_genomes + '.tbi'], checkIfExists: true).collect() } else { gnomadgenomes = Channel.of([],[]) }
@@ -80,7 +97,7 @@ if (params.cpgislands_file)      { cpgislands = Channel.fromPath([params.cpgisla
 if (params.tfbscons_file)        { tfbscons = Channel.fromPath([params.tfbscons_file, params.tfbscons_file + '.tbi'], checkIfExists: true).collect() } else { tfbscons = Channel.of([],[]) }
 if (params.encode_dnase_file)    { encode_dnase = Channel.fromPath([params.encode_dnase_file, params.encode_dnase_file + '.tbi'], checkIfExists: true).collect() } else { encode_dnase = Channel.of([],[]) }
 if (params.mirnas_snornas_file)  { mirnas_snornas = Channel.fromPath([params.mirnas_snornas_file, params.mirnas_snornas_file + '.tbi'], checkIfExists: true).collect() } else { mirnas_snornas = Channel.of([],[]) }
-if (params.mirna_sncrnas_file)   { mirna_sncrnas = Channel.fromPath([params.mirna_sncrnas_file, params.mirna_sncrnas_file + '.tbi'], checkIfExists: true).collect() } else { mirna_sncrnas = Channel.of([],[]) }
+if (params.mirna_sncrnas_file)   { mirnas_sncrnas = Channel.fromPath([params.mirna_sncrnas_file, params.mirna_sncrnas_file + '.tbi'], checkIfExists: true).collect() } else { mirnas_sncrnas = Channel.of([],[]) }
 if (params.cosmic_file)          { cosmic = Channel.fromPath([params.cosmic_file, params.cosmic_file + '.tbi'], checkIfExists: true).collect() } else { cosmic = Channel.of([],[]) }
 if (params.mirbase_file)         { mirbase = Channel.fromPath([params.mirbase_file, params.mirbase_file + '.tbi'], checkIfExists: true).collect() } else { mirbase = Channel.of([],[]) }
 if (params.mir_targets_file)     { mir_targets = Channel.fromPath([params.mir_targets_file, params.mir_targets_file + '.tbi'], checkIfExists: true).collect() } else { mir_targets = Channel.of([],[]) }
@@ -187,11 +204,10 @@ workflow SNVCALLING {
 
     if (params.runSNVAnnotation){ 
         SNV_ANNOTATION(
-            ch_vcf, ref, kgenome, dbsnpindel, exac, evs, localcontrolwgs,
-        localcontrolwes, gnomadgenomes, gnomadexomes, annodb, repeatmasker, dacblacklist,
-        dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats, enchangers,
-        cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets,
-        cgi_mountains, phastconselem, encode_tfbs, chr_prefix
+        ch_vcf, ref, kgenome, dbsnpsnv, localcontrolwgs,localcontrolwes, gnomadgenomes, gnomadexomes, annodb, 
+        repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats, 
+        enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets, 
+        cgi_mountains, phastconselem, encode_tfbs, mirnas_sncrnas, chr_prefix
         )
     }
 
