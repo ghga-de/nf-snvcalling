@@ -22,6 +22,7 @@ process ANNOTATION_PIPES {
     tuple file(cgi_mountains) , file(cgi_mountains_i)
     tuple file(phastconselem) , file(phastconselem_i)
     tuple file(encode_tfbs)   , file(encode_tfbs_i)
+    tuple file(mirnas_sncrnas), file(mirnas_sncrnas_i)
 
     output:
     tuple val(meta), path('*.deepanno.vcf.gz'), path('*.deepanno.vcf.gz.tbi') , emit: vcf
@@ -44,7 +45,8 @@ process ANNOTATION_PIPES {
                 mir_targets.baseName !='input' ? " | annotate_vcf.pl -a - -b ${mir_targets} --columnName='miRNAtargets'" : '' ,
                 cgi_mountains.baseName !='input' ? " | annotate_vcf.pl -a - -b ${cgi_mountains} --bFileType=bed --columnName='CgiMountains' --bAdditionalColumns=4" : '',
                 phastconselem.baseName !='input' ? " | annotate_vcf.pl -a - -b ${phastconselem} --bFileType=bed --columnName='phastConsElem20bp' --bAdditionalColumns=4" : '',
-                encode_tfbs.baseName !='input' ? " | annotate_vcf.pl -a - -b ${encode_tfbs} --columnName='ENCODE_TFBS'" : ''
+                encode_tfbs.baseName !='input' ? " | annotate_vcf.pl -a - -b ${encode_tfbs} --columnName='ENCODE_TFBS'" : '',
+                mirnas_sncrnas.baseName !='input' ? " | annotate_vcf.pl -a - -b ${mirnas_sncrnas} --bFileType=bed --columnName='miRNAs_sncRNAs'" : ''
                 ].join(' ').trim() 
     """
     zcat < $vcf $pipe > ${prefix}.deepanno.vcf

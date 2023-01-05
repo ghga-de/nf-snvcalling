@@ -9,7 +9,7 @@ process SNV_RELIABILITY_PIPE {
     'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
     
     input:
-    tuple val(meta),                 file(ch_vcf),               file(ch_vcf_i)
+    tuple val(meta),                 file(ch_vcf),         file(dummy)
     tuple file(repeatmasker),        file(repeatmasker_i)
     tuple file(dacblacklist),        file(dacblacklist_i)
     tuple file(dukeexcluded),        file(dukeexcluded_i)
@@ -19,8 +19,8 @@ process SNV_RELIABILITY_PIPE {
     tuple file(simpletandemrepeats), file(simpletandemrepeats_i)
 
     output:
-    tuple val(meta), path('*.annotated.vcf.gz'), path('*.annotated.vcf.gz.tbi')   , emit: vcf
-    path  "versions.yml"                                                          , emit: versions
+    tuple val(meta), path('*.annotated.vcf')   , emit: vcf
+    path  "versions.yml"                       , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -38,10 +38,7 @@ process SNV_RELIABILITY_PIPE {
                     ].join(' ').trim()
 
     """
-    zcat < $ch_vcf $pipe > ${prefix}.annotated.vcf
-
-    bgzip -c ${prefix}.annotated.vcf > ${prefix}.annotated.vcf.gz
-    tabix ${prefix}.annotated.vcf.gz
+    cat < $ch_vcf $pipe > ${prefix}.annotated.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
