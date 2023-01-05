@@ -24,12 +24,16 @@ workflow MPILEUP_SNV_CALL {
         .combine(intervals)
         .set { combined_inputs }
 
+    //
+    // MODULE:BCFTOOLS_MPILEUP 
+    //
     // RUN bcftools mpileup and bcftools call to call variants. This process is scattered by chr intervals
     BCFTOOLS_MPILEUP (
         combined_inputs, ref
     )
     versions = versions.mix(BCFTOOLS_MPILEUP.out.versions)
 
+    // filter VCFs if there is no variant
     BCFTOOLS_MPILEUP.out.vcf
                     .join(BCFTOOLS_MPILEUP.out.intervals)
                     .join(BCFTOOLS_MPILEUP.out.stats)
@@ -43,12 +47,16 @@ workflow MPILEUP_SNV_CALL {
         .map { meta, vcf, intervals, stats -> [meta, intervals]} 
         .set {ch_intervals} 
 
+    //
+    // MODULE:FILTER_STRAND_BIAS 
+    //
     // RUN seqContext_annotator.pl and filterVcfForBias.py
     FILTER_STRAND_BIAS(
         ch_vcf.join(ch_intervals, by: [0]), ref
     )
     versions = versions.mix(FILTER_STRAND_BIAS.out.versions) 
 
+    // filter VCFs if there is no variant after bias filtration
     FILTER_STRAND_BIAS.out.vcf
                     .join(FILTER_STRAND_BIAS.out.intervals)
                     .join(FILTER_STRAND_BIAS.out.stats)
@@ -61,7 +69,9 @@ workflow MPILEUP_SNV_CALL {
     ch_vcf_stats
         .map { meta, vcf, intervals, stats -> [meta, intervals]} 
         .set {ch_intervals} 
-
+    //
+    // MODULE:MPILEUP_COMPARE 
+    //
     // RUN bcftools mpileup and vcf_pileup_compare_allin1_basecount.pl to compare germline variants.
     // This process only applies of there is control and runCompareGermline is true
     MPILEUP_COMPARE(
@@ -76,9 +86,11 @@ workflow MPILEUP_SNV_CALL {
         .groupTuple()
         .set { combined_vcf }
 
+    //
+    // MODULE: FILE_CONCATENATOR 
+    //
     // MERGE interval VCF files
     // RUN: headeredFileConcatenator.pl
-    
     FILE_CONCATENATOR(
         combined_vcf
     )
