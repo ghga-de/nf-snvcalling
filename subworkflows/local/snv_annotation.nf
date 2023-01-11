@@ -7,11 +7,21 @@ params.options = [:]
 include { ANNOTATE_VCF           } from '../../modules/local/annotate_vcf.nf'            addParams( options: params.options )
 include { ANNOVAR                } from '../../modules/local/annovar.nf'                 addParams( options: params.options )
 include { SNV_RELIABILITY_PIPE   } from '../../modules/local/snv_reliability_pipe.nf'    addParams( options: params.options )
-include { CONFIDENCE_ANNOTATION  } from '../../modules/local/confidence_annotation.nf'   addParams( options: params.options )
 include { ANNOTATION_PIPES       } from '../../modules/local/annotation_pipes.nf'        addParams( options: params.options )
-include { POST_PROCESS           } from '../../modules/local/post_process.nf'            addParams( options: params.options )
-include { FILTER_PEOVERLAP       } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
-
+include { CONFIDENCE_ANNOTATION_1} from '../../modules/local/confidence_annotation_1.nf' addParams( options: params.options )
+include { TABIX_BGZIPTABIX       } from '../../modules/nf-core/modules/tabix/bgziptabix/main' addParams( options: params.options )
+include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_1  } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
+include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_2  } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
+include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_3  } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
+include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_4  } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
+include { ERROR_PLOTS as ERROR_PLOTS_1            } from '../../modules/local/error_plots.nf'             addParams( options: params.options )
+include { ERROR_PLOTS as ERROR_PLOTS_2            } from '../../modules/local/error_plots.nf'             addParams( options: params.options )
+include { ERROR_PLOTS as ERROR_PLOTS_3            } from '../../modules/local/error_plots.nf'             addParams( options: params.options )
+include { ERROR_PLOTS as ERROR_PLOTS_4            } from '../../modules/local/error_plots.nf'             addParams( options: params.options )
+include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_1 } from '../../modules/local/plot_basescore_bias.nf'    addParams( options: params.options )
+include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_2 } from '../../modules/local/plot_basescore_bias.nf'    addParams( options: params.options )
+include { FLAG_BIAS as FLAG_BIAS_1 }        from '../../modules/local/flag_bias.nf'    addParams( options: params.options )
+include { FLAG_BIAS as FLAG_BIAS_2 }        from '../../modules/local/flag_bias.nf'    addParams( options: params.options )
 
 workflow SNV_ANNOTATION {
     take:
@@ -76,7 +86,8 @@ workflow SNV_ANNOTATION {
         )
         logs     = logs.mix(ANNOVAR.out.log)
         versions = versions.mix(ANNOVAR.out.versions)
-        input_ch = ANNOVAR.out.vcf
+        cf_vcf   = ANNOVAR.out.vcf
+        input_ch = ch_vcf.join(ANNOTATE_VCF.out.forannovar) 
     }
 
     //
@@ -88,15 +99,71 @@ workflow SNV_ANNOTATION {
     )
     versions = versions.mix(SNV_RELIABILITY_PIPE.out.versions)
 
-    // RUN: confidenceAnnotation_SNVs.py : Confidence annotation will be added to the variants
     vcf_ch = SNV_RELIABILITY_PIPE.out.vcf 
     input_ch = vcf_ch.join(ANNOTATE_VCF.out.median)
-    
-    CONFIDENCE_ANNOTATION(
-        input_ch
-    )
-    ann_vcf_ch  = CONFIDENCE_ANNOTATION.out.vcf_ann
-    versions    = versions.mix(CONFIDENCE_ANNOTATION.out.versions)
+    input_ch.view()
+
+    //
+    // MODULE: CONFIDENCE_ANNOTATION_1
+    //
+    CONFIDENCE_ANNOTATION_1(input_ch)
+
+    versions = versions.mix(CONFIDENCE_ANNOTATION_1.out.versions)
+
+    // ASK: If this is for the pancancer workflow, then also create a DKFZ specific file.// ask this
+    // mkfifo is not implemented! If true runArtifactFilter creates a bias file will be used to plot errors
+    if (params.runArtifactFilter){
+        FILTER_PEOVERLAP_1(
+            CONFIDENCE_ANNOTATION_1.out.vcf, ref 
+        )
+        versions = versions.mix(FILTER_PEOVERLAP_1.out.versions)
+
+        ERROR_PLOTS_1(
+            FILTER_PEOVERLAP_1.out.allelebasescore_vcf,'sequencing_specific', 'sequencing_specific_error_plot_before_filter', 'sequencing_error_matrix', 'Sequencing strand bias before guanine oxidation filter'
+        )
+        versions = versions.mix(ERROR_PLOTS_1.out.versions)
+
+        ERROR_PLOTS_2(
+            FILTER_PEOVERLAP_1.out.allelebasescore_vcf, 'sequence_specific', 'sequence_specific_error_plot_before_filter','sequence_error_matrix', 'PCR strand bias before guanine oxidation filter'
+        )
+        versions = versions.mix(ERROR_PLOTS_2.out.versions)
+
+        //
+        // MODULE: PLOT_BASESCORE_BIAS
+        //
+        // Run plot_basescore_bias.r only if generateExtendedQcPlots is true, this step only generates a pdf!
+        if (params.generateExtendedQcPlots){
+            // create input channel with error matrixes
+            input_ch = FILTER_PEOVERLAP_1.out.allelebasescore_vcf.join(FILTER_PEOVERLAP_1.out.reference_allele_base_qualities)
+            input_ch = input_ch.join(FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities)
+
+            PLOT_BASESCORE_BIAS_1(
+                input_ch, 'base_score_bias_before_filter','Base Quality Bias Plot for PID before guanine oxidation filter'
+                )
+            versions = versions.mix(PLOT_BASESCORE_BIAS_1.out.versions)
+        }
+
+        // create input channel for flag bias with error matrixes from error plots
+        input_ch = FILTER_PEOVERLAP_1.out.allelebasescore_vcf.join(ERROR_PLOTS_2.out.error_matrix)
+        input_ch = input_ch.join(ERROR_PLOTS_1.out.error_matrix)
+
+        FLAG_BIAS_1(
+            input_ch, ref
+            )
+        
+    }
+    // IF runArticantfilter is false run only FILTER_PEOVERLAP
+    else{
+        FILTER_PEOVERLAP_2(
+            CONFIDENCE_ANNOTATION_1.out.vcf, ref  
+        )
+        versions = versions.mix(FILTER_PEOVERLAP_2.out.versions)
+
+        TABIX_BGZIPTABIX(
+            FILTER_PEOVERLAP_2.out.allelebasescore_vcf
+            )
+        versions = versions.mix(TABIX_BGZIPTABIX.out.versions)       
+    }
 
     //
     // MODULE: ANNOTATION_PIPES
@@ -112,37 +179,6 @@ workflow SNV_ANNOTATION {
     //    versions    = versions.mix(ANNOTATION_PIPES.out.versions)
 
     //}
-
-    // ASK: If this is for the pancancer workflow, then also create a DKFZ specific file.// ask this
-    // mkfifo is not implemented! If true runArtifactFilter creates a bias file will be used to plot errors
-    // RUN REMANING AS ALL
-    //if (params.runArtifactFilter){
-    //        POST_PROCESS(
-    //        ann_vcf_ch, ref 
-    //    )
-    //    versions = versions.mix(POST_PROCESS.out.versions)
-    //}
-    //else{
-    //    FILTER_PEOVERLAP(
-    //        ann_vcf_ch, ref  
-    //    )
-    //}
-
-    //FILTER_PEOVERLAP(
-    //    vcf_ch, ref
-    //)
-    //versions = versions.mix(FILTER_PEOVERLAP.out.versions)
-
-    // createErrorPlots.py! works only if there is a bias file produced 
-    //ERROR_PLOTS(
-    //    FILTER_PEOVERLAP.out.somatic_snvs_for_bias 
-    //)
-    //versions = versions.mix(ERROR_PLOTS.out.versions)
-
-    // plotBaseScoreDistribution.R That will work only if it is true
-    //PLOT_BASESCORE_BIAS(
-    //    ERROR_PLOTS.out.error_matrix
-    //)
 
 
 emit:

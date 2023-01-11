@@ -4,10 +4,10 @@
 
 params.options = [:]
 
-include { BCFTOOLS_MPILEUP   } from '../../modules/nf-core/modules/bcftools/mpileup/main'  addParams( options: params.options )
-include { FILTER_STRAND_BIAS } from '../../modules/local/filter_strand_bias.nf'            addParams( options: params.options )
-include { MPILEUP_COMPARE    } from '../../modules/local/mpileup_compare.nf'               addParams( options: params.options )
-include { FILE_CONCATENATOR  } from '../../modules/local/file_concatenator.nf'             addParams( options: params.options )
+include { BCFTOOLS_MPILEUP      } from '../../modules/nf-core/modules/bcftools/mpileup/main'  addParams( options: params.options )
+include { SEQ_CONTEXT_ANNOTATOR } from '../../modules/local/seq_context_annotator.nf'         addParams( options: params.options )
+include { MPILEUP_COMPARE       } from '../../modules/local/mpileup_compare.nf'               addParams( options: params.options )
+include { FILE_CONCATENATOR     } from '../../modules/local/file_concatenator.nf'             addParams( options: params.options )
 
 
 workflow MPILEUP_SNV_CALL {
@@ -48,18 +48,18 @@ workflow MPILEUP_SNV_CALL {
         .set {ch_intervals} 
 
     //
-    // MODULE:FILTER_STRAND_BIAS 
+    // MODULE:SEQ_CONTEXT_ANNOTATOR
     //
     // RUN seqContext_annotator.pl and filterVcfForBias.py
-    FILTER_STRAND_BIAS(
+    SEQ_CONTEXT_ANNOTATOR(
         ch_vcf.join(ch_intervals, by: [0]), ref
     )
-    versions = versions.mix(FILTER_STRAND_BIAS.out.versions) 
+    versions = versions.mix(SEQ_CONTEXT_ANNOTATOR.out.versions) 
 
     // filter VCFs if there is no variant after bias filtration
-    FILTER_STRAND_BIAS.out.vcf
-                    .join(FILTER_STRAND_BIAS.out.intervals)
-                    .join(FILTER_STRAND_BIAS.out.stats)
+    SEQ_CONTEXT_ANNOTATOR.out.vcf
+                    .join(SEQ_CONTEXT_ANNOTATOR.out.intervals)
+                    .join(SEQ_CONTEXT_ANNOTATOR.out.stats)
                     .filter{meta, vcf, intervals, stats -> WorkflowCommons.getNumVariantsFromBCFToolsStats(stats) > 0 }
                     .set{ch_vcf_stats}
     ch_vcf_stats
