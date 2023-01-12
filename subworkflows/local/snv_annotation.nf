@@ -8,7 +8,7 @@ include { ANNOTATE_VCF           } from '../../modules/local/annotate_vcf.nf'   
 include { ANNOVAR                } from '../../modules/local/annovar.nf'                 addParams( options: params.options )
 include { SNV_RELIABILITY_PIPE   } from '../../modules/local/snv_reliability_pipe.nf'    addParams( options: params.options )
 include { ANNOTATION_PIPES       } from '../../modules/local/annotation_pipes.nf'        addParams( options: params.options )
-include { CONFIDENCE_ANNOTATION_1} from '../../modules/local/confidence_annotation_1.nf' addParams( options: params.options )
+include { CONFIDENCE_ANNOTATION} from '../../modules/local/confidence_annotation_1.nf' addParams( options: params.options )
 include { TABIX_BGZIPTABIX       } from '../../modules/nf-core/modules/tabix/bgziptabix/main' addParams( options: params.options )
 include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_1  } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
 include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_2  } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
@@ -76,7 +76,8 @@ workflow SNV_ANNOTATION {
     ch_vcf = ANNOTATE_VCF.out.unziped_vcf
     input_ch = ch_vcf.join(ANNOTATE_VCF.out.forannovar)
 
-    // Only if RunGeneAnnovar is true, run annovar
+    // Only if RunGeneAnnovar is true, run annovar 
+    // this is not correct!!!!!!!! should be fixed
     //
     // MODULE: ANNOVAR
     //
@@ -86,7 +87,7 @@ workflow SNV_ANNOTATION {
         )
         logs     = logs.mix(ANNOVAR.out.log)
         versions = versions.mix(ANNOVAR.out.versions)
-        cf_vcf   = ANNOVAR.out.vcf
+        ch_vcf   = ANNOVAR.out.vcf
         input_ch = ch_vcf.join(ANNOTATE_VCF.out.forannovar) 
     }
 
@@ -99,32 +100,30 @@ workflow SNV_ANNOTATION {
     )
     versions = versions.mix(SNV_RELIABILITY_PIPE.out.versions)
 
-    vcf_ch = SNV_RELIABILITY_PIPE.out.vcf 
-    input_ch = vcf_ch.join(ANNOTATE_VCF.out.median)
-    input_ch.view()
-
     //
     // MODULE: CONFIDENCE_ANNOTATION_1
     //
-    CONFIDENCE_ANNOTATION_1(input_ch)
+    CONFIDENCE_ANNOTATION(
+        SNV_RELIABILITY_PIPE.out.vcf
+    )
 
-    versions = versions.mix(CONFIDENCE_ANNOTATION_1.out.versions)
+    versions = versions.mix(CONFIDENCE_ANNOTATION.out.versions)
 
     // ASK: If this is for the pancancer workflow, then also create a DKFZ specific file.// ask this
     // mkfifo is not implemented! If true runArtifactFilter creates a bias file will be used to plot errors
     if (params.runArtifactFilter){
         FILTER_PEOVERLAP_1(
-            CONFIDENCE_ANNOTATION_1.out.vcf, ref 
+            CONFIDENCE_ANNOTATION.out.vcf, ref 
         )
         versions = versions.mix(FILTER_PEOVERLAP_1.out.versions)
 
         ERROR_PLOTS_1(
-            FILTER_PEOVERLAP_1.out.allelebasescore_vcf,'sequencing_specific', 'sequencing_specific_error_plot_before_filter', 'sequencing_error_matrix', 'Sequencing strand bias before guanine oxidation filter'
+            FILTER_PEOVERLAP_1.out.somatic_snvs_tmp,'sequencing_specific', 'sequencing_specific_error_plot_before_filter', 'sequencing_error_matrix', 'Sequencing strand bias before guanine oxidation filter'
         )
         versions = versions.mix(ERROR_PLOTS_1.out.versions)
 
         ERROR_PLOTS_2(
-            FILTER_PEOVERLAP_1.out.allelebasescore_vcf, 'sequence_specific', 'sequence_specific_error_plot_before_filter','sequence_error_matrix', 'PCR strand bias before guanine oxidation filter'
+            FILTER_PEOVERLAP_1.out.somatic_snvs_tmp, 'sequence_specific', 'sequence_specific_error_plot_before_filter','sequence_error_matrix', 'PCR strand bias before guanine oxidation filter'
         )
         versions = versions.mix(ERROR_PLOTS_2.out.versions)
 
@@ -134,7 +133,7 @@ workflow SNV_ANNOTATION {
         // Run plot_basescore_bias.r only if generateExtendedQcPlots is true, this step only generates a pdf!
         if (params.generateExtendedQcPlots){
             // create input channel with error matrixes
-            input_ch = FILTER_PEOVERLAP_1.out.allelebasescore_vcf.join(FILTER_PEOVERLAP_1.out.reference_allele_base_qualities)
+            input_ch = FILTER_PEOVERLAP_1.out.somatic_snvs_tmp.join(FILTER_PEOVERLAP_1.out.reference_allele_base_qualities)
             input_ch = input_ch.join(FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities)
 
             PLOT_BASESCORE_BIAS_1(
@@ -144,7 +143,7 @@ workflow SNV_ANNOTATION {
         }
 
         // create input channel for flag bias with error matrixes from error plots
-        input_ch = FILTER_PEOVERLAP_1.out.allelebasescore_vcf.join(ERROR_PLOTS_2.out.error_matrix)
+        input_ch = FILTER_PEOVERLAP_1.out.vcf.join(ERROR_PLOTS_2.out.error_matrix)
         input_ch = input_ch.join(ERROR_PLOTS_1.out.error_matrix)
 
         FLAG_BIAS_1(
@@ -155,12 +154,12 @@ workflow SNV_ANNOTATION {
     // IF runArticantfilter is false run only FILTER_PEOVERLAP
     else{
         FILTER_PEOVERLAP_2(
-            CONFIDENCE_ANNOTATION_1.out.vcf, ref  
+            CONFIDENCE_ANNOTATION.out.vcf, ref  
         )
         versions = versions.mix(FILTER_PEOVERLAP_2.out.versions)
 
         TABIX_BGZIPTABIX(
-            FILTER_PEOVERLAP_2.out.allelebasescore_vcf
+            FILTER_PEOVERLAP_2.out.vcf
             )
         versions = versions.mix(TABIX_BGZIPTABIX.out.versions)       
     }
