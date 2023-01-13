@@ -8,7 +8,7 @@ include { ANNOTATE_VCF           } from '../../modules/local/annotate_vcf.nf'   
 include { ANNOVAR                } from '../../modules/local/annovar.nf'                 addParams( options: params.options )
 include { SNV_RELIABILITY_PIPE   } from '../../modules/local/snv_reliability_pipe.nf'    addParams( options: params.options )
 include { ANNOTATION_PIPES       } from '../../modules/local/annotation_pipes.nf'        addParams( options: params.options )
-include { CONFIDENCE_ANNOTATION} from '../../modules/local/confidence_annotation_1.nf' addParams( options: params.options )
+include { CONFIDENCE_ANNOTATION  } from '../../modules/local/confidence_annotation.nf'   addParams( options: params.options )
 include { TABIX_BGZIPTABIX       } from '../../modules/nf-core/modules/tabix/bgziptabix/main' addParams( options: params.options )
 include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_1  } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
 include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_2  } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
@@ -113,7 +113,7 @@ workflow SNV_ANNOTATION {
     // mkfifo is not implemented! If true runArtifactFilter creates a bias file will be used to plot errors
     if (params.runArtifactFilter){
         FILTER_PEOVERLAP_1(
-            CONFIDENCE_ANNOTATION.out.vcf, ref 
+            CONFIDENCE_ANNOTATION.out.vcf, ref, 0 
         )
         versions = versions.mix(FILTER_PEOVERLAP_1.out.versions)
 
@@ -145,7 +145,7 @@ workflow SNV_ANNOTATION {
         // create input channel for flag bias with error matrixes from error plots
         input_ch = FILTER_PEOVERLAP_1.out.vcf.join(ERROR_PLOTS_2.out.error_matrix)
         input_ch = input_ch.join(ERROR_PLOTS_1.out.error_matrix)
-
+        // input_ch: meta, _peoverlap.vcf, _sequence_error_matrix.txt, _sequencing_error_matrix.txt
         FLAG_BIAS_1(
             input_ch, ref
             )
@@ -154,7 +154,7 @@ workflow SNV_ANNOTATION {
     // IF runArticantfilter is false run only FILTER_PEOVERLAP
     else{
         FILTER_PEOVERLAP_2(
-            CONFIDENCE_ANNOTATION.out.vcf, ref  
+            CONFIDENCE_ANNOTATION.out.vcf, ref, 0  
         )
         versions = versions.mix(FILTER_PEOVERLAP_2.out.versions)
 

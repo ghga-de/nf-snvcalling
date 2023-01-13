@@ -5,7 +5,7 @@ process PLOT_BASESCORE_BIAS {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v6':'kubran/odcf_snvcalling:v6' }"
+        'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
 
     input:
     tuple val(meta), path(vcf), path(reference_allele_base_qualities), path(alternative_allele_base_qualities)
