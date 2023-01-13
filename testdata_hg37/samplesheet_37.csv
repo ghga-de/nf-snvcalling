@@ -1,0 +1,3 @@
+sample,tumor,control
+withcontrol,testdata_hg37/tumor.bam,testdata_hg37/control.bam
+nocontrol,testdata_hg37/tumor.bam,

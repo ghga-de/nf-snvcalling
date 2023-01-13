@@ -8,13 +8,15 @@ process FLAG_BIAS {
     'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
     
     input:
-    tuple val(meta), path(vcf), path(sequence_error_matrix), path(sequencing_error_matrix)
+    tuple val(meta), file(vcf), file(sequence_error_matrix), file(sequencing_error_matrix)
     tuple path(fasta), path(fai)
 
     output:
-    tuple val(meta), path('*.flagbias.vcf'),    emit: vcf
-    tuple val(meta), path('*.flagbiastmp.vcf'), emit: vcftmp
-    path  "versions.yml"                   ,    emit: versions
+    tuple val(meta), path('*.flagbias.vcf'),                        emit: vcf
+    tuple val(meta), path('*.flagbiastmp.vcf'),                     emit: vcftmp
+    tuple val(meta), path('*_sequence_specific_bias_matrix.txt'),   emit: sequence_bias_matrix
+    tuple val(meta), path('*_sequencing_specific_bias_matrix.txt'), emit: sequencing_bias_matrix
+    path  "versions.yml" ,                                          emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -22,10 +24,9 @@ process FLAG_BIAS {
     script:
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
-    def controlflag = meta.iscontrol == "1" ? "true" : "false"
-    def ref_hg38   = params.ref_type == "hg38" ? "--refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz": "" 
-    def ref_spec   = params.ref_type == "hg38" ? "--gnomAD_WGS_maxMAF=${params.crit_gnomad_genomes_maxmaf} --gnomAD_WES_maxMAF=${params.crit_gnomad_exomes_maxmaf} --localControl_WGS_maxMAF=${params.crit_localcontrol_maxmaf} --localControl_WES_maxMAF=${params.crit_localcontrol_maxmaf} --1000genome_maxMAF=${params.crit_1kgenomes_maxmaf}" : ""
-
+    def controlflag = meta.iscontrol == "1" ? "" : "--nocontrol"
+    def confoptions   = params.ref_type == "hg38" ? "${params.confidenceoptions} --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz": "${params.confidenceoptions}" 
+    
     """
     filterVcfForBias.py \\
         --vcfFile=$vcf \\
@@ -42,11 +43,17 @@ process FLAG_BIAS {
         --maxNumOppositeReadsSequencingStrongBias=${params.maxNumOppositeReadsSequencingStrongBias} \\
         --maxNumOppositeReadsSequenceStrongBias=${params.maxNumOppositeReadsSequenceStrongBias} \\
         --ratioVcf=${params.rVcf} \\
-        --bias_matrixSeqFile=${filenameBiasMatrixSeqFile} \\
-        --bias_matrixSeqingFile=${filenameBiasMatrixSeqingFile}
+        --bias_matrixSeqFile=${prefix}_sequence_specific_bias_matrix.txt \\
+        --bias_matrixSeqingFile=${prefix}_sequencing_specific_bias_matrix.txt \\
         --vcfFileFlagged=${prefix}.flagged.vcf | \\
-            confidenceAnnotation_SNVs.py $controlflag -i - ${params.confidenceoptions} $ref_hg38 -a 1 \\
-                -f snv_${prefix}.flagbiastmp.vcf $ref_spec > snv_${prefix}.flagbias.vcf
+            confidenceAnnotation_SNVs.py $controlflag -i - \\
+            $confoptions -a 1 \\
+            --gnomAD_WGS_maxMAF=${params.crit_gnomad_genomes_maxmaf} \\
+            --gnomAD_WES_maxMAF=${params.crit_gnomad_exomes_maxmaf} \\
+            --localControl_WGS_maxMAF=${params.crit_localcontrol_maxmaf} \\
+            --localControl_WES_maxMAF=${params.crit_localcontrol_maxmaf} \\
+            --1000genome_maxMAF=${params.crit_1kgenomes_maxmaf} 
+            -f snv_${prefix}.flagbiastmp.vcf > snv_${prefix}.flagbias.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
