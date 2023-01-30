@@ -5,7 +5,7 @@ process FILTER_BY_CRIT {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-     'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
+    'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
 
     input:
     tuple val(meta), file(vcfgz), file(vcf_tbi)
@@ -21,10 +21,11 @@ process FILTER_BY_CRIT {
     script:
     def args          = task.ext.args ?: ''
     def prefix        = task.ext.prefix ?: "${meta.id}"
+    // recurrance is not implemented!!
     def filter_values = [ (params.filter_exac && params.crit_exac_maxmaf) ? "ExAC AF $params.crit_exac_maxmaf+": "",
                         (params.filter_evs && params.crit_evs_maxmaf) ? "EVS MAF $params.crit_evs_maxmaf+": "",
-                        (params.filter_gnomad_genomes && params.crit_gnomad_genomes_maxmaf) ? "GNOMAD_GENOMES AF $crit_gnomad_genomes_maxmaf+": "",
-                        (params.filter_gnomad_exomes && params.crit_gnomad_exomes_maxmaf) ? "GNOMAD_EXOMES AF $crit_gnomad_exomes_maxmaf+": "",
+                        (params.filter_gnomad_genomes && params.crit_gnomad_genomes_maxmaf) ? "GNOMAD_GENOMES AF $params.crit_gnomad_genomes_maxmaf+": "",
+                        (params.filter_gnomad_exomes && params.crit_gnomad_exomes_maxmaf) ? "GNOMAD_EXOMES AF $params.crit_gnomad_exomes_maxmaf+": "",
                         (params.filter_1kgenomes && params.crit_1kgenomes_maxmaf) ? "1K_GENOMES AF $params.crit_1kgenomes_maxmaf+": "",
                         params.filter_non_clinic ? "DBSNP CLN,COMMON nonexist,exist": "", 
                         (params.filter_localcontrol && params.crit_localcontrol_maxmaf) ? "LocalControlAF_WGS AF $params.crit_localcontrol_maxmaf+": "",
@@ -54,7 +55,7 @@ process FILTER_BY_CRIT {
             bgzip -c ${prefix}_postFiltered.vcf > ${prefix}_postFiltered.vcf.gz
             tabix ${prefix}_postFiltered.vcf.gz
 
-            echo $filter_values > ${prefix}_postFilter_criteria.txt
+            echo "$filter_values" > ${prefix}_postFilter_criteria.txt
 
             cat <<-END_VERSIONS > versions.yml
             "${task.process}":

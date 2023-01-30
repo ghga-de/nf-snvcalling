@@ -130,6 +130,7 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 include { INPUT_CHECK         } from '../subworkflows/local/input_check'
 include { MPILEUP_SNV_CALL    } from '../subworkflows/local/mpileup_snv_call'
 include { SNV_ANNOTATION      } from '../subworkflows/local/snv_annotation'
+include { FILTER_SNVS         } from '../subworkflows/local/filter_snvs'
 
 
 /*
@@ -209,6 +210,15 @@ workflow SNVCALLING {
         enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets, 
         cgi_mountains, phastconselem, encode_tfbs, mirnas_sncrnas, chr_prefix
         )
+
+        //
+        // SUBWORKFLOW: FILTER_SNVS: Filters SNVs
+        //
+        if (params.runSNVVCFFilter){
+            FILTER_SNVS(
+            SNV_ANNOTATION.out.vcf_ch, ref    
+            )
+        }
     }
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
