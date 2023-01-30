@@ -26,6 +26,7 @@ process ANNOTATION_PIPES {
 
     output:
     tuple val(meta), path('*.deepanno.vcf.gz'), path('*.deepanno.vcf.gz.tbi') , emit: vcf
+    path ('*.deepanno.vcf') 
     path  "versions.yml"                                                      , emit: versions
 
     when:
