@@ -1,4 +1,4 @@
-process PLOT_BASESCORE_BIAS {
+process PLOT_BASESCORE_DISTRIBUTION {
     tag "$meta.id"
     label 'process_high'
 
@@ -22,13 +22,12 @@ process PLOT_BASESCORE_BIAS {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    tripletBased_BQRatio_plotter.R \\
+    plotBaseScoreDistribution.R \\
         -v $vcf \\
         -r $reference_allele_base_qualities \\
         -a $alternative_allele_base_qualities \\
         -t ${params.basequal} \\
         -o ${prefix}_${pdfname}.pdf \\
-        -p Differences \\
         -d "${prefix}${title}"
 
     cat <<-END_VERSIONS > versions.yml
