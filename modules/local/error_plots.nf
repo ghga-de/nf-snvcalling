@@ -15,7 +15,7 @@ process ERROR_PLOTS {
 
     output:
     tuple val(meta), path("*txt"), emit: error_matrix
-    path  "*.pdf"
+    path  "*.pdf"                , emit: plot
     path  "versions.yml"         , emit: versions
 
     when:

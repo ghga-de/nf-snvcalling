@@ -7,12 +7,12 @@ process PER_CHROM_PLOT {
     'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
     
     input:
-    tuple val(meta), file(vcf)
-    val(exy)
+    tuple val(meta), file(distance)
+    each file(chr_file)
 
     output:
-    tuple val(meta), path('*.txt.tmp')   , emit: distance_tmp        
-    path  "versions.yml"                     , emit: versions
+    tuple val(meta), path('*.pdf')   , emit: plot        
+    path  "versions.yml"             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -20,13 +20,14 @@ process PER_CHROM_PLOT {
     script:
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
+    def rerun_suffix = params.rerunfiltering ? "1": ""     
     
     """
-    mutationDistance.py \\
-        --inf=$vcf \\
-        --outf=${prefix}_somatic_mutation_dist_conf_${params.min_confidence_score}_to_10.txt.tmp \\
-        --alleleFreq=$params.allele_freq \\
-        $exy
+    snvsPerChromPlot.r \\
+        -i $distance \\
+        -l $chr_file \\
+        -s ${prefix} \\
+        -o ${prefix}_perChromFreq_conf_${params.min_confidence_score}_to_10${rerun_suffix}.pdf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

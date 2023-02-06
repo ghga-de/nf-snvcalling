@@ -120,10 +120,14 @@ workflow SNV_ANNOTATION {
         )
         versions = versions.mix(FILTER_PEOVERLAP_1.out.versions)
 
+        altbasequal = FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities
+        refbasequal = FILTER_PEOVERLAP_1.out.reference_allele_base_qualities 
+        altreadpos  = FILTER_PEOVERLAP_1.out.alternative_allele_read_positions 
+        refreadpos  = FILTER_PEOVERLAP_1.out.reference_allele_read_positions
+
         ////////////////////////////////////////
         //// First round of plot generation ////
         ////////////////////////////////////////
-
         //
         // MODULE: ERROR_PLOTS
         //
@@ -223,7 +227,11 @@ workflow SNV_ANNOTATION {
         )
         versions = versions.mix(FILTER_PEOVERLAP_2.out.versions)
 
-        out_vcf=FILTER_PEOVERLAP_2.out.vcf      
+        out_vcf=FILTER_PEOVERLAP_2.out.vcf
+        altbasequal = FILTER_PEOVERLAP_2.out.alternative_allele_base_qualities
+        refbasequal = FILTER_PEOVERLAP_2.out.reference_allele_base_qualities 
+        altreadpos  = FILTER_PEOVERLAP_2.out.alternative_allele_read_positions 
+        refreadpos  = FILTER_PEOVERLAP_2.out.reference_allele_read_positions     
     }
     //
     // MODULE: TABIX_BGZIPTABIX
@@ -250,6 +258,10 @@ workflow SNV_ANNOTATION {
 
 emit:
 vcf_ch
+altbasequal
+refbasequal
+altreadpos 
+refreadpos
 logs
 versions
 }

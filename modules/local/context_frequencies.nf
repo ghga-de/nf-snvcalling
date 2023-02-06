@@ -10,8 +10,8 @@ process CONTEXT_FREQUENCIES {
     tuple val(meta), file(vcf)
 
     output:
-    tuple val(meta), path('*.txt.tmp')        , emit: seq_contex        
-    path  "versions.yml"                      , emit: versions
+    tuple val(meta), path('*.txt')        , emit: seq_contex        
+    path  "versions.yml"                  , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -23,7 +23,7 @@ process CONTEXT_FREQUENCIES {
     """
     SNV_context_frequencies.pl \\
         $vcf \\
-        $params.min_confidence_score > ${prefix}_snvs_with_context_conf_${params.min_confidence_score}_to_10.txt.tmp
+        $params.min_confidence_score > ${prefix}_snvs_with_context_conf_${params.min_confidence_score}_to_10.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
