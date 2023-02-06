@@ -214,9 +214,16 @@ workflow SNVCALLING {
         //
         // SUBWORKFLOW: FILTER_SNVS: Filters SNVs
         //
+        // input_ch= meta, annotated vcf, index, altbasequal, refbasequal, altredpos, refredpos
+        vcf_ch   = SNV_ANNOTATION.out.vcf_ch
+        input_ch = vcf_ch.join(SNV_ANNOTATION.out.altbasequal)
+        input_ch = input_ch.join(SNV_ANNOTATION.out.refbasequal)
+        input_ch = input_ch.join(SNV_ANNOTATION.out.altreadpos)
+        input_ch = input_ch.join(SNV_ANNOTATION.out.refreadpos)
+
         if (params.runSNVVCFFilter){
             FILTER_SNVS(
-            SNV_ANNOTATION.out.vcf_ch, ref    
+            input_ch, ref, chr_prefix, chrlength    
             )
         }
     }

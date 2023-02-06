@@ -10,10 +10,10 @@ process SNV_EXTRACTOR {
     tuple val(meta), file(vcf), file(index)
 
     output:
-    tuple val(meta), path('snv_*_somatic_functional_snvs_conf_*_to_10.vcf')        , emit: somatic_functional
-    tuple val(meta), path('snv_*_somatic_snvs_conf_*_to_10.vcf')                   , emit: somatic_snv
-    tuple val(meta), path('snv_*_somatic_functional_ncRNA_snvs_conf_*_to_10.vcf')               
-    tuple val(meta), path('snv_*_germline_functional_snvs_conf_*_to_10.vcf')         
+    tuple val(meta), path('*_somatic_functional_snvs_conf_*_to_10.vcf')        , emit: somatic_functional
+    tuple val(meta), path('*_somatic_snvs_conf_*_to_10.vcf')                   , emit: somatic_snv
+    tuple val(meta), path('*_somatic_functional_ncRNA_snvs_conf_*_to_10.vcf')               
+    tuple val(meta), path('*_germline_functional_snvs_conf_*_to_10.vcf')         
     path  "versions.yml"                                                            , emit: versions
 
     when:
@@ -22,13 +22,15 @@ process SNV_EXTRACTOR {
     script:
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
+    def suffix     = params.rerunfiltering ? "--suffix=1": ""
     
     """
     snv_extractor_v1.pl \\
         --infile=$vcf \\
         --minconf=$params.min_confidence_score \\
-        --pid=snv_$meta.id \\
-        $args 
+        --pid=$meta.id \\
+        $args \\
+        $suffix
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

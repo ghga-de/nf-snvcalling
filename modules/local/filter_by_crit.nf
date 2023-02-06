@@ -8,7 +8,7 @@ process FILTER_BY_CRIT {
     'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
 
     input:
-    tuple val(meta), file(vcfgz), file(vcf_tbi)
+    tuple val(meta), file(vcfgz), file(vcf_tbi), file(a), file(b), file(c), file(d)
 
     output:
     tuple val(meta), path('*Filtered.vcf.gz'),  path('*Filtered.vcf.gz.tbi')   , emit: vcf
