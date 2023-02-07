@@ -1,4 +1,4 @@
-process INTERMUTATION_DISTANCE {
+process THA_DETECTOR {
     tag "$meta.id"
     label 'process_medium'
 
@@ -7,13 +7,11 @@ process INTERMUTATION_DISTANCE {
     'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
     
     input:
-    tuple val(meta), file(vcf)
-    each file(chr_file)
-    val(chr_prefix)
+    tuple val(meta), file(somatic_vcf)
 
     output:
-    tuple val(meta), path('*.pdf')   , emit: plot        
-    path  "versions.yml"             , emit: versions
+    tuple val(meta), path('*.txt')        , emit: tha_file        
+    path  "versions.yml"                  , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -21,17 +19,11 @@ process INTERMUTATION_DISTANCE {
     script:
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
-    def rerun_suffix = params.rerunfiltering ? "1": ""     
     
     """
-    intermutationDistance_Coord_color.r \\
-        -i $vcf \\
-        -s $prefix \\
-        -o ${prefix}_intermutation_distance_conf_${params.min_confidence_score}_to_10${rerun_suffix}.pdf \\
-        -a "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y" \\
-        -l $chr_file \\
-        -p "${chr_prefix}" \\
-        -u ""
+    THA_SCORE=`determine_THA_score.R  -i ${somatic_vcf}`
+    [[ \$(echo "${THA_SCORE} > ${params.tha_score_threashold}" | bc -l) ]] && echo -e "THA score\\t\${THA_SCORE}\\n" >${prefix}_is_THA_affected.txt
+
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

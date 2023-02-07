@@ -32,6 +32,7 @@ process MPILEUP_COMPARE {
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
+            perl: v5.28.1
             samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
         END_VERSIONS
 

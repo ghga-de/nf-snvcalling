@@ -35,9 +35,7 @@ process ERROR_PLOTS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        perl: v5.28.1
         python: \$(python2.7 --version | sed 's/Python //g')
-        bedtools: \$(echo \$(bedtools --version 2>&1) | sed 's/^.*bedtools //; s/Using.*\$//') 
     END_VERSIONS
     """
 }

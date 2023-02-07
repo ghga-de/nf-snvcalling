@@ -1,6 +1,6 @@
 process PLOT_BASESCORE_DISTRIBUTION {
     tag "$meta.id"
-    label 'process_high'
+    label 'process_medium'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -28,13 +28,11 @@ process PLOT_BASESCORE_DISTRIBUTION {
         -a $alternative_allele_base_qualities \\
         -t ${params.basequal} \\
         -o ${prefix}_${pdfname}.pdf \\
-        -d "${prefix}${title}"
+        -d "${prefix} ${title}"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        perl: v5.28.1
-        python: \$(python2.7 --version | sed 's/Python //g')
-        bedtools: \$(echo \$(bedtools --version 2>&1) | sed 's/^.*bedtools //; s/Using.*\$//') 
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
     END_VERSIONS
     """
 }
