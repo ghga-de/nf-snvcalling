@@ -17,7 +17,7 @@ process TRIPLET_PLOTTER {
     output:
     path "*withMAF.vcf"             , emit: withmaf_vcf
     path "*filteredAltMedian*.vcf"  , emit: filtered_vcf
-    path "*.pdf"                    , emit: pdf
+    path "*.pdf"                    , emit: plot
     path "versions.yml"             , emit: versions
 
     when:
@@ -41,7 +41,7 @@ process TRIPLET_PLOTTER {
         -o ${prefix}_tripletSpecific_base_score_distribution${rerun_suffix} \\
         -r $force \\
         -m $median_filter_threshold \\
-        -w "${prefix}: ${title}" \\
+        -w "${prefix} ${title}" \\
         -sp $skipplots  \\
         -rb $refbasequal \\
         -ab $altbasequal \\

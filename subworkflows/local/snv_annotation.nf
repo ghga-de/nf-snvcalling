@@ -4,24 +4,25 @@
 
 params.options = [:]
 
-include { ANNOTATE_VCF           } from '../../modules/local/annotate_vcf.nf'            addParams( options: params.options )
-include { ANNOVAR                } from '../../modules/local/annovar.nf'                 addParams( options: params.options )
-include { SNV_RELIABILITY_PIPE   } from '../../modules/local/snv_reliability_pipe.nf'    addParams( options: params.options )
-include { ANNOTATION_PIPES       } from '../../modules/local/annotation_pipes.nf'        addParams( options: params.options )
-include { CONFIDENCE_ANNOTATION  } from '../../modules/local/confidence_annotation.nf'   addParams( options: params.options )
-include { TABIX_BGZIPTABIX       } from '../../modules/nf-core/modules/tabix/bgziptabix/main' addParams( options: params.options )
-include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_1  } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
-include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_2  } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
-include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_3  } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
-include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_4  } from '../../modules/local/filter_peoverlap.nf'        addParams( options: params.options )
-include { ERROR_PLOTS as ERROR_PLOTS_1            } from '../../modules/local/error_plots.nf'             addParams( options: params.options )
-include { ERROR_PLOTS as ERROR_PLOTS_2            } from '../../modules/local/error_plots.nf'             addParams( options: params.options )
-include { ERROR_PLOTS as ERROR_PLOTS_3            } from '../../modules/local/error_plots.nf'             addParams( options: params.options )
-include { ERROR_PLOTS as ERROR_PLOTS_4            } from '../../modules/local/error_plots.nf'             addParams( options: params.options )
-include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_1 } from '../../modules/local/plot_basescore_bias.nf'    addParams( options: params.options )
-include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_2 } from '../../modules/local/plot_basescore_bias.nf'    addParams( options: params.options )
-include { FLAG_BIAS as FLAG_BIAS_1 }        from '../../modules/local/flag_bias.nf'    addParams( options: params.options )
-include { FLAG_BIAS as FLAG_BIAS_2 }        from '../../modules/local/flag_bias.nf'    addParams( options: params.options )
+include { ANNOTATE_VCF             } from '../../modules/local/annotate_vcf.nf'          addParams( options: params.options )
+include { ANNOVAR                  } from '../../modules/local/annovar.nf'               addParams( options: params.options )
+include { SNV_RELIABILITY_PIPE     } from '../../modules/local/snv_reliability_pipe.nf'  addParams( options: params.options )
+include { ANNOTATION_PIPES         } from '../../modules/local/annotation_pipes.nf'      addParams( options: params.options )
+include { CONFIDENCE_ANNOTATION    } from '../../modules/local/confidence_annotation.nf' addParams( options: params.options )
+include { FLAG_BIAS as FLAG_BIAS_1 } from '../../modules/local/flag_bias.nf'             addParams( options: params.options )
+include { FLAG_BIAS as FLAG_BIAS_2 } from '../../modules/local/flag_bias.nf'             addParams( options: params.options )
+include { TABIX_BGZIPTABIX         } from '../../modules/nf-core/modules/tabix/bgziptabix/main'            addParams( options: params.options )
+include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_1  } from '../../modules/local/filter_peoverlap.nf'         addParams( options: params.options )
+include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_2  } from '../../modules/local/filter_peoverlap.nf'         addParams( options: params.options )
+include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_3  } from '../../modules/local/filter_peoverlap.nf'         addParams( options: params.options )
+include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_4  } from '../../modules/local/filter_peoverlap.nf'         addParams( options: params.options )
+include { ERROR_PLOTS as ERROR_PLOTS_1            } from '../../modules/local/error_plots.nf'              addParams( options: params.options )
+include { ERROR_PLOTS as ERROR_PLOTS_2            } from '../../modules/local/error_plots.nf'              addParams( options: params.options )
+include { ERROR_PLOTS as ERROR_PLOTS_3            } from '../../modules/local/error_plots.nf'              addParams( options: params.options )
+include { ERROR_PLOTS as ERROR_PLOTS_4            } from '../../modules/local/error_plots.nf'              addParams( options: params.options )
+include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_1 } from '../../modules/local/plot_basescore_bias.nf' addParams( options: params.options )
+include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_2 } from '../../modules/local/plot_basescore_bias.nf' addParams( options: params.options )
+
 
 workflow SNV_ANNOTATION {
     take:
@@ -76,27 +77,23 @@ workflow SNV_ANNOTATION {
     ch_vcf = ANNOTATE_VCF.out.unziped_vcf
     input_ch = ch_vcf.join(ANNOTATE_VCF.out.forannovar)
 
-    // Only if RunGeneAnnovar is true, run annovar 
-    // this is not correct!!!!!!!! should be fixed
     //
     // MODULE: ANNOVAR
-    //
-    
+    //  
     ANNOVAR(
         input_ch, annodb, chr_prefix
     )
     logs     = logs.mix(ANNOVAR.out.log)
     versions = versions.mix(ANNOVAR.out.versions)
     ch_vcf   = ANNOVAR.out.vcf
-    input_ch = ch_vcf.join(ANNOTATE_VCF.out.forannovar) 
+    vcf_ch = ch_vcf.join(ANNOTATE_VCF.out.forannovar) 
     
-
     //
     // MODULE: SNV_RELIABILITY_PIPE
     //
     // RUN annotate_vcf.pl : BED files are used to annotate variants
     SNV_RELIABILITY_PIPE(
-        input_ch, repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats
+        vcf_ch, repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats
     )
     versions = versions.mix(SNV_RELIABILITY_PIPE.out.versions)
 
@@ -106,11 +103,10 @@ workflow SNV_ANNOTATION {
     CONFIDENCE_ANNOTATION(
         SNV_RELIABILITY_PIPE.out.vcf
     )
-
     versions = versions.mix(CONFIDENCE_ANNOTATION.out.versions)
 
     // ASK: If this is for the pancancer workflow, then also create a DKFZ specific file.// ask this
-    // mkfifo is not implemented! If true runArtifactFilter creates a bias file will be used to plot errors
+    // If true runArtifactFilter creates a bias file will be used to plot errors
     if (params.runArtifactFilter){
         //
         // MODULE: FILTER_PEOVERLAP
@@ -149,11 +145,11 @@ workflow SNV_ANNOTATION {
         // Run plot_basescore_bias.r only if generateExtendedQcPlots is true, this step only generates a pdf!
         if (params.generateExtendedQcPlots){
             // create input channel with error matrixes: Somatic SVC Temp,reference_allele_base_qualities, alternative_allele_base_qualities 
-            input_ch = FILTER_PEOVERLAP_1.out.somatic_snvs_tmp.join(FILTER_PEOVERLAP_1.out.reference_allele_base_qualities)
-            input_ch = input_ch.join(FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities)
+            somatic_ch = FILTER_PEOVERLAP_1.out.somatic_snvs_tmp.join(FILTER_PEOVERLAP_1.out.reference_allele_base_qualities)
+            somatic_ch = somatic_ch.join(FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities)
 
             PLOT_BASESCORE_BIAS_1(
-                input_ch, 'base_score_bias_before_filter','Base Quality Bias Plot for PID before guanine oxidation filter'
+                somatic_ch, 'base_score_bias_before_filter','Base Quality Bias Plot for PID before guanine oxidation filter'
                 )
             versions = versions.mix(PLOT_BASESCORE_BIAS_1.out.versions)
         }
@@ -161,13 +157,12 @@ workflow SNV_ANNOTATION {
         //
         // MODULE: FLAG_BIAS
         //
-
         // create input channel for flag bias with error matrixes from error plots
-        input_ch = FILTER_PEOVERLAP_1.out.vcf.join(ERROR_PLOTS_2.out.error_matrix)
-        input_ch = input_ch.join(ERROR_PLOTS_1.out.error_matrix)
-        // input_ch: meta, _peoverlap.vcf, _sequence_error_matrix.txt, _sequencing_error_matrix.txt
+        error_ch = FILTER_PEOVERLAP_1.out.vcf.join(ERROR_PLOTS_2.out.error_matrix)
+        error_ch = error_ch.join(ERROR_PLOTS_1.out.error_matrix)
+        // error_ch: meta, _peoverlap.vcf, _sequence_error_matrix.txt, _sequencing_error_matrix.txt
         FLAG_BIAS_1(
-            input_ch, ref, 1, "first"
+            error_ch, ref, 1, "first"
             )
 
         /////////////////////////////////////////    
@@ -194,11 +189,11 @@ workflow SNV_ANNOTATION {
         // Run plot_basescore_bias.r only if generateExtendedQcPlots is true, this step only generates a pdf!
         if (params.generateExtendedQcPlots){
             // create input channel with error matrixes: Somatic SVC Temp,reference_allele_base_qualities, alternative_allele_base_qualities 
-            input_ch = FLAG_BIAS_1.out.vcftmp.join(FILTER_PEOVERLAP_1.out.reference_allele_base_qualities)
-            input_ch = input_ch.join(FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities)
+            som2_ch = FLAG_BIAS_1.out.vcftmp.join(FILTER_PEOVERLAP_1.out.reference_allele_base_qualities)
+            som2_ch = som2_ch.join(FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities)
 
             PLOT_BASESCORE_BIAS_2(
-                input_ch, 'base_score_bias_after_filter_once','Base Quality Bias Plot for PID after first round of guanine oxidation filter'
+                som2_ch, 'base_score_bias_after_filter_once','Base Quality Bias Plot for PID after first round of guanine oxidation filter'
                 )
             versions = versions.mix(PLOT_BASESCORE_BIAS_2.out.versions)
         }
@@ -207,11 +202,11 @@ workflow SNV_ANNOTATION {
         //
 
         // create input channel for flag bias with error matrixes from error plots
-        input_ch = FLAG_BIAS_1.out.vcf.join(ERROR_PLOTS_2.out.error_matrix)
-        input_ch = input_ch.join(ERROR_PLOTS_1.out.error_matrix)
+        error2_ch = FLAG_BIAS_1.out.vcf.join(ERROR_PLOTS_2.out.error_matrix)
+        error2_ch = error2_ch.join(ERROR_PLOTS_1.out.error_matrix)
         // input_ch: meta, _peoverlap.vcf, _sequence_error_matrix.txt, _sequencing_error_matrix.txt
         FLAG_BIAS_2(
-            input_ch, ref, 2, "second"
+            error2_ch, ref, 2, "second"
             )
         
         out_vcf=FLAG_BIAS_2.out.vcf
@@ -253,7 +248,6 @@ workflow SNV_ANNOTATION {
         )
         vcf_ch  = ANNOTATION_PIPES.out.vcf 
         versions    = versions.mix(ANNOTATION_PIPES.out.versions)
-
     }
 
 emit:

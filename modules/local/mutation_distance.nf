@@ -8,7 +8,6 @@ process MUTATION_DISTANCE {
     
     input:
     tuple val(meta), file(vcf)
-    val(exy)
 
     output:
     tuple val(meta), path('*.txt')   , emit: distance      
@@ -25,8 +24,7 @@ process MUTATION_DISTANCE {
     mutationDistance.py \\
         --inf=$vcf \\
         --outf=${prefix}_somatic_mutation_dist_conf_${params.min_confidence_score}_to_10.txt \\
-        --alleleFreq=$params.allele_freq \\
-        $exy
+        --alleleFreq=$params.allele_freq 
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -27,6 +27,7 @@ process PURITY_RELOADED {
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
+        python: \$(python2.7 --version | sed 's/Python //g')
         perl: v5.28.1
     END_VERSIONS
     """
