@@ -134,10 +134,10 @@ colnames(transitions) = c("FROM", "TO")
 
 # ALT.MEDIAN.THRESHOLD
 if (ALT.MEDIAN.THRESHOLD > -1) {
-  DATA_RESULTS_FILE=paste0(MPILEUP_FOLDER,"BQ_TripletSpecific_MedianFiltered",ALT.MEDIAN.THRESHOLD,".RData")
+  DATA_RESULTS_FILE=paste0("BQ_TripletSpecific_MedianFiltered",ALT.MEDIAN.THRESHOLD,".RData")
   VCF_OUTPUT_FILE.filtered = sub(".vcf$", paste0("_filteredAltMedian",ALT.MEDIAN.THRESHOLD,".vcf"), vcfInputFile)  
 } else {
-  DATA_RESULTS_FILE=paste0(MPILEUP_FOLDER,"BQ_TripletSpecific.RData")
+  DATA_RESULTS_FILE="BQ_TripletSpecific.RData"
 }
 
 

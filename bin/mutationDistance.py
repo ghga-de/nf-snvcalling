@@ -17,6 +17,7 @@ def striplist(l):
     return([x.strip() for x in l])         
 
 
+
 # MAIN ANALYSIS PROCEDURE
 def performAnalysis(options):
     InFile = open(options.inf, "r")
