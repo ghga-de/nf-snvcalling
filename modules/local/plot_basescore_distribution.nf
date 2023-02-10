@@ -12,8 +12,8 @@ process PLOT_BASESCORE_DISTRIBUTION {
     val(title)
 
     output:
-    path "*pdf"           , emit: plot  
-    path "versions.yml"   , emit: versions
+    tuple val(meta), path("*pdf"), emit: plot  
+    path "versions.yml"          , emit: versions
 
     when:
     task.ext.when == null || task.ext.when

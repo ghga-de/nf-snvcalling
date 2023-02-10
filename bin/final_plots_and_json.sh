@@ -1,0 +1,89 @@
+set -euo pipefail
+
+usage() { echo "Usage: $0 [-p prefix] [-i filenameSomaticSnvs]  [-s filenameSomaticSnvsIndbSNP] [-t mincov] [-v minconfidencescore] [-b thatreshold] [-r rerun]" 1>&2; exit 1; }
+
+while [[ $# -gt 0 ]]
+do
+  key=$1
+  case $key in
+  		-p)
+			prefix=$2
+			shift # past argument
+	    	shift # past value
+			;;
+		-i)
+			filenameSomaticSnvs=$2
+			shift # past argument
+	    	shift # past value
+			;;
+		-s)
+			filenameSomaticSnvsIndbSNP=$2
+			shift # past argument
+	    	shift # past value
+			;;
+		-t)
+			MINCOV=$2
+			shift # past argument
+	    	shift # past value
+			;;
+		-v)
+			MIN_CONFIDENCE_SCORE=$2
+			shift # past argument
+	    	shift # past value
+			;;
+		-b)
+			THA_SCORE_THRESHOLD=$2
+			shift # past argument
+	    	shift # past value
+			;;
+		-r)
+			rerun=$2
+			shift # past argument
+	    	shift # past value
+			;;
+	esac
+done
+
+# 2. MAF plots
+# get mutant allele frequency ("MAF") for extracted somatic high confidence SNVs
+makeMAFinput.pl ${filenameSomaticSnvs} "$MINCOV" "$MIN_CONFIDENCE_SCORE" > ${prefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt
+
+[[ "$?" != 0 ]] && echo "There was a non-zero exit code in making the MAF input file" && exit 6
+
+# count the obtained SNVs to output their number in the plot: < 50 will not be reliable!
+snvnum=`grep -v "^#" ${filenameSomaticSnvs} | wc -l`
+echo "snv num is ${snvnum}"
+snvindbSNP=` awk '{FS="\t"}{if(NR==2)print $5}'	${filenameSomaticSnvsIndbSNP}`
+echo "snvindbSNP is ${snvindbSNP}"
+
+# QC value $SNV_IN_DBSNP_RATIO will be written to $filenameQCvalues
+if [ "$snvindbSNP" != "0" ]; then
+	SNV_IN_DBSNP_RATIO=`echo -e "$snvindbSNP\t$snvnum" | perl -F -ne 'print $F[0]/$F[1];'`
+	echo "SNV_IN_DBSNP_RATIO is ${SNV_IN_DBSNP_RATIO}"
+	# make MAF plot - from Natalie
+else
+	SNV_IN_DBSNP_RATIO="NA" # no output produced, don't include in "convert" later
+fi
+
+
+# infer baseQuality bias (PV4)-related THA score (QC value)
+THA_SCORE=`determine_THA_score.R -i ${filenameSomaticSnvs}`
+echo $THA_SCORE
+[[ "$?" != 0 ]] && echo "There was a non-zero exit code in THA score determination script." && exit 24
+[[ $(echo "${THA_SCORE} > ${THA_SCORE_THRESHOLD}") ]] && echo -e "THA score\t${THA_SCORE}\n" >${prefix}_is_THA_affected.txt
+
+
+# determine fraction of SNVs called as "synonymous SNV" among all exonic SNVs (QC value)
+EXONIC_CLASSIFICATION_COLUMN_INDEX=`cat ${filenameSomaticSnvs} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "EXONIC_CLASSIFICATION"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+export EXONIC_CLASSIFICATION_COLUMN_INDEX=$((${EXONIC_CLASSIFICATION_COLUMN_INDEX}-1))
+ANNOVAR_FUNCTION_COLUMN_INDEX=`cat ${filenameSomaticSnvs} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "ANNOVAR_FUNCTION"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+export ANNOVAR_FUNCTION_COLUMN_INDEX=$((${ANNOVAR_FUNCTION_COLUMN_INDEX}-1))
+SYNONYMOUS_RATIO=`grep -v '^#' ${filenameSomaticSnvs} | perl -F'\t' -ae 'BEGIN { my $total=0; my $synonymous=0; } if ($F[$ENV{"ANNOVAR_FUNCTION_COLUMN_INDEX"}] eq "exonic" ) {$total++; if ($F[$ENV{"EXONIC_CLASSIFICATION_COLUMN_INDEX"}] eq "synonymous SNV") {$synonymous++;}} END { print $synonymous/$total; }'`
+
+echo -e "{" >${prefix}_QC_values${rerun}.json
+echo -e "\t\"snvnum\": ${snvnum:-NA}," >>${prefix}_QC_values${rerun}.json
+echo -e "\t\"snvindbSNP\": ${snvindbSNP:-NA}," >>${prefix}_QC_values${rerun}.json
+echo -e "\t\"snvInDbsnpRatio\": ${SNV_IN_DBSNP_RATIO:-NA}," >>${prefix}_QC_values${rerun}.json
+echo -e "\t\"synonymousRatio\": ${SYNONYMOUS_RATIO:-NA}," >>${prefix}_QC_values${rerun}.json
+echo -e "\t\"thaScore\": ${THA_SCORE:-NA}" >>${prefix}_QC_values${rerun}.json
+echo -e "}" >>${prefix}_QC_values${rerun}.json

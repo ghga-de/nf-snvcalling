@@ -10,15 +10,15 @@ process TRIPLET_PLOTTER {
         'docker://kubran/odcf_snvcalling:v8':'kubran/odcf_snvcalling:v8' }"
 
     input:
-    tuple val(meta), path(somaticvcf), path(vcf), path(index),  path(altbasequal), path(refbasequal), path(altreadpos), path(refreadpos)
+    tuple val(meta), path(somaticvcf), path(altbasequal), path(refbasequal), path(altreadpos), path(refreadpos)
     val(plotBackgroundBaseScoreDistribution)
     val(title)
 
     output:
-    path "*withMAF.vcf"             , emit: withmaf_vcf
-    path "*filteredAltMedian*.vcf"  , emit: filtered_vcf
-    path "*.pdf"                    , emit: plot
-    path "versions.yml"             , emit: versions
+    tuple val(meta), path("*.withMAF.vcf")             , emit: withmaf_vcf
+    tuple val(meta), path("*filteredAltMedian*.vcf")  , emit: filtered_vcf
+    tuple val(meta), path("*.pdf")                    , emit: plot
+    path "versions.yml"                               , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -29,11 +29,11 @@ process TRIPLET_PLOTTER {
     def force = params.rerunfiltering ? '1': '0'
     def median_filter_threshold = params.rerunfiltering  ? "${params.median_filter_threshold}" : '-1'
     def skipplots    = params.rerunfiltering  ? '1': '0'
-    def rerun_suffix = params.rerunfiltering  ? '1': '0'
+    def rerun_suffix = params.rerunfiltering  ? '1': "''"
 
     """
     tripletbased_BQdistribution_runner.sh \\
-        -p ${prefix} \\
+        -p $prefix \\
         -i $somaticvcf \\
         -t $meta.tumor_bam \\
         -v ${params.basequal} \\
@@ -42,7 +42,7 @@ process TRIPLET_PLOTTER {
         -r $force \\
         -m $median_filter_threshold \\
         -w "${prefix} ${title}" \\
-        -sp $skipplots  \\
+        -sp $skipplots \\
         -rb $refbasequal \\
         -ab $altbasequal \\
         -ar $altreadpos \\

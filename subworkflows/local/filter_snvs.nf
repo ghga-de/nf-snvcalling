@@ -15,7 +15,8 @@ include { CONTEXT_FREQUENCIES    } from '../../modules/local/context_frequencies
 include { CONTEXT_PLOT           } from '../../modules/local/context_plot.nf'            addParams( options: params.options )
 include { PURITY_RELOADED        } from '../../modules/local/purity_reloaded.nf'         addParams( options: params.options )
 include { BEDTOOLS_SUBTRACT      } from '../../modules/local/bedtools_subtract.nf'       addParams( options: params.options )
-include { THA_DETECTOR           } from '../../modules/local/tha_detector.nf'            addParams( options: params.options )
+include { JSON_REPORT            } from '../../modules/local/json_report.nf'             addParams( options: params.options )
+include { MERGE_PLOTS            } from '../../modules/local/merge_plots.nf'             addParams( options: params.options )
 include { ERROR_PLOTS as ERROR_PLOTS_5     } from '../../modules/local/error_plots.nf'   addParams( options: params.options )
 include { ERROR_PLOTS as ERROR_PLOTS_6     } from '../../modules/local/error_plots.nf'   addParams( options: params.options )
 include { SNV_EXTRACTOR as SNV_EXTRACTOR_1 } from '../../modules/local/snv_extractor.nf' addParams( options: params.options )
@@ -27,21 +28,23 @@ include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_3 } from '../../modules/loc
 
 workflow FILTER_SNVS {
     take:
-    input_ch        // channel: [val(meta), vcf, index,  altbasequal, refbasequal, altreadpos, refreadpos ]
+    input_ch        // channel: [val(meta), vcf, index,  altbasequal, refbasequal, altreadpos, refreadpos, plots ]
     ref             // reference channel [ref.fa, ref.fa.fai]
     chr_prefix      // val channel
     chrlength       // chr file    
 
     main:
+    versions = Channel.empty()
+    plots_ch = Channel.empty()
 
-    versions=Channel.empty()
-
+    // rawvcf_ch=meta, vcf, index
+    rawvcf_ch  = input_ch.map{ it -> tuple( it[0], it[1], it[2] )}
     //
     // MODULE: FILTER_BY_CRIT
     //
     // RUN vcf_filter_bycrit.pl : filter only be apply on for no-control cases
     FILTER_BY_CRIT(
-    input_ch
+    rawvcf_ch
     )
     versions = versions.mix(FILTER_BY_CRIT.out.versions)
 
@@ -55,8 +58,9 @@ workflow FILTER_SNVS {
     somatic_vcf_ch = SNV_EXTRACTOR_1.out.somatic_snv
     versions = versions.mix(SNV_EXTRACTOR_1.out.versions)
 
-    // temp_ch=meta, somatic_vcf, vcfgz, index,  altbasequal, refbasequal, altreadpos, refreadpos
-    som_and_pos_ch =somatic_vcf_ch.join(input_ch)
+    // som_and_pos_ch=meta, somatic_vcf,  altbasequal, refbasequal, altreadpos, refreadpos
+    triplet_ch = input_ch.map{ it -> tuple( it[0], it[3], it[4], it[5], it[6] )}
+    som_and_pos_ch =somatic_vcf_ch.join(triplet_ch)
 
     // Rerun Filtering
     if (params.rerunfiltering)
@@ -93,8 +97,7 @@ workflow FILTER_SNVS {
     }
     else {
         // Rest is the usual pipeline. if rerun is false
-            if (params.runplots)
-            {
+        if (params.runplots){
             //!!!! track analysed chromosomes, if there is no Y, set ignoreY=1 and exY="--excludedChromosomes=chrY" 
             // 1. Rainfall plots
             //
@@ -126,7 +129,7 @@ workflow FILTER_SNVS {
                 somatic_vcf_ch, chrlength, chr_prefix
             )
             versions = versions.mix(INTERMUTATION_DISTANCE.out.versions)
-            plot1 = INTERMUTATION_DISTANCE.out.plot
+            plots_ch = plots_ch.mix(INTERMUTATION_DISTANCE.out.plot)
 
             //
             // MODULE: PER_CHROM_PLOT
@@ -136,7 +139,7 @@ workflow FILTER_SNVS {
                 MUTATION_DISTANCE.out.distance, chrlength
             )  
             versions = versions.mix(PER_CHROM_PLOT.out.versions)
-            plot2 = PER_CHROM_PLOT.out.plot         
+            plots_ch = plots_ch.mix(PER_CHROM_PLOT.out.plot)         
 
             // 2. MAF plots
             //get mutant allele frequency ("MAF") for extracted somatic high confidence SNVs
@@ -161,7 +164,7 @@ workflow FILTER_SNVS {
             temp2_ch
             )
             versions = versions.mix(MAF_PLOTS.out.versions)
-            plot3 = MAF_PLOTS.out.plot
+            plots_ch = plots_ch.mix(MAF_PLOTS.out.plot)
 
             //
             // MODULE: CONTEXT_FREQUENCIES
@@ -180,7 +183,7 @@ workflow FILTER_SNVS {
             CONTEXT_FREQUENCIES.out.seq_contex  
             )
             versions = versions.mix(CONTEXT_PLOT.out.versions) 
-            plot4 = CONTEXT_PLOT.out.plot
+            plots_ch = plots_ch.mix(CONTEXT_PLOT.out.plot)
 
             //
             // MODULE: ERROR_PLOTS
@@ -190,14 +193,15 @@ workflow FILTER_SNVS {
             somatic_vcf_ch,'sequencing_specific', "sequencing_specific_error_plot_conf_${params.min_confidence_score}_to_10", "_sequencing_specific_error_Matrix_conf_${params.min_confidence_score}_to_10", 'Final sequencing strand bias from vcf filter script'
             )
             versions = versions.mix(ERROR_PLOTS_5.out.versions)
-            plot5 = ERROR_PLOTS_5.out.plot
+            plots_ch = plots_ch.mix(ERROR_PLOTS_5.out.plot)
 
             // Sequence Error plot
             ERROR_PLOTS_6(
             somatic_vcf_ch, 'sequence_specific',"sequence_specific_error_plot_conf_${params.min_confidence_score}_to_10","_sequence_specific_error_Matrix_conf_${params.min_confidence_score}_to_10", 'Final PCR strand bias from vcf filter script'
             )
             versions = versions.mix(ERROR_PLOTS_6.out.versions)
-            plot6 = ERROR_PLOTS_6.out.plot
+            plots_ch = plots_ch.mix(ERROR_PLOTS_6.out.plot)
+
             if (params.generateExtendedQcPlots){
 
                 //
@@ -205,15 +209,14 @@ workflow FILTER_SNVS {
                 //
                 // run tripletBased_BQRatio_plotter.R
                 // create input channel: meta, sometic_vcf,  refbasequal, altbasequal
-                input_ch.view()
-                filt_ch  = input_ch.map{ it -> tuple( it[0], it[4], it[3] )}
+                filt_ch  = input_ch.map{it -> tuple( it[0], it[4], it[3] )}
                 temp4_ch = somatic_vcf_ch.join(filt_ch)
-                temp4_ch.view()
                 PLOT_BASESCORE_BIAS_3(
                 temp4_ch, "base_score_bias_plot_conf_${params.min_confidence_score}_to_10", "Final Base Quality Bias Plot for PID"
                 )
                 versions = versions.mix(PLOT_BASESCORE_BIAS_3.out.versions)
-                plot7 = PLOT_BASESCORE_BIAS_3.out.plot 
+                plots_ch= plots_ch.mix(PLOT_BASESCORE_BIAS_3.out.plot) 
+
                 //
                 // MODULE: PLOT_BASESCORE_DISTRIBUTION
                 //
@@ -222,34 +225,42 @@ workflow FILTER_SNVS {
                 temp4_ch, "base_score_distribution", "for somatic SNVs for PID"
                 )
                 versions = versions.mix(PLOT_BASESCORE_DISTRIBUTION.out.versions)
-                plot8 = PLOT_BASESCORE_DISTRIBUTION.out.plot
+                plots_ch = plots_ch.mix(PLOT_BASESCORE_DISTRIBUTION.out.plot)
 
                 //
                 // MODULE: TRIPLET_PLOTTER
                 //
                 // Run tripletBased_BQDistribution_plotter.R
+                // currently not running!!!!
 
-                TRIPLET_PLOTTER_2(
-                som_and_pos_ch, 0, "Base score distribution of PID"
-                )
-                versions = versions.mix(TRIPLET_PLOTTER_2.out.versions)
-                plot9 = TRIPLET_PLOTTER_2.out.plot 
+                //TRIPLET_PLOTTER_2(
+                //som_and_pos_ch, 0, "Base score distribution of PID"
+                //)
+                //versions = versions.mix(TRIPLET_PLOTTER_2.out.versions)
+                //plots_ch = plots_ch(TRIPLET_PLOTTER_2.out.plot) 
             }
 
             //
             // MODULE: MERGE_PLOTS
             // 
             // run ghostscript
+            temp_ch = input_ch.map{ it -> tuple( it[0], [it[7], it[8], it[9], it[10], it[11], it[12]] )} 
+            temp2_ch = plots_ch.groupTuple().map {it -> tuple( it[0], [it[1], it[2], it[3], it[4], it[5], it[6], it[7], it[8]] )}            
+            plots2_ch = temp_ch.join(temp2_ch)
+            plots2_ch.view()
+            //plots_ch = plots_ch.join(per_chrom_plot)
+            //plots_ch = plots_ch.join(maf_plot)
+            //plots_ch = plots_ch.join(context_plot)
+            //plots_ch = plots_ch.join(sequencing_spesific_error_plot_3)
+            //plots_ch = plots_ch.join(sequence_spesific_error_plot_3)
+            //plots_ch = plots_ch.join(base_score_distribution_plot_3)
+            //plots_ch = plots_ch.join(base_score_distribution)
+            //plots_ch.view() 
 
-            //
-            // MODULE: THA_DETECTOR
-            //
-            // Run determine_THA_score.R
-            //infer baseQuality bias (PV4)-related THA score (QC value)
-            THA_DETECTOR(
-            somatic_vcf_ch 
-            ) 
-            versions = versions.mix(THA_DETECTOR.out.versions)
+            //MERGE_PLOTS(
+            //plots_ch
+            //)
+
         }
         // 3. Run purityEST
         if (params.runpurest){
@@ -259,15 +270,22 @@ workflow FILTER_SNVS {
             // Run PurityReloaded.py
 
             PURITY_RELOADED(
-            input_ch
+            rawvcf_ch
             )
+            versions = versions.mix(PURITY_RELOADED.out.versions) 
         }
 
         //
-        // MODULE:REPORT_JSON
+        // MODULE:JSON_REPORT
         //
-        //merge plots and prepare report json file
-
+        // merge plots and prepare report json file
+        // determine fraction of SNVs called as "synonymous SNV" among all exonic SNVs (QC value)
+        // and THA detection
+        temp5_ch = somatic_vcf_ch.join(DBSNP_COUNTER.out.indbsnp)
+        JSON_REPORT(
+            temp5_ch
+        )
+        versions = versions.mix(JSON_REPORT.out.versions) 
     }
 
     emit:

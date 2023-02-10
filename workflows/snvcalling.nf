@@ -214,12 +214,15 @@ workflow SNVCALLING {
         //
         // SUBWORKFLOW: FILTER_SNVS: Filters SNVs
         //
-        // input_ch= meta, annotated vcf, index, altbasequal, refbasequal, altredpos, refredpos
+        // input_ch= meta, annotated vcf, index, altbasequal, refbasequal, altreadpos, refreadpos, 
+                    //    sequence_spesific_error_plot_1, sequencing_spesific_error_plot_1, sequence_spesific_error_plot_2
+                    //     sequencing_spesific_error_plot_2, base_score_distribution_plot_1, base_score_distribution_plot_2
         vcf_ch   = SNV_ANNOTATION.out.vcf_ch
         input_ch = vcf_ch.join(SNV_ANNOTATION.out.altbasequal)
         input_ch = input_ch.join(SNV_ANNOTATION.out.refbasequal)
         input_ch = input_ch.join(SNV_ANNOTATION.out.altreadpos)
         input_ch = input_ch.join(SNV_ANNOTATION.out.refreadpos)
+        input_ch = input_ch.join(SNV_ANNOTATION.out.plots_ch.groupTuple())
 
         if (params.runSNVVCFFilter){
             FILTER_SNVS(
