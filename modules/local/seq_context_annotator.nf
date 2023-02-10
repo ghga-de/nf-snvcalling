@@ -1,4 +1,4 @@
-process FILTER_STRAND_BIAS {
+process SEQ_CONTEXT_ANNOTATOR {
     tag "$meta.id"
     label 'process_medium'
 

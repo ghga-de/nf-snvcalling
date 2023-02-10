@@ -1,9 +1,4 @@
 #!/usr/bin/env perl
-#
-# Copyright (c) 2018 German Cancer Research Center (Deutsches Krebsforschungszentrum, DKFZ).
-#
-# Distributed under the MIT License (license terms are at https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin/LICENSE).
-#
 
 
 use strict;
@@ -15,44 +10,45 @@ my $line;
 my $colnames;
 my $current_colnames;
 
-if (!@ARGV) {
-    pod2usage({ -verbose => 1, -message => "Error: No input files specified", -exitval => 2, -output => \*STDERR });
+if (! @ARGV) {
+  pod2usage({-verbose => 1,  -message => "Error: No input files specified", -exitval => 2, -output => \*STDERR});
 }
 
 if ($ARGV[0] eq '--help') {
-    pod2usage({ -verbose => 2, -exitval => 1 });
+  pod2usage({-verbose => 2, -exitval => 1});
 }
 
 ### First file: print header lines and set colnames
 open(IN, $files[0]) || die "Could not open file $files[0] ($!)";
 
 while ($line = <IN>) {
-    print $line;
-    last if ($line !~ /^\#/);
-    $colnames = $line;
+  print $line;
+  last if ($line !~ /^\#/);
+  $colnames = $line;
 }
-die "No header found in 1st file ($files[0])" if (!defined($colnames));
+die "No header found in 1st file ($files[0])" if (! defined($colnames));
+
 
 while (<IN>) {
-    print;
+  print;
 }
 close IN;
 
 ### Additional Files: do not print header; check if colnames match
-foreach my $file (@files[1 .. $#files]) {
-    open(IN, $file) || die "Could not open file $file ($!)";
-    while ($line = <IN>) {
-        last if ($line !~ /^\#/);
-        $current_colnames = $line;
-    }
-    die "No header found in file $file" if (!defined($current_colnames));
-    die "Columns in file $file do not match\n 1st file: $colnames\n Current file: $current_colnames\n" if ($colnames ne $current_colnames);
-    print $line;
+foreach my $file (@files[1..$#files]) {
+  open(IN, $file) || die "Could not open file $file ($!)";
+  while ($line = <IN>) {
+    last if ($line !~ /^\#/);
+    $current_colnames = $line;
+  }
+  die "No header found in file $file" if (! defined($current_colnames));
+  die "Columns in file $file do not match\n 1st file: $colnames\n Current file: $current_colnames\n" if ($colnames ne $current_colnames);
+  print $line;
 
-    while (<IN>) {
-        print;
-    }
-    close IN;
+  while (<IN>) {
+    print;
+  }
+  close IN;
 }
 
 
