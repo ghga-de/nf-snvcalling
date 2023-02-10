@@ -28,7 +28,6 @@ SKIP_PLOTS=FALSE
 
 opt = getopt(matrix(c(
   'vcfInputFile', 'v', 1, "character",
-  'mpileupFolder', 'm', 1, "character",
   'alignmentFolder', 'a', 1, "character",
   'PID', 'p', 1, "character",
   'background', 'b', 2, "integer",
@@ -68,10 +67,8 @@ setIntegerValueFromParameter = function(parameterName, valueName) {
 
 checkForMissingParameter("vcfInputFile", "Please specify the file that contains the SNVs for which the base score distribution plot shall be created.", 1)
     vcfInputFile = paste0(opt$vcfInputFile)
-checkForMissingParameter("mpileupFolder", "Please specify the mpileup folder.", 1)
-    MPILEUP_FOLDER=paste0(opt$mpileupFolder,"/")
 checkForMissingParameter("alignmentFolder", "Please specify the alignment folder.", 1)
-    ALIGNMENT_FOLDER=paste0(opt$alignmentFolder,"/")
+    ALIGNMENT_FOLDER=paste0(opt$alignmentFolder,"")
 checkForMissingParameter("PID", "Please specify the PID.", 1)
     PID=opt$PID
 checkForMissingParameter("refBaseQual", "Please specify the reference allel base qualities file.", 1)    

@@ -26,9 +26,15 @@ process MPILEUP_COMPARE {
     if (meta.iscontrol == '1' && params.runCompareGermline)
     {
         """
-        samtools mpileup $args -r $intervals -l $vcf -f $fasta $meta.control_bam > ${prefix}.${intervals}.control.temp
+        samtools mpileup \\
+            $args \\
+            -r $intervals \\
+            -l $vcf \\
+            -f $fasta \\
+            $meta.control_bam > ${prefix}.${intervals}.control.temp
         
-        vcf_pileup_compare_allin1_basecount.pl $vcf ${prefix}.${intervals}.control.temp "Header" > ${prefix}.${intervals}.nppileup.vcf        
+        vcf_pileup_compare_allin1_basecount.pl $vcf \\
+            ${prefix}.${intervals}.control.temp "Header" > ${prefix}.${intervals}.nppileup.vcf        
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":

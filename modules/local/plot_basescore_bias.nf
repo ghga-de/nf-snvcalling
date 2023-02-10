@@ -12,8 +12,8 @@ process PLOT_BASESCORE_BIAS {
     val(title)
 
     output:
-    path "*.pdf"           , emit: plot  
-    path "versions.yml"    , emit: versions
+    tuple val(meta), path("*.pdf") , emit: plot  
+    path "versions.yml"            , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -28,7 +28,7 @@ process PLOT_BASESCORE_BIAS {
         -a $alternative_allele_base_qualities \\
         -t ${params.basequal} \\
         -o ${prefix}_${pdfname}.pdf \\
-        -p Differences \\
+        -p ${params.plot_type} \\
         -d "${prefix}${title}"
 
     cat <<-END_VERSIONS > versions.yml

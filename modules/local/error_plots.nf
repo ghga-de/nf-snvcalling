@@ -14,9 +14,9 @@ process ERROR_PLOTS {
     val(plottitle)
 
     output:
-    tuple val(meta), path("*txt"), emit: error_matrix
-    path  "*.pdf"                , emit: plot
-    path  "versions.yml"         , emit: versions
+    tuple val(meta), path("*txt"),  emit: error_matrix
+    tuple val(meta), path("*.pdf"), emit: plot
+    path  "versions.yml"         ,  emit: versions
 
     when:
     task.ext.when == null || task.ext.when

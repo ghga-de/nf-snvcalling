@@ -58,8 +58,9 @@ workflow SNV_ANNOTATION {
 
     main:
 
-    versions=Channel.empty()
-    logs=Channel.empty() 
+    versions = Channel.empty()
+    logs     = Channel.empty()
+    plots_ch = Channel.empty() 
 
     //
     // MODULE: ANNOTATE_VCF
@@ -115,7 +116,6 @@ workflow SNV_ANNOTATION {
             CONFIDENCE_ANNOTATION.out.vcf, ref, 0 
         )
         versions = versions.mix(FILTER_PEOVERLAP_1.out.versions)
-
         altbasequal = FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities
         refbasequal = FILTER_PEOVERLAP_1.out.reference_allele_base_qualities 
         altreadpos  = FILTER_PEOVERLAP_1.out.alternative_allele_read_positions 
@@ -132,12 +132,13 @@ workflow SNV_ANNOTATION {
             FILTER_PEOVERLAP_1.out.somatic_snvs_tmp,'sequencing_specific', 'sequencing_specific_error_plot_before_filter', 'sequencing_error_matrix_first', 'Sequencing strand bias before guanine oxidation filter'
         )
         versions = versions.mix(ERROR_PLOTS_1.out.versions)
+        plots_ch = plots_ch.mix(ERROR_PLOTS_1.out.plot)
 
         // Sequence Error plot
         ERROR_PLOTS_2(
             FILTER_PEOVERLAP_1.out.somatic_snvs_tmp, 'sequence_specific', 'sequence_specific_error_plot_before_filter','sequence_error_matrix_first', 'PCR strand bias before guanine oxidation filter'
         )
-        versions = versions.mix(ERROR_PLOTS_2.out.versions)
+        sequence_spesific_error_plot_1 = ERROR_PLOTS_2.out.plot 
 
         //
         // MODULE: PLOT_BASESCORE_BIAS
@@ -145,13 +146,14 @@ workflow SNV_ANNOTATION {
         // Run plot_basescore_bias.r only if generateExtendedQcPlots is true, this step only generates a pdf!
         if (params.generateExtendedQcPlots){
             // create input channel with error matrixes: Somatic SVC Temp,reference_allele_base_qualities, alternative_allele_base_qualities 
-            somatic_ch = FILTER_PEOVERLAP_1.out.somatic_snvs_tmp.join(FILTER_PEOVERLAP_1.out.reference_allele_base_qualities)
-            somatic_ch = somatic_ch.join(FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities)
-
+            somatic_ch = FILTER_PEOVERLAP_1.out.somatic_snvs_tmp.join(refbasequal)
+            somatic_ch = somatic_ch.join(altbasequal)
+            
             PLOT_BASESCORE_BIAS_1(
                 somatic_ch, 'base_score_bias_before_filter','Base Quality Bias Plot for PID before guanine oxidation filter'
                 )
             versions = versions.mix(PLOT_BASESCORE_BIAS_1.out.versions)
+            plots_ch = plots_ch.mix(PLOT_BASESCORE_BIAS_1.out.plot) 
         }
 
         //
@@ -164,7 +166,7 @@ workflow SNV_ANNOTATION {
         FLAG_BIAS_1(
             error_ch, ref, 1, "first"
             )
-
+        versions = versions.mix(FLAG_BIAS_1.out.versions)
         /////////////////////////////////////////    
         //// Second round of plot generation ////
         /////////////////////////////////////////    
@@ -175,13 +177,13 @@ workflow SNV_ANNOTATION {
         ERROR_PLOTS_3(
             FLAG_BIAS_1.out.vcftmp,'sequencing_specific', 'sequencing_specific_error_plot_after_filter_once', 'sequencing_error_matrix_second', 'Sequencing strand bias after first round of guanine oxidation filter'
         )
-        versions = versions.mix(ERROR_PLOTS_3.out.versions)
+        plots_ch = plots_ch.mix(ERROR_PLOTS_3.out.plot)
 
         // Sequence Error plot
         ERROR_PLOTS_4(
             FLAG_BIAS_1.out.vcftmp, 'sequence_specific', 'sequence_specific_error_plot_after_filter_once','sequence_error_matrix_second', 'PCR strand bias after first round of guanine oxidation filter'
         )
-        versions = versions.mix(ERROR_PLOTS_4.out.versions)
+        plots_ch = plots_ch.mix(ERROR_PLOTS_4.out.plot)
 
         //
         // MODULE: PLOT_BASESCORE_BIAS
@@ -189,13 +191,13 @@ workflow SNV_ANNOTATION {
         // Run plot_basescore_bias.r only if generateExtendedQcPlots is true, this step only generates a pdf!
         if (params.generateExtendedQcPlots){
             // create input channel with error matrixes: Somatic SVC Temp,reference_allele_base_qualities, alternative_allele_base_qualities 
-            som2_ch = FLAG_BIAS_1.out.vcftmp.join(FILTER_PEOVERLAP_1.out.reference_allele_base_qualities)
-            som2_ch = som2_ch.join(FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities)
+            som2_ch = FLAG_BIAS_1.out.vcftmp.join(refbasequal)
+            som2_ch = som2_ch.join(altbasequal)
 
             PLOT_BASESCORE_BIAS_2(
                 som2_ch, 'base_score_bias_after_filter_once','Base Quality Bias Plot for PID after first round of guanine oxidation filter'
                 )
-            versions = versions.mix(PLOT_BASESCORE_BIAS_2.out.versions)
+            plots_ch = plots_ch.mix(PLOT_BASESCORE_BIAS_2.out.plot) 
         }
         //
         // MODULE: FLAG_BIAS
@@ -207,8 +209,7 @@ workflow SNV_ANNOTATION {
         // input_ch: meta, _peoverlap.vcf, _sequence_error_matrix.txt, _sequencing_error_matrix.txt
         FLAG_BIAS_2(
             error2_ch, ref, 2, "second"
-            )
-        
+            )        
         out_vcf=FLAG_BIAS_2.out.vcf
 
     }
@@ -220,9 +221,7 @@ workflow SNV_ANNOTATION {
         FILTER_PEOVERLAP_2(
             CONFIDENCE_ANNOTATION.out.vcf, ref, 0  
         )
-        versions = versions.mix(FILTER_PEOVERLAP_2.out.versions)
-
-        out_vcf=FILTER_PEOVERLAP_2.out.vcf
+        out_vcf     = FILTER_PEOVERLAP_2.out.vcf
         altbasequal = FILTER_PEOVERLAP_2.out.alternative_allele_base_qualities
         refbasequal = FILTER_PEOVERLAP_2.out.reference_allele_base_qualities 
         altreadpos  = FILTER_PEOVERLAP_2.out.alternative_allele_read_positions 
@@ -246,8 +245,8 @@ workflow SNV_ANNOTATION {
         TABIX_BGZIPTABIX.out.gz_tbi, enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets,
         cgi_mountains, phastconselem, encode_tfbs, mirnas_sncrnas
         )
-        vcf_ch  = ANNOTATION_PIPES.out.vcf 
-        versions    = versions.mix(ANNOTATION_PIPES.out.versions)
+        vcf_ch   = ANNOTATION_PIPES.out.vcf 
+        versions = versions.mix(ANNOTATION_PIPES.out.versions)
     }
 
 emit:
@@ -256,6 +255,7 @@ altbasequal
 refbasequal
 altreadpos 
 refreadpos
+plots_ch
 logs
 versions
 }
