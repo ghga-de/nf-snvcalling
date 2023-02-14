@@ -7,7 +7,7 @@ process MERGE_PLOTS {
         'docker://kubran/odcf_snvcalling:v9':'kubran/odcf_snvcalling:v9' }"
 
     input:
-    tuple val(meta), file(plot1), file(plot2), file(plot3), file(plot4), file(plot5), file(plot6), file(plot7), file(plot8), file(plot9), file(plot10), file(plot11), file(plot12), file(plot13), file(plot14) 
+    tuple val(meta), file(plot1), file(plot2)
 
     output:
     tuple val(meta), path("*_allSNVdiagnosticsPlots*.pdf") , emit: plots
@@ -26,7 +26,7 @@ process MERGE_PLOTS {
     export TMPDIR=\$TEMP
     gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite \\
         -sOutputFile=${prefix}_allSNVdiagnosticsPlots${rerun}.pdf \\
-        $plot1 $plot2 $plot3 $plot4 $plot5 $plot6 $plot7 $plot8 $plot9 $plot10 $plot11 $plot12 $plot13 $plot14
+        $plot1 $plot2
     rm -rf \$TEMP
     
     cat <<-END_VERSIONS > versions.yml
