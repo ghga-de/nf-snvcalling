@@ -43,36 +43,44 @@ if ((params.runCytoband ) &&(params.runGeneAnnovar) &&(params.annovar_path))  { 
 
 // Set up reference depending on the genome choice
 // NOTE: link will be defined by aoutomatic reference generation when the pipeline ready!
-if (params.ref_type)
+if ((params.reference) && (params.chrlength) && (params.chr_prefix))
     {
+        fa_file    = params.reference
+        chr_file   = params.chrlength
+        chr_prefix = params.chr_prefix
+
+        if (params.contig_file) {
+            contig_file = params.contig_file
+        }
+    }
+    else{
     if (params.ref_type == 'hg37')
         { 
-        def fa_file  = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/1KGRef_Phix/hs37d5_PhiX.fa"
-        ref          = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect() 
-        def chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hs37d5.fa.chrLenOnlyACGT_realChromosomes.tab'
-        chrlength    = Channel.fromPath(chr_file, checkIfExists: true)
+        fa_file  = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/1KGRef_Phix/hs37d5_PhiX.fa"
+        chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hs37d5.fa.chrLenOnlyACGT_realChromosomes.tab'      
         chr_prefix   = Channel.value("")                    
         }
     if (params.ref_type == 'hg19') 
         { 
-        def fa_file  = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/hg19_chr/hg19_1-22_X_Y_M.fa"
-        ref          = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect()
-        def chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hg19_1-22_X_Y_M.fa.chrLenOnlyACGT.tab'
-        chrlength    = Channel.fromPath(chr_file, checkIfExists: true)
+        fa_file  = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/hg19_chr/hg19_1-22_X_Y_M.fa"
+        chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hg19_1-22_X_Y_M.fa.chrLenOnlyACGT.tab'
         chr_prefix   = Channel.value("chr")
         }
     if (params.ref_type == 'hg38') 
         { 
-        def fa_file = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38/sequence/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa"
-        ref = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect()
-        def chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38/stats/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.chrLenOnlyACGT_realChromosomes.tsv'
-        chrlength    = Channel.fromPath(chr_file, checkIfExists: true)
+        fa_file = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38/sequence/GRCh38_decoy_ebv_alt_hla_phiX.fa"
+        chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hg19_1-22_X_Y_M.fa.chrLenOnlyACGT.tab'
         chr_prefix   = Channel.value("chr")
+        // HLA and ALT contigs
+        contig_file = 'assets/temp_ALT.txt'      
         }
     }
 
-// prepare interval channel
-interval_ch = chrlength.splitCsv(sep: '\t', by:1)
+// prepare  channels
+ref          = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect()
+chrlength    = Channel.fromPath(chr_file, checkIfExists: true)
+interval_ch  = chrlength.splitCsv(sep: '\t', by:1)
+if (params.ref_type == 'hg38') { contigs = Channel.fromPath(contig_file, checkIfExists: true) } else { contigs = Channel.empty() }
 
 // Annotation databases
 if (params.k_genome)             { kgenome = Channel.fromPath([params.k_genome,params.k_genome +'.tbi'], checkIfExists: true).collect() } else { kgenome = Channel.of([],[]) }
@@ -172,7 +180,7 @@ workflow SNVCALLING {
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    sample_ch = INPUT_CHECK.out.ch_sample
+    sample_ch   = INPUT_CHECK.out.ch_sample
 
     //
     // MODULE: Extract sample name from BAM
@@ -183,15 +191,15 @@ workflow SNVCALLING {
     ch_versions = ch_versions.mix(GREP_SAMPLENAME.out.versions)
 
     // Prepare an input channel of sample with sample names
-    name_ch=GREP_SAMPLENAME.out.samplenames
-    ch_sample=sample_ch.join(name_ch)
+    name_ch   = GREP_SAMPLENAME.out.samplenames
+    ch_sample = sample_ch.join(name_ch)
 
     //
     // SUBWORKFLOW: MPILEUP_SNV_CALL: Call SNVs
     //
     
     MPILEUP_SNV_CALL(
-        ch_sample, ref, interval_ch
+        ch_sample, ref, interval_ch, contigs
     )
     ch_versions = ch_versions.mix(MPILEUP_SNV_CALL.out.versions)
 
@@ -200,8 +208,8 @@ workflow SNVCALLING {
     //
 
     // Prepare an input channel of vcf with sample names 
-    vcf_ch=MPILEUP_SNV_CALL.out.vcf_ch
-    ch_vcf=vcf_ch.join(name_ch)
+    vcf_ch = MPILEUP_SNV_CALL.out.vcf_ch
+    ch_vcf = vcf_ch.join(name_ch)
 
     if (params.runSNVAnnotation){ 
         SNV_ANNOTATION(
