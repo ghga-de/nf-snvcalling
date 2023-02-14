@@ -55,8 +55,12 @@ workflow FILTER_SNVS {
     SNV_EXTRACTOR_1(
     FILTER_BY_CRIT.out.vcf  
     )
-    somatic_vcf_ch = SNV_EXTRACTOR_1.out.somatic_snv
     versions = versions.mix(SNV_EXTRACTOR_1.out.versions)
+
+    // filter out the lists if no variant exists for visualization
+    SNV_EXTRACTOR_1.out.somatic_snv
+        .filter{meta, somatic_snv -> WorkflowCommons.getNumLinesInFile(somatic_snv) > 1}
+        .set{somatic_vcf_ch}
 
     // som_and_pos_ch=meta, somatic_vcf,  altbasequal, refbasequal, altreadpos, refreadpos
     triplet_ch = input_ch.map{ it -> tuple( it[0], it[3], it[4], it[5], it[6] )}
@@ -73,7 +77,7 @@ workflow FILTER_SNVS {
         // Run tripletBased_BQDistribution_plotter.R
 
         TRIPLET_PLOTTER_1(
-            som_and_pos_ch, 1, "Base score distribution of PID \nafter Median'${params.median_filter_threshold}' filtering"
+            som_and_pos_ch, "Base score distribution of PID \nafter Median'${params.median_filter_threshold}' filtering"
         )
         versions = version.mix(TRIPLET_PLOTTER_1.out.versions)
 
@@ -234,32 +238,24 @@ workflow FILTER_SNVS {
                 // currently not running!!!!
 
                 //TRIPLET_PLOTTER_2(
-                //som_and_pos_ch, 0, "Base score distribution of PID"
+                //som_and_pos_ch, "Base score distribution of PID"
                 //)
                 //versions = versions.mix(TRIPLET_PLOTTER_2.out.versions)
-                //plots_ch = plots_ch(TRIPLET_PLOTTER_2.out.plot) 
+                //plots_ch = plots_ch.mix(TRIPLET_PLOTTER_2.out.plot) 
             }
 
             //
             // MODULE: MERGE_PLOTS
             // 
             // run ghostscript
-            temp_ch = input_ch.map{ it -> tuple( it[0], [it[7], it[8], it[9], it[10], it[11], it[12]] )} 
-            temp2_ch = plots_ch.groupTuple().map {it -> tuple( it[0], [it[1], it[2], it[3], it[4], it[5], it[6], it[7], it[8]] )}            
+            // !!!! Check if all plots were generated !!!
+            temp_ch = input_ch.map{ it -> tuple( it[0], it[7])} 
+            temp2_ch = plots_ch.groupTuple().map {it -> tuple( it[0], it[1] )}            
             plots2_ch = temp_ch.join(temp2_ch)
             plots2_ch.view()
-            //plots_ch = plots_ch.join(per_chrom_plot)
-            //plots_ch = plots_ch.join(maf_plot)
-            //plots_ch = plots_ch.join(context_plot)
-            //plots_ch = plots_ch.join(sequencing_spesific_error_plot_3)
-            //plots_ch = plots_ch.join(sequence_spesific_error_plot_3)
-            //plots_ch = plots_ch.join(base_score_distribution_plot_3)
-            //plots_ch = plots_ch.join(base_score_distribution)
-            //plots_ch.view() 
-
-            //MERGE_PLOTS(
-            //plots_ch
-            //)
+            MERGE_PLOTS(
+            plots2_ch
+            )
 
         }
         // 3. Run purityEST
