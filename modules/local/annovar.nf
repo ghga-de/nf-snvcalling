@@ -1,8 +1,6 @@
 //# Gene annotation with annovar
 // PROCESS ANNOVAR table_annovar
-// working database is annovar_Feb2016
-
-//NOTES: RunGeneAnnovar and runCytoband are no implemented!
+//NOTES: RunGeneAnnovar and runCytoband are not implemented!
 
 process ANNOVAR {
     tag "$meta.id"
@@ -10,7 +8,7 @@ process ANNOVAR {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
+    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
     
     input:
     tuple val(meta)         , file(ch_vcf),  file(annovar_bed)
@@ -68,9 +66,9 @@ process ANNOVAR {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        perl: v5.28.1
-        gzip: \$(echo \$(gzip --version 2>&1) | sed 's/^.*gzip //; s/ .*\$//')
-        tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
+        annovar_table: ${annovar_table}
+        annovar_bed: ${annovar_bed}
+        annovar_buildver: ${params.buildver} 
     END_VERSIONS
     """
 }

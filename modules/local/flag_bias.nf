@@ -4,20 +4,18 @@ process FLAG_BIAS {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
+    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
     
     input:
     tuple val(meta), file(vcf), file(sequence_error_matrix), file(sequencing_error_matrix)
     tuple path(fasta), path(fai)
     val(round)
-    val(bias_round)
 
     output:
-    tuple val(meta), path("*.${bias_round}.flagged.vcf"),       emit: flagged
-    tuple val(meta), path("*.${bias_round}.flagbias.vcf"),      emit: vcf
-    tuple val(meta), path("*.${bias_round}.flagbiastmp.vcf"),   emit: vcftmp
-    tuple val(meta), path('*.txt'),                             emit: bias_matrixs
-    path  "versions.yml" ,                                      emit: versions
+    tuple val(meta), path("*.${round}.flagbias.vcf"),      emit: vcf
+    tuple val(meta), path("*.${round}.somaticsnv.vcf"),    emit: somatic_snvs
+    tuple val(meta), path('*.txt'),                        emit: bias_matrixs
+    path  "versions.yml" ,                                 emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -27,7 +25,7 @@ process FLAG_BIAS {
     def prefix     = task.ext.prefix ?: "${meta.id}"
     def controlflag = meta.iscontrol == "1" ? "" : "--nocontrol"
     def confoptions   = params.ref_type == "hg38" ? "${params.confidenceoptions} --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz": "${params.confidenceoptions}" 
-    
+
     """
     filterVcfForBias.py \\
         --vcfFile=$vcf \\
@@ -44,11 +42,11 @@ process FLAG_BIAS {
         --maxNumOppositeReadsSequencingStrongBias=${params.maxNumOppositeReadsSequencingStrongBias} \\
         --maxNumOppositeReadsSequenceStrongBias=${params.maxNumOppositeReadsSequenceStrongBias} \\
         --ratioVcf=${params.rVcf} \\
-        --bias_matrixSeqFile=${prefix}_sequence_specific_bias_matrix_${bias_round}.txt \\
-        --bias_matrixSeqingFile=${prefix}_sequencing_specific_bias_matrix_${bias_round}.txt \\
-        --vcfFileFlagged=${prefix}.${bias_round}.flagged.vcf
+        --bias_matrixSeqFile=${prefix}_sequence_specific_bias_matrix_${round}.txt \\
+        --bias_matrixSeqingFile=${prefix}_sequencing_specific_bias_matrix_${round}.txt \\
+        --vcfFileFlagged=${prefix}.${round}.flagged.vcf
 
-        cat < ${prefix}.${bias_round}.flagged.vcf | confidenceAnnotation_SNVs.py \\
+        cat < ${prefix}.${round}.flagged.vcf | confidenceAnnotation_SNVs.py \\
             $controlflag \\
             -i - \\
             $confoptions \\
@@ -58,7 +56,7 @@ process FLAG_BIAS {
             --localControl_WGS_maxMAF=${params.crit_localcontrol_maxmaf} \\
             --localControl_WES_maxMAF=${params.crit_localcontrol_maxmaf} \\
             --1000genome_maxMAF=${params.crit_1kgenomes_maxmaf} \\
-            -f snv_${prefix}.${bias_round}.flagbiastmp.vcf > snv_${prefix}.${bias_round}.flagbias.vcf
+            -f ${prefix}.${round}.somaticsnv.vcf > ${prefix}.${round}.flagbias.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

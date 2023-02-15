@@ -4,7 +4,7 @@ process FILE_CONCATENATOR {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
+        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
 
     input:
     tuple val(meta), path(vcfs)
@@ -27,7 +27,7 @@ process FILE_CONCATENATOR {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+        perl: v5.28.1
     END_VERSIONS
 
     """ 

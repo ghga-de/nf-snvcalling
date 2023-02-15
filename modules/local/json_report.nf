@@ -4,7 +4,7 @@ process JSON_REPORT {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v8':'kubran/odcf_snvcalling:v8' }"
+    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
     
     input:
     tuple val(meta), file(somatic_vcf), file(insnp_file)
@@ -29,12 +29,13 @@ process JSON_REPORT {
         -s $insnp_file \\
         -t $params.min_cov \\
         -v $params.min_confidence_score \\
-        -b $params.tha_score_threashold \\
+        -b $params.tha_score_threshold \\
         -r $rerun
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         perl: v5.28.1
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
     END_VERSIONS
     """
 }

@@ -4,7 +4,7 @@ process MERGE_PLOTS {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v9':'kubran/odcf_snvcalling:v9' }"
+        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v910' }"
 
     input:
     tuple val(meta), file(plot1), file(plot2)

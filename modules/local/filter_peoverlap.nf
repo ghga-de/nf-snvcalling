@@ -10,17 +10,18 @@ process FILTER_PEOVERLAP {
     'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
     
     input:
-    tuple val(meta), file(vcf)
+    tuple val(meta),   file(vcf)
     tuple path(fasta), path(fai)
     val(round)
 
     output:
     tuple val(meta), path('*_peoverlap.vcf')                         , emit: vcf
-    tuple val(meta), path('*_somatic_snvs_for_bias.vcf')             , emit: somatic_snvs_tmp
+    tuple val(meta), path('*_somatic_snvs_for_bias.vcf')             , emit: somatic_snvs
     tuple val(meta), path('*_alternative_allele_base_qualities.txt') , emit: alternative_allele_base_qualities
     tuple val(meta), path('*_reference_allele_base_qualities.txt')   , emit: reference_allele_base_qualities 
     tuple val(meta), path('*_alternative_allele_read_positions.txt') , emit: alternative_allele_read_positions 
-    tuple val(meta), path('*_reference_allele_read_positions.txt')   , emit: reference_allele_read_positions 
+    tuple val(meta), path('*_reference_allele_read_positions.txt')   , emit: reference_allele_read_positions
+    path "*_QC_values.tsv"                                           
     path  "versions.yml"                                             , emit: versions
 
     when:
@@ -38,7 +39,7 @@ process FILTER_PEOVERLAP {
         --alignmentFile=$meta.tumor_bam \\
         --mapq=${params.mapqual} \\
         --baseq=${params.basequal} \\
-        --qualityScore=${params.qualityScore} \\
+        --qualityScore=${params.qualityscore} \\
         --maxNumberOfMismatchesInRead=${params.mismatch_threshold} \\
         --altBaseQualFile=${prefix}_alternative_allele_base_qualities.txt \\
         --refBaseQualFile=${prefix}_reference_allele_base_qualities.txt \\
@@ -54,7 +55,10 @@ process FILTER_PEOVERLAP {
                 --localControl_WGS_maxMAF=${params.crit_localcontrol_maxmaf} \\
                 --localControl_WES_maxMAF=${params.crit_localcontrol_maxmaf} \\
                 --1000genome_maxMAF=${params.crit_1kgenomes_maxmaf} \\
-                -f snv_${prefix}_somatic_snvs_for_bias.vcf > snv_${prefix}_peoverlap.vcf
+                -f ${prefix}_somatic_snvs_for_bias.vcf > ${prefix}_peoverlap.vcf
+
+    NRSOMSNV=`grep -v "^#" ${prefix}_somatic_snvs_for_bias.vcf | wc -l`
+	echo -e "SOMATIC_SNVS_UNFILTERED\\t\${NRSOMSNV}">> ${prefix}_QC_values.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

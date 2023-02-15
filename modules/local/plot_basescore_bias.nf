@@ -29,7 +29,7 @@ process PLOT_BASESCORE_BIAS {
         -t ${params.basequal} \\
         -o ${prefix}_${pdfname}.pdf \\
         -p ${params.plot_type} \\
-        -d "${prefix}${title}"
+        -d "${prefix} ${title}"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
