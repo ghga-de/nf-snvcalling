@@ -2,9 +2,9 @@ process MPILEUP_COMPARE {
     tag "$meta.id"
     label 'process_medium'
 
-    conda (params.enable_conda ? "bioconda::bcftools=1.9" : null)
+    conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
+        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
 
     debug true
 

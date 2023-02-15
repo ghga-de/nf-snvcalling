@@ -4,7 +4,7 @@ process PURITY_RELOADED {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
+    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
     
     input:
     tuple val(meta), file(vcf), file(index)

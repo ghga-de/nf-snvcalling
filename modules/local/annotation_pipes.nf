@@ -5,7 +5,7 @@ process ANNOTATION_PIPES {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
+    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
 
     debug true
     
@@ -26,7 +26,6 @@ process ANNOTATION_PIPES {
 
     output:
     tuple val(meta), path('*.deepanno.vcf.gz'), path('*.deepanno.vcf.gz.tbi') , emit: vcf
-    path ('*.deepanno.vcf') 
     path  "versions.yml"                                                      , emit: versions
 
     when:

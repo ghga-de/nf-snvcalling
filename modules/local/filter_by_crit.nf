@@ -5,7 +5,7 @@ process FILTER_BY_CRIT {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
+    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
 
     input:
     tuple val(meta), file(vcfgz), file(vcf_tbi)
@@ -26,7 +26,7 @@ process FILTER_BY_CRIT {
                         (params.filter_evs && params.crit_evs_maxmaf) ? "EVS MAF $params.crit_evs_maxmaf+": "",
                         (params.filter_gnomad_genomes && params.crit_gnomad_genomes_maxmaf) ? "GNOMAD_GENOMES AF $params.crit_gnomad_genomes_maxmaf+": "",
                         (params.filter_gnomad_exomes && params.crit_gnomad_exomes_maxmaf) ? "GNOMAD_EXOMES AF $params.crit_gnomad_exomes_maxmaf+": "",
-                        (params.filter_1kgenomes && params.crit_1kgenomes_maxmaf) ? "1K_GENOMES AF $params.crit_1kgenomes_maxmaf+": "",
+                        (params.filter_1kgenomes && params.crit_1kgenomes_maxmaf) ? "1K_GENOMES EUR_AF $params.crit_1kgenomes_maxmaf+": "",
                         params.filter_non_clinic ? "DBSNP CLN,COMMON nonexist,exist": "", 
                         (params.filter_localcontrol && params.crit_localcontrol_maxmaf) ? "LocalControlAF_WGS AF $params.crit_localcontrol_maxmaf+": "",
                         (params.filter_localcontrol && params.crit_localcontrol_maxmaf) ? "LocalControlAF_WES AF $params.crit_localcontrol_maxmaf+": ""              
@@ -40,9 +40,7 @@ process FILTER_BY_CRIT {
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            python: \$(python --version | sed 's/Python //g')
             tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
-            gzip: \$(echo \$(gzip --version 2>&1) | sed 's/^.*gzip //; s/ .*\$//')
         END_VERSIONS
         """
     }
@@ -73,9 +71,7 @@ process FILTER_BY_CRIT {
             
             cat <<-END_VERSIONS > versions.yml
             "${task.process}":
-                python: \$(python --version | sed 's/Python //g')
                 tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
-                gzip: \$(echo \$(gzip --version 2>&1) | sed 's/^.*gzip //; s/ .*\$//')
             END_VERSIONS
             """ 
         }
