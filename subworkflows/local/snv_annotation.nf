@@ -67,55 +67,70 @@ workflow SNV_ANNOTATION {
     //
     // RUN annotate_vcf.pl: Uses various databases (all mandatory exept recurrance) to annotate variants
     ANNOTATE_VCF (
-        vcf_ch, kgenome, dbsnpsnv, localcontrolwgs,
-        localcontrolwes, gnomadgenomes, gnomadexomes, chr_prefix
+        vcf_ch, 
+        kgenome, 
+        dbsnpsnv, 
+        localcontrolwgs,
+        localcontrolwes, 
+        gnomadgenomes, 
+        gnomadexomes, 
+        chr_prefix
     )
     versions  = versions.mix(ANNOTATE_VCF.out.versions)
-
-    // RUN annovar, processAnnovarOutput.pl and newCols2vcf.pl: annovar annotates and classifies the variants, 
-    // perl scripts re-creates vcfs.
-
+    // prepare input channel for annovar 
+    // input_ch = meta, vcf, for_annovar.bed
     ch_vcf = ANNOTATE_VCF.out.unziped_vcf
     input_ch = ch_vcf.join(ANNOTATE_VCF.out.forannovar)
 
     //
     // MODULE: ANNOVAR
-    //  
+    // 
+    // RUN annovar, processAnnovarOutput.pl and newCols2vcf.pl: annovar annotates and classifies the variants, 
+    // perl scripts re-creates vcfs. 
     ANNOVAR(
-        input_ch, annodb, chr_prefix
+        input_ch, 
+        annodb, 
+        chr_prefix
     )
     logs     = logs.mix(ANNOVAR.out.log)
     versions = versions.mix(ANNOVAR.out.versions)
-    ch_vcf   = ANNOVAR.out.vcf
-    vcf_ch = ch_vcf.join(ANNOTATE_VCF.out.forannovar) 
-    
+
     //
     // MODULE: SNV_RELIABILITY_PIPE
     //
     // RUN annotate_vcf.pl : BED files are used to annotate variants
     SNV_RELIABILITY_PIPE(
-        vcf_ch, repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats
+        ANNOVAR.out.vcf, 
+        repeatmasker, 
+        dacblacklist, 
+        dukeexcluded, 
+        hiseqdepth, 
+        selfchain, 
+        mapability, 
+        simpletandemrepeats
     )
     versions = versions.mix(SNV_RELIABILITY_PIPE.out.versions)
 
     //
-    // MODULE: CONFIDENCE_ANNOTATION_1
+    // MODULE: CONFIDENCE_ANNOTATION
     //
+    // Apply confidenceAnnotation_SNVs.py only to with germline variants
     CONFIDENCE_ANNOTATION(
         SNV_RELIABILITY_PIPE.out.vcf
     )
     versions = versions.mix(CONFIDENCE_ANNOTATION.out.versions)
 
-    // ASK: If this is for the pancancer workflow, then also create a DKFZ specific file.// ask this
     // If true runArtifactFilter creates a bias file will be used to plot errors
     if (params.runArtifactFilter){
         //
         // MODULE: FILTER_PEOVERLAP
         //
         FILTER_PEOVERLAP_1(
-            CONFIDENCE_ANNOTATION.out.vcf, ref, 0 
+            CONFIDENCE_ANNOTATION.out.vcf, 
+            ref, 
+            0 
         )
-        versions = versions.mix(FILTER_PEOVERLAP_1.out.versions)
+        versions    = versions.mix(FILTER_PEOVERLAP_1.out.versions)
         altbasequal = FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities
         refbasequal = FILTER_PEOVERLAP_1.out.reference_allele_base_qualities 
         altreadpos  = FILTER_PEOVERLAP_1.out.alternative_allele_read_positions 
@@ -128,29 +143,40 @@ workflow SNV_ANNOTATION {
         // MODULE: ERROR_PLOTS
         //
         // Sequencing Error plot
+        somatic_vcf = FILTER_PEOVERLAP_1.out.somatic_snvs 
         ERROR_PLOTS_1(
-            FILTER_PEOVERLAP_1.out.somatic_snvs_tmp,'sequencing_specific', 'sequencing_specific_error_plot_before_filter', 'sequencing_error_matrix_first', 'Sequencing strand bias before guanine oxidation filter'
+            somatic_vcf,
+            'sequencing_specific', 
+            'sequencing_specific_error_plot_before_filter', 
+            'sequencing_error_matrix_first', 
+            'Sequencing strand bias before guanine oxidation filter'
         )
         versions = versions.mix(ERROR_PLOTS_1.out.versions)
         plots_ch = plots_ch.mix(ERROR_PLOTS_1.out.plot)
-
         // Sequence Error plot
         ERROR_PLOTS_2(
-            FILTER_PEOVERLAP_1.out.somatic_snvs_tmp, 'sequence_specific', 'sequence_specific_error_plot_before_filter','sequence_error_matrix_first', 'PCR strand bias before guanine oxidation filter'
+            somatic_vcf, 
+            'sequence_specific', 
+            'sequence_specific_error_plot_before_filter',
+            'sequence_error_matrix_first', 
+            'PCR strand bias before guanine oxidation filter'
         )
-        sequence_spesific_error_plot_1 = ERROR_PLOTS_2.out.plot 
+        plots_ch = plots_ch.mix(ERROR_PLOTS_2.out.plot)
 
         //
         // MODULE: PLOT_BASESCORE_BIAS
         //
-        // Run plot_basescore_bias.r only if generateExtendedQcPlots is true, this step only generates a pdf!
+        // Run tripletBased_BQRatio_plotter.R only if generateExtendedQcPlots is true, this step only generates a pdf!
         if (params.generateExtendedQcPlots){
-            // create input channel with error matrixes: Somatic SVC Temp,reference_allele_base_qualities, alternative_allele_base_qualities 
-            somatic_ch = FILTER_PEOVERLAP_1.out.somatic_snvs_tmp.join(refbasequal)
+            // create input channel with error matrixes: 
+            //Somatic SVC Temp,reference_allele_base_qualities, alternative_allele_base_qualities 
+            somatic_ch = somatic_vcf.join(refbasequal)
             somatic_ch = somatic_ch.join(altbasequal)
             
             PLOT_BASESCORE_BIAS_1(
-                somatic_ch, 'base_score_bias_before_filter','Base Quality Bias Plot for PID before guanine oxidation filter'
+                somatic_ch, 
+                'base_score_bias_before_filter',
+                'Base Quality Bias Plot for PID before guanine oxidation filter'
                 )
             versions = versions.mix(PLOT_BASESCORE_BIAS_1.out.versions)
             plots_ch = plots_ch.mix(PLOT_BASESCORE_BIAS_1.out.plot) 
@@ -160,13 +186,15 @@ workflow SNV_ANNOTATION {
         // MODULE: FLAG_BIAS
         //
         // create input channel for flag bias with error matrixes from error plots
+        // error_ch: meta, _peoverlap.vcf, _sequence_error_matrix.txt, _sequencing_error_matrix.txt
         error_ch = FILTER_PEOVERLAP_1.out.vcf.join(ERROR_PLOTS_2.out.error_matrix)
         error_ch = error_ch.join(ERROR_PLOTS_1.out.error_matrix)
-        // error_ch: meta, _peoverlap.vcf, _sequence_error_matrix.txt, _sequencing_error_matrix.txt
+        
         FLAG_BIAS_1(
-            error_ch, ref, 1, "first"
+            error_ch, ref, 1
             )
         versions = versions.mix(FLAG_BIAS_1.out.versions)
+
         /////////////////////////////////////////    
         //// Second round of plot generation ////
         /////////////////////////////////////////    
@@ -174,14 +202,23 @@ workflow SNV_ANNOTATION {
         // MODULE: ERROR_PLOTS
         //
         // Sequencing Error plot
+        somatic_vcf = FLAG_BIAS_1.out.somatic_snvs
         ERROR_PLOTS_3(
-            FLAG_BIAS_1.out.vcftmp,'sequencing_specific', 'sequencing_specific_error_plot_after_filter_once', 'sequencing_error_matrix_second', 'Sequencing strand bias after first round of guanine oxidation filter'
+            somatic_vcf,
+            'sequencing_specific', 
+            'sequencing_specific_error_plot_after_filter_once', 
+            'sequencing_error_matrix_second', 
+            'Sequencing strand bias after first round of guanine oxidation filter'
         )
         plots_ch = plots_ch.mix(ERROR_PLOTS_3.out.plot)
 
         // Sequence Error plot
         ERROR_PLOTS_4(
-            FLAG_BIAS_1.out.vcftmp, 'sequence_specific', 'sequence_specific_error_plot_after_filter_once','sequence_error_matrix_second', 'PCR strand bias after first round of guanine oxidation filter'
+            somatic_vcf, 
+            'sequence_specific', 
+            'sequence_specific_error_plot_after_filter_once',
+            'sequence_error_matrix_second', 
+            'PCR strand bias after first round of guanine oxidation filter'
         )
         plots_ch = plots_ch.mix(ERROR_PLOTS_4.out.plot)
 
@@ -190,27 +227,31 @@ workflow SNV_ANNOTATION {
         //
         // Run plot_basescore_bias.r only if generateExtendedQcPlots is true, this step only generates a pdf!
         if (params.generateExtendedQcPlots){
-            // create input channel with error matrixes: Somatic SVC Temp,reference_allele_base_qualities, alternative_allele_base_qualities 
-            som2_ch = FLAG_BIAS_1.out.vcftmp.join(refbasequal)
+            // create input channel with error matrixes: somatic_vcf,reference_allele_base_qualities, alternative_allele_base_qualities 
+            som2_ch = somatic_vcf.join(refbasequal)
             som2_ch = som2_ch.join(altbasequal)
 
             PLOT_BASESCORE_BIAS_2(
-                som2_ch, 'base_score_bias_after_filter_once','Base Quality Bias Plot for PID after first round of guanine oxidation filter'
+                som2_ch, 
+                'base_score_bias_after_filter_once',
+                'Base Quality Bias Plot for PID after first round of guanine oxidation filter'
                 )
             plots_ch = plots_ch.mix(PLOT_BASESCORE_BIAS_2.out.plot) 
         }
+
         //
         // MODULE: FLAG_BIAS
         //
-
         // create input channel for flag bias with error matrixes from error plots
         error2_ch = FLAG_BIAS_1.out.vcf.join(ERROR_PLOTS_2.out.error_matrix)
         error2_ch = error2_ch.join(ERROR_PLOTS_1.out.error_matrix)
         // input_ch: meta, _peoverlap.vcf, _sequence_error_matrix.txt, _sequencing_error_matrix.txt
         FLAG_BIAS_2(
-            error2_ch, ref, 2, "second"
+            error2_ch, 
+            ref, 
+            2
             )        
-        out_vcf=FLAG_BIAS_2.out.vcf
+        out_vcf = FLAG_BIAS_2.out.vcf
 
     }
     // IF runArticantfilter is false run only FILTER_PEOVERLAP
@@ -219,7 +260,9 @@ workflow SNV_ANNOTATION {
         // MODULE: FILTER_PEOVERLAP
         //
         FILTER_PEOVERLAP_2(
-            CONFIDENCE_ANNOTATION.out.vcf, ref, 0  
+            CONFIDENCE_ANNOTATION.out.vcf, 
+            ref, 
+            0  
         )
         out_vcf     = FILTER_PEOVERLAP_2.out.vcf
         altbasequal = FILTER_PEOVERLAP_2.out.alternative_allele_base_qualities
@@ -227,6 +270,7 @@ workflow SNV_ANNOTATION {
         altreadpos  = FILTER_PEOVERLAP_2.out.alternative_allele_read_positions 
         refreadpos  = FILTER_PEOVERLAP_2.out.reference_allele_read_positions     
     }
+    
     //
     // MODULE: TABIX_BGZIPTABIX
     //
@@ -235,6 +279,7 @@ workflow SNV_ANNOTATION {
     )
     versions = versions.mix(TABIX_BGZIPTABIX.out.versions) 
     vcf_ch = TABIX_BGZIPTABIX.out.gz_tbi 
+
     //
     // MODULE: ANNOTATION_PIPES
     //
@@ -242,8 +287,19 @@ workflow SNV_ANNOTATION {
     if (params.runSNVDeepAnnotation)
     {
         ANNOTATION_PIPES (
-        TABIX_BGZIPTABIX.out.gz_tbi, enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets,
-        cgi_mountains, phastconselem, encode_tfbs, mirnas_sncrnas
+        TABIX_BGZIPTABIX.out.gz_tbi, 
+        enchangers, 
+        cpgislands, 
+        tfbscons, 
+        encode_dnase, 
+        mirnas_snornas, 
+        cosmic, 
+        mirbase, 
+        mir_targets,
+        cgi_mountains, 
+        phastconselem, 
+        encode_tfbs, 
+        mirnas_sncrnas
         )
         vcf_ch   = ANNOTATION_PIPES.out.vcf 
         versions = versions.mix(ANNOTATION_PIPES.out.versions)

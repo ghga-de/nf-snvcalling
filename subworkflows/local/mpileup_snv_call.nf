@@ -86,7 +86,7 @@ workflow MPILEUP_SNV_CALL {
     SEQ_CONTEXT_ANNOTATOR(
         ch_vcf.join(ch_intervals, by: [0]), ref
     )
-    versions = versions.mix(SEQ_CONTEXT_ANNOTATOR.out.versions) 
+    //versions = versions.mix(SEQ_CONTEXT_ANNOTATOR.out.versions) 
 
     // filter VCFs if there is no variant after bias filtration
     SEQ_CONTEXT_ANNOTATOR.out.vcf
@@ -109,7 +109,7 @@ workflow MPILEUP_SNV_CALL {
     MPILEUP_COMPARE(
         ch_vcf.join(ch_intervals, by: [0]), ref
     )
-    versions = versions.mix(MPILEUP_COMPARE.out.versions) 
+    //versions = versions.mix(MPILEUP_COMPARE.out.versions) 
 
     // Group interval VCF files according to meta
     MPILEUP_COMPARE
@@ -126,7 +126,7 @@ workflow MPILEUP_SNV_CALL {
     FILE_CONCATENATOR(
         combined_vcf
     )
-    versions = versions.mix(FILE_CONCATENATOR.out.versions) 
+    //versions = versions.mix(FILE_CONCATENATOR.out.versions) 
     vcf_ch=FILE_CONCATENATOR.out.vcf
 
     emit:
