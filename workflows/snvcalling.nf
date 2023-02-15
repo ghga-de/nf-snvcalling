@@ -9,7 +9,6 @@ def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 // Validate input parameters
 WorkflowSnvcalling.initialise(params, log)
 
-// TODO nf-core: Add all file path parameters for the pipeline to the list below
 // Check input path parameters to see if they exist
 def checkPathParamList = [ params.input, params.multiqc_config]
 
@@ -39,7 +38,10 @@ if ((params.runSNVDeepAnnotation) && (!params.enchancer_file && !params.cpgislan
 
 if (params.input)         { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 // Annovar only be checked if runGeneAnnovar is true
-if ((params.runCytoband ) &&(params.runGeneAnnovar) &&(params.annovar_path))  { annodb = Channel.fromPath(params.annovar_path + '/humandb/', checkIfExists: true ) } else { annodb = Channel.empty() }
+if ((params.runCytoband ) &&(params.runGeneAnnovar) &&(params.annovar_path))  
+    { annodb = Channel.fromPath(params.annovar_path + '/humandb/', checkIfExists: true ) } 
+else 
+    { annodb = Channel.empty() }
 
 // Set up reference depending on the genome choice
 // NOTE: link will be defined by aoutomatic reference generation when the pipeline ready!
@@ -112,10 +114,6 @@ if (params.mir_targets_file)     { mir_targets = Channel.fromPath([params.mir_ta
 if (params.cgi_mountains_file)   { cgi_mountains = Channel.fromPath([params.cgi_mountains_file, params.cgi_mountains_file + '.tbi'], checkIfExists: true).collect() } else { cgi_mountains = Channel.of([],[]) }
 if (params.phastconselem_file)   { phastconselem = Channel.fromPath([params.phastconselem_file, params.phastconselem_file + '.tbi'], checkIfExists: true).collect() } else { phastconselem = Channel.of([],[]) }
 if (params.encode_tfbs_file)     { encode_tfbs = Channel.fromPath([params.encode_tfbs_file, params.encode_tfbs_file + '.tbi'], checkIfExists: true).collect() } else { encode_tfbs = Channel.of([],[]) }
-// Tinda files
-if (params.genemodel_bed)        { genemodel = Channel.fromPath(params.genemodel_bed, checkIfExists: true).collect() } else { genemodel = Channel.empty() }
-if (params.local_control_platypus_wgs)    { localcontrolplatypuswgs = Channel.fromPath([params.local_control_platypus_wgs,params.local_control_platypus_wgs + '.tbi' ], checkIfExists: true).collect() } else { localcontrolplatypuswgs = Channel.empty() }
-if (params.local_control_platypus_wes)    { localcontrolplatypuswes = Channel.fromPath([params.local_control_platypus_wes, params.local_control_platypus_wes + '.tbi'], checkIfExists: true).collect() } else { localcontrolplatypuswes = Channel.empty() }
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -139,7 +137,6 @@ include { INPUT_CHECK         } from '../subworkflows/local/input_check'
 include { MPILEUP_SNV_CALL    } from '../subworkflows/local/mpileup_snv_call'
 include { SNV_ANNOTATION      } from '../subworkflows/local/snv_annotation'
 include { FILTER_SNVS         } from '../subworkflows/local/filter_snvs'
-
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -199,7 +196,10 @@ workflow SNVCALLING {
     //
     
     MPILEUP_SNV_CALL(
-        ch_sample, ref, interval_ch, contigs
+        ch_sample, 
+        ref, 
+        interval_ch, 
+        contigs
     )
     ch_versions = ch_versions.mix(MPILEUP_SNV_CALL.out.versions)
 
@@ -213,18 +213,43 @@ workflow SNVCALLING {
 
     if (params.runSNVAnnotation){ 
         SNV_ANNOTATION(
-        ch_vcf, ref, kgenome, dbsnpsnv, localcontrolwgs,localcontrolwes, gnomadgenomes, gnomadexomes, annodb, 
-        repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats, 
-        enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets, 
-        cgi_mountains, phastconselem, encode_tfbs, mirnas_sncrnas, chr_prefix
+        ch_vcf, 
+        ref, 
+        kgenome, 
+        dbsnpsnv, 
+        localcontrolwgs,
+        localcontrolwes, 
+        gnomadgenomes, 
+        gnomadexomes, 
+        annodb, 
+        repeatmasker, 
+        dacblacklist, 
+        dukeexcluded, 
+        hiseqdepth, 
+        selfchain, 
+        mapability, 
+        simpletandemrepeats, 
+        enchangers, 
+        cpgislands, 
+        tfbscons, 
+        encode_dnase,
+        mirnas_snornas, 
+        cosmic, 
+        mirbase, 
+        mir_targets, 
+        cgi_mountains, 
+        phastconselem, 
+        encode_tfbs, 
+        mirnas_sncrnas, 
+        chr_prefix
         )
 
         //
         // SUBWORKFLOW: FILTER_SNVS: Filters SNVs
         //
         // input_ch= meta, annotated vcf, index, altbasequal, refbasequal, altreadpos, refreadpos, 
-                    //    sequence_spesific_error_plot_1, sequencing_spesific_error_plot_1, sequence_spesific_error_plot_2
-                    //     sequencing_spesific_error_plot_2, base_score_distribution_plot_1, base_score_distribution_plot_2
+                    //sequence_spesific_error_plot_1, sequencing_spesific_error_plot_1, sequence_spesific_error_plot_2
+                    //sequencing_spesific_error_plot_2, base_score_distribution_plot_1, base_score_distribution_plot_2
         vcf_ch   = SNV_ANNOTATION.out.vcf_ch
         input_ch = vcf_ch.join(SNV_ANNOTATION.out.altbasequal)
         input_ch = input_ch.join(SNV_ANNOTATION.out.refbasequal)
@@ -234,7 +259,10 @@ workflow SNVCALLING {
 
         if (params.runSNVVCFFilter){
             FILTER_SNVS(
-            input_ch, ref, chr_prefix, chrlength    
+            input_ch, 
+            ref, 
+            chr_prefix, 
+            chrlength    
             )
         }
     }
