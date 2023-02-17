@@ -118,7 +118,7 @@ workflow FILTER_SNVS {
             JSON_REPORT(
             temp5_ch
             )
-            versions = versions.mix(JSON_REPORT.out.versions)
+            //versions = versions.mix(JSON_REPORT.out.versions)
 
             // Exclude Y is false. No gender info is collected. 
             //exy="--excludedChromosomes=chrY", ignoreY=1
@@ -287,7 +287,6 @@ workflow FILTER_SNVS {
             )
             versions = versions.mix(PURITY_RELOADED.out.versions) 
         }
-
     }
 
     emit:

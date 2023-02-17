@@ -58,11 +58,11 @@ process FILTER_PEOVERLAP {
                 -f ${prefix}_somatic_snvs_for_bias.vcf > ${prefix}_peoverlap.vcf
 
     NRSOMSNV=`grep -v "^#" ${prefix}_somatic_snvs_for_bias.vcf | wc -l`
-	echo -e "SOMATIC_SNVS_UNFILTERED\\t\${NRSOMSNV}">> ${prefix}_QC_values.tsv
+	echo -e "SOMATIC_SNVS_UNFILTERED\\t\${NRSOMSNV}">>${prefix}_QC_values.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        python: \$(python2 --version 2>&1 | sed 's/Python //g')
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
     END_VERSIONS
     """     
 }

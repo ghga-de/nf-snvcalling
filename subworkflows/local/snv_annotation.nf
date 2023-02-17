@@ -130,7 +130,7 @@ workflow SNV_ANNOTATION {
             ref, 
             0 
         )
-        versions    = versions.mix(FILTER_PEOVERLAP_1.out.versions)
+        //versions    = versions.mix(FILTER_PEOVERLAP_1.out.versions)
         altbasequal = FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities
         refbasequal = FILTER_PEOVERLAP_1.out.reference_allele_base_qualities 
         altreadpos  = FILTER_PEOVERLAP_1.out.alternative_allele_read_positions 

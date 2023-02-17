@@ -1,3 +1,5 @@
+//purityEST - from Florian. Needs the original SNV file because it also considers germline (DP5 field)
+//has everything hardcoded (in which fields to look and confidence 8)
 process PURITY_RELOADED {
     tag "$meta.id"
     label 'process_medium'
