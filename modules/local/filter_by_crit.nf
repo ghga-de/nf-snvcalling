@@ -22,9 +22,7 @@ process FILTER_BY_CRIT {
     def args          = task.ext.args ?: ''
     def prefix        = task.ext.prefix ?: "${meta.id}"
     // recurrance is not implemented!!
-    def filter_values = [ (params.filter_exac && params.crit_exac_maxmaf) ? "ExAC AF $params.crit_exac_maxmaf+": "",
-                        (params.filter_evs && params.crit_evs_maxmaf) ? "EVS MAF $params.crit_evs_maxmaf+": "",
-                        (params.filter_gnomad_genomes && params.crit_gnomad_genomes_maxmaf) ? "GNOMAD_GENOMES AF $params.crit_gnomad_genomes_maxmaf+": "",
+    def filter_values = [(params.filter_gnomad_genomes && params.crit_gnomad_genomes_maxmaf) ? "GNOMAD_GENOMES AF $params.crit_gnomad_genomes_maxmaf+": "",
                         (params.filter_gnomad_exomes && params.crit_gnomad_exomes_maxmaf) ? "GNOMAD_EXOMES AF $params.crit_gnomad_exomes_maxmaf+": "",
                         (params.filter_1kgenomes && params.crit_1kgenomes_maxmaf) ? "1K_GENOMES EUR_AF $params.crit_1kgenomes_maxmaf+": "",
                         params.filter_non_clinic ? "DBSNP CLN,COMMON nonexist,exist": "", 
