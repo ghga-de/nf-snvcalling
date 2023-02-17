@@ -274,6 +274,7 @@ workflow FILTER_SNVS {
             MERGE_PLOTS(
             plots2_ch
             )
+            versions = versions.mix(MERGE_PLOTS.out.versions)  
         }
         // 3. Run purityEST
         if (params.runpurest){
