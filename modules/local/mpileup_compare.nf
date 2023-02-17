@@ -38,8 +38,8 @@ process MPILEUP_COMPARE {
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            perl: v5.28.1
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+            perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
+            samtools: \$(echo \$(samtools 2>&1) | sed -e 's/.*Version: //; s/ Usage.*//')
         END_VERSIONS
 
         """
@@ -51,7 +51,7 @@ process MPILEUP_COMPARE {
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+            samtools: \$(echo \$(samtools 2>&1) | sed -e 's/.*Version: //; s/ Usage.*//')
         END_VERSIONS
         """
     }

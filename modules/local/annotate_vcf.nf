@@ -48,7 +48,7 @@ process ANNOTATE_VCF {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        perl: v5.28.1
+        perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\1/')
     END_VERSIONS
     """
 }
