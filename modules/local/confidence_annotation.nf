@@ -28,7 +28,7 @@ process CONFIDENCE_ANNOTATION {
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            perl: v5.28.1
+            python: \$(python2 --version 2>&1 | sed 's/Python //g')
         END_VERSIONS
     """
     } 
@@ -47,8 +47,7 @@ process CONFIDENCE_ANNOTATION {
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            python: \$(python2.7 --version | sed 's/Python //g')
-            tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
+            python: \$(python2 --version 2>&1 | sed 's/Python //g')
         END_VERSIONS
         """
     }

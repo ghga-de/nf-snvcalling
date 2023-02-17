@@ -68,7 +68,8 @@ process ANNOVAR {
     "${task.process}":
         annovar_table: ${annovar_table}
         annovar_bed: ${annovar_bed}
-        annovar_buildver: ${params.buildver} 
+        annovar_buildver: ${params.buildver}
+        perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\1/') 
     END_VERSIONS
     """
 }

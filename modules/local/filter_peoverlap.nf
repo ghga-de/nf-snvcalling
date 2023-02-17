@@ -62,7 +62,7 @@ process FILTER_PEOVERLAP {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        python: \$(python --version | sed 's/Python //g')
+        python: \$(python2 --version 2>&1 | sed 's/Python //g')
     END_VERSIONS
     """     
 }

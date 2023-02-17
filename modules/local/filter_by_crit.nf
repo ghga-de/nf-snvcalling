@@ -40,6 +40,7 @@ process FILTER_BY_CRIT {
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
+            gzip: \$(echo \$(gzip --version 2>&1) | sed 's/^.*gzip //; s/ .*\$//')
             tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
         END_VERSIONS
         """
@@ -57,9 +58,9 @@ process FILTER_BY_CRIT {
 
             cat <<-END_VERSIONS > versions.yml
             "${task.process}":
-                python: \$(python --version | sed 's/Python //g')
-                tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
+                python: \$(python2 --version 2>&1 | sed 's/Python //g')
                 gzip: \$(echo \$(gzip --version 2>&1) | sed 's/^.*gzip //; s/ .*\$//')
+                tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
             END_VERSIONS
             """
             }
@@ -71,6 +72,7 @@ process FILTER_BY_CRIT {
             
             cat <<-END_VERSIONS > versions.yml
             "${task.process}":
+                gzip: \$(echo \$(gzip --version 2>&1) | sed 's/^.*gzip //; s/ .*\$//')
                 tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
             END_VERSIONS
             """ 

@@ -31,7 +31,10 @@ process SEQ_CONTEXT_ANNOTATOR {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        perl: v5.28.1
+        perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
+        python: \$(python2 --version 2>&1 | sed 's/Python //g')
+        bedtools: \$(bedtools --version | sed -e "s/bedtools v//g")
+        bcftools: \$(bcftools --version 2>&1 | head -n1 | sed 's/^.*bcftools //; s/ .*\$//')
     END_VERSIONS
     """
 }
