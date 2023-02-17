@@ -243,6 +243,7 @@ workflow SNVCALLING {
         mirnas_sncrnas, 
         chr_prefix
         )
+        ch_versions = ch_versions.mix(SNV_ANNOTATION.out.versions)
 
         //
         // SUBWORKFLOW: FILTER_SNVS: Filters SNVs
@@ -264,6 +265,7 @@ workflow SNVCALLING {
             chr_prefix, 
             chrlength    
             )
+            ch_versions = ch_versions.mix(FILTER_SNVS.out.versions)
         }
     }
 
