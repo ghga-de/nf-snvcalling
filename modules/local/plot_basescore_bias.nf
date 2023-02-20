@@ -4,7 +4,7 @@ process PLOT_BASESCORE_BIAS {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v8':'kubran/odcf_snvcalling:v8' }"
+        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
 
     input:
     tuple val(meta), path(vcf), path(reference_allele_base_qualities), path(alternative_allele_base_qualities)
@@ -12,8 +12,8 @@ process PLOT_BASESCORE_BIAS {
     val(title)
 
     output:
-    path "*.pdf"           , emit: plot  
-    path "versions.yml"    , emit: versions
+    tuple val(meta), path("*.pdf") , emit: plot  
+    path "versions.yml"            , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -28,8 +28,8 @@ process PLOT_BASESCORE_BIAS {
         -a $alternative_allele_base_qualities \\
         -t ${params.basequal} \\
         -o ${prefix}_${pdfname}.pdf \\
-        -p Differences \\
-        -d "${prefix}${title}"
+        -p ${params.plot_type} \\
+        -d "${prefix} ${title}"
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

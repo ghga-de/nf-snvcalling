@@ -2,9 +2,9 @@ process MPILEUP_COMPARE {
     tag "$meta.id"
     label 'process_medium'
 
-    conda (params.enable_conda ? "bioconda::bcftools=1.9" : null)
+    conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
+        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
 
     debug true
 
@@ -26,14 +26,20 @@ process MPILEUP_COMPARE {
     if (meta.iscontrol == '1' && params.runCompareGermline)
     {
         """
-        samtools mpileup $args -r $intervals -l $vcf -f $fasta $meta.control_bam > ${prefix}.${intervals}.control.temp
+        samtools mpileup \\
+            $args \\
+            -r $intervals \\
+            -l $vcf \\
+            -f $fasta \\
+            $meta.control_bam > ${prefix}.${intervals}.control.temp
         
-        vcf_pileup_compare_allin1_basecount.pl $vcf ${prefix}.${intervals}.control.temp "Header" > ${prefix}.${intervals}.nppileup.vcf        
+        vcf_pileup_compare_allin1_basecount.pl $vcf \\
+            ${prefix}.${intervals}.control.temp "Header" > ${prefix}.${intervals}.nppileup.vcf        
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            perl: v5.28.1
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+            perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
+            samtools: \$(echo \$(samtools 2>&1) | sed -e 's/.*Version: //; s/ Usage.*//')
         END_VERSIONS
 
         """
@@ -45,7 +51,7 @@ process MPILEUP_COMPARE {
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+            samtools: \$(echo \$(samtools 2>&1) | sed -e 's/.*Version: //; s/ Usage.*//')
         END_VERSIONS
         """
     }
