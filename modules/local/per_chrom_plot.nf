@@ -4,7 +4,7 @@ process PER_CHROM_PLOT {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
+    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
     
     input:
     tuple val(meta), file(distance)
@@ -31,7 +31,7 @@ process PER_CHROM_PLOT {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        python: \$(python2.7 --version | sed 's/Python //g')
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
     END_VERSIONS
     """
 }

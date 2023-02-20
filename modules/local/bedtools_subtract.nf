@@ -26,7 +26,8 @@ process BEDTOOLS_SUBTRACT {
     grep '^#' ${somatic_vcf} >${filtered}; bedtools subtract -a ${somatic_vcf} -b ${filtered} >>${prefix}_somatic_functional_snvs_conf_${params.min_confidence_score}_to_10_removedByMedian${params.median_filter_threshold}Filter.vcf  
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        perl: v5.28.1
+        perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
+        bedtools: \$(bedtools --version | sed -e "s/bedtools v//g")
     END_VERSIONS
     """
 }

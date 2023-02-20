@@ -4,7 +4,7 @@ process MUTATION_DISTANCE {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
+    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
     
     input:
     tuple val(meta), file(vcf)
@@ -28,7 +28,7 @@ process MUTATION_DISTANCE {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        python: \$(python2.7 --version | sed 's/Python //g')
+        python: \$(python2 --version 2>&1 | sed 's/Python //g')
     END_VERSIONS
     """
 }

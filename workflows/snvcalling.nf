@@ -9,7 +9,6 @@ def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 // Validate input parameters
 WorkflowSnvcalling.initialise(params, log)
 
-// TODO nf-core: Add all file path parameters for the pipeline to the list below
 // Check input path parameters to see if they exist
 def checkPathParamList = [ params.input, params.multiqc_config]
 
@@ -39,40 +38,51 @@ if ((params.runSNVDeepAnnotation) && (!params.enchancer_file && !params.cpgislan
 
 if (params.input)         { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 // Annovar only be checked if runGeneAnnovar is true
-if ((params.runCytoband ) &&(params.runGeneAnnovar) &&(params.annovar_path))  { annodb = Channel.fromPath(params.annovar_path + '/humandb/', checkIfExists: true ) } else { annodb = Channel.empty() }
+if ((params.runCytoband ) &&(params.runGeneAnnovar) &&(params.annovar_path))  
+    { annodb = Channel.fromPath(params.annovar_path + '/humandb/', checkIfExists: true ) } 
+else 
+    { annodb = Channel.empty() }
 
 // Set up reference depending on the genome choice
 // NOTE: link will be defined by aoutomatic reference generation when the pipeline ready!
-if (params.ref_type)
+if ((params.reference) && (params.chrlength) && (params.chr_prefix))
     {
+        fa_file    = params.reference
+        chr_file   = params.chrlength
+        chr_prefix = params.chr_prefix
+
+        if (params.contig_file) {
+            contig_file = params.contig_file
+        }
+    }
+    else{
     if (params.ref_type == 'hg37')
         { 
-        def fa_file  = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/1KGRef_Phix/hs37d5_PhiX.fa"
-        ref          = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect() 
-        def chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hs37d5.fa.chrLenOnlyACGT_realChromosomes.tab'
-        chrlength    = Channel.fromPath(chr_file, checkIfExists: true)
+        fa_file  = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/1KGRef_Phix/hs37d5_PhiX.fa"
+        chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hs37d5.fa.chrLenOnlyACGT_realChromosomes.tab'      
         chr_prefix   = Channel.value("")                    
         }
     if (params.ref_type == 'hg19') 
         { 
-        def fa_file  = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/hg19_chr/hg19_1-22_X_Y_M.fa"
-        ref          = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect()
-        def chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hg19_1-22_X_Y_M.fa.chrLenOnlyACGT.tab'
-        chrlength    = Channel.fromPath(chr_file, checkIfExists: true)
+        fa_file  = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/hg19_chr/hg19_1-22_X_Y_M.fa"
+        chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hg19_1-22_X_Y_M.fa.chrLenOnlyACGT.tab'
         chr_prefix   = Channel.value("chr")
         }
     if (params.ref_type == 'hg38') 
         { 
-        def fa_file = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38/sequence/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa"
-        ref = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect()
-        def chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38/stats/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.chrLenOnlyACGT_realChromosomes.tsv'
-        chrlength    = Channel.fromPath(chr_file, checkIfExists: true)
+        fa_file = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38/sequence/GRCh38_decoy_ebv_alt_hla_phiX.fa"
+        chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hg19_1-22_X_Y_M.fa.chrLenOnlyACGT.tab'
         chr_prefix   = Channel.value("chr")
+        // HLA and ALT contigs
+        contig_file = 'assets/temp_ALT.txt'      
         }
     }
 
-// prepare interval channel
-interval_ch = chrlength.splitCsv(sep: '\t', by:1)
+// prepare  channels
+ref          = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect()
+chrlength    = Channel.fromPath(chr_file, checkIfExists: true)
+interval_ch  = chrlength.splitCsv(sep: '\t', by:1)
+if (params.ref_type == 'hg38') { contigs = Channel.fromPath(contig_file, checkIfExists: true) } else { contigs = Channel.empty() }
 
 // Annotation databases
 if (params.k_genome)             { kgenome = Channel.fromPath([params.k_genome,params.k_genome +'.tbi'], checkIfExists: true).collect() } else { kgenome = Channel.of([],[]) }
@@ -104,10 +114,6 @@ if (params.mir_targets_file)     { mir_targets = Channel.fromPath([params.mir_ta
 if (params.cgi_mountains_file)   { cgi_mountains = Channel.fromPath([params.cgi_mountains_file, params.cgi_mountains_file + '.tbi'], checkIfExists: true).collect() } else { cgi_mountains = Channel.of([],[]) }
 if (params.phastconselem_file)   { phastconselem = Channel.fromPath([params.phastconselem_file, params.phastconselem_file + '.tbi'], checkIfExists: true).collect() } else { phastconselem = Channel.of([],[]) }
 if (params.encode_tfbs_file)     { encode_tfbs = Channel.fromPath([params.encode_tfbs_file, params.encode_tfbs_file + '.tbi'], checkIfExists: true).collect() } else { encode_tfbs = Channel.of([],[]) }
-// Tinda files
-if (params.genemodel_bed)        { genemodel = Channel.fromPath(params.genemodel_bed, checkIfExists: true).collect() } else { genemodel = Channel.empty() }
-if (params.local_control_platypus_wgs)    { localcontrolplatypuswgs = Channel.fromPath([params.local_control_platypus_wgs,params.local_control_platypus_wgs + '.tbi' ], checkIfExists: true).collect() } else { localcontrolplatypuswgs = Channel.empty() }
-if (params.local_control_platypus_wes)    { localcontrolplatypuswes = Channel.fromPath([params.local_control_platypus_wes, params.local_control_platypus_wes + '.tbi'], checkIfExists: true).collect() } else { localcontrolplatypuswes = Channel.empty() }
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -131,7 +137,6 @@ include { INPUT_CHECK         } from '../subworkflows/local/input_check'
 include { MPILEUP_SNV_CALL    } from '../subworkflows/local/mpileup_snv_call'
 include { SNV_ANNOTATION      } from '../subworkflows/local/snv_annotation'
 include { FILTER_SNVS         } from '../subworkflows/local/filter_snvs'
-
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -172,7 +177,7 @@ workflow SNVCALLING {
         ch_input
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    sample_ch = INPUT_CHECK.out.ch_sample
+    sample_ch   = INPUT_CHECK.out.ch_sample
 
     //
     // MODULE: Extract sample name from BAM
@@ -183,15 +188,18 @@ workflow SNVCALLING {
     ch_versions = ch_versions.mix(GREP_SAMPLENAME.out.versions)
 
     // Prepare an input channel of sample with sample names
-    name_ch=GREP_SAMPLENAME.out.samplenames
-    ch_sample=sample_ch.join(name_ch)
+    name_ch   = GREP_SAMPLENAME.out.samplenames
+    ch_sample = sample_ch.join(name_ch)
 
     //
     // SUBWORKFLOW: MPILEUP_SNV_CALL: Call SNVs
     //
     
     MPILEUP_SNV_CALL(
-        ch_sample, ref, interval_ch
+        ch_sample, 
+        ref, 
+        interval_ch, 
+        contigs
     )
     ch_versions = ch_versions.mix(MPILEUP_SNV_CALL.out.versions)
 
@@ -200,31 +208,64 @@ workflow SNVCALLING {
     //
 
     // Prepare an input channel of vcf with sample names 
-    vcf_ch=MPILEUP_SNV_CALL.out.vcf_ch
-    ch_vcf=vcf_ch.join(name_ch)
+    vcf_ch = MPILEUP_SNV_CALL.out.vcf_ch
+    ch_vcf = vcf_ch.join(name_ch)
 
     if (params.runSNVAnnotation){ 
         SNV_ANNOTATION(
-        ch_vcf, ref, kgenome, dbsnpsnv, localcontrolwgs,localcontrolwes, gnomadgenomes, gnomadexomes, annodb, 
-        repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats, 
-        enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets, 
-        cgi_mountains, phastconselem, encode_tfbs, mirnas_sncrnas, chr_prefix
+        ch_vcf, 
+        ref, 
+        kgenome, 
+        dbsnpsnv, 
+        localcontrolwgs,
+        localcontrolwes, 
+        gnomadgenomes, 
+        gnomadexomes, 
+        annodb, 
+        repeatmasker, 
+        dacblacklist, 
+        dukeexcluded, 
+        hiseqdepth, 
+        selfchain, 
+        mapability, 
+        simpletandemrepeats, 
+        enchangers, 
+        cpgislands, 
+        tfbscons, 
+        encode_dnase,
+        mirnas_snornas, 
+        cosmic, 
+        mirbase, 
+        mir_targets, 
+        cgi_mountains, 
+        phastconselem, 
+        encode_tfbs, 
+        mirnas_sncrnas, 
+        chr_prefix
         )
+        ch_versions = ch_versions.mix(SNV_ANNOTATION.out.versions)
 
         //
         // SUBWORKFLOW: FILTER_SNVS: Filters SNVs
         //
-        // input_ch= meta, annotated vcf, index, altbasequal, refbasequal, altredpos, refredpos
+        // input_ch= meta, annotated vcf, index, altbasequal, refbasequal, altreadpos, refreadpos, 
+                    //sequence_spesific_error_plot_1, sequencing_spesific_error_plot_1, sequence_spesific_error_plot_2
+                    //sequencing_spesific_error_plot_2, base_score_distribution_plot_1, base_score_distribution_plot_2
         vcf_ch   = SNV_ANNOTATION.out.vcf_ch
         input_ch = vcf_ch.join(SNV_ANNOTATION.out.altbasequal)
         input_ch = input_ch.join(SNV_ANNOTATION.out.refbasequal)
         input_ch = input_ch.join(SNV_ANNOTATION.out.altreadpos)
         input_ch = input_ch.join(SNV_ANNOTATION.out.refreadpos)
+        input_ch = input_ch.join(SNV_ANNOTATION.out.plots_ch.groupTuple())
 
         if (params.runSNVVCFFilter){
             FILTER_SNVS(
-            input_ch, ref, chr_prefix, chrlength    
+            input_ch, 
+            ref, 
+            chr_prefix, 
+            chrlength    
             )
+            ch_versions = ch_versions.mix(FILTER_SNVS.out.versions)
         }
     }
 

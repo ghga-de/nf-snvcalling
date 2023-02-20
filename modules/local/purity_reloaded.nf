@@ -1,13 +1,15 @@
+//purityEST - from Florian. Needs the original SNV file because it also considers germline (DP5 field)
+//has everything hardcoded (in which fields to look and confidence 8)
 process PURITY_RELOADED {
     tag "$meta.id"
     label 'process_medium'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
+    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
     
     input:
-    tuple val(meta), file(vcf), file(index), file(a), file(b), file(c), file(d)
+    tuple val(meta), file(vcf), file(index)
 
     output:
     tuple val(meta), path('*.txt')        , emit: purity
@@ -27,8 +29,8 @@ process PURITY_RELOADED {
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        python: \$(python2.7 --version | sed 's/Python //g')
-        perl: v5.28.1
+        perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
+        python: \$(python2 --version 2>&1 | sed 's/Python //g')
     END_VERSIONS
     """
 }

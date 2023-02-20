@@ -4,7 +4,7 @@ process ERROR_PLOTS {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
+        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
 
     input:
     tuple val(meta), path(vcf)
@@ -14,9 +14,9 @@ process ERROR_PLOTS {
     val(plottitle)
 
     output:
-    tuple val(meta), path("*txt"), emit: error_matrix
-    path  "*.pdf"                , emit: plot
-    path  "versions.yml"         , emit: versions
+    tuple val(meta), path("*txt"),  emit: error_matrix
+    tuple val(meta), path("*.pdf"), emit: plot
+    path  "versions.yml"         ,  emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -35,7 +35,7 @@ process ERROR_PLOTS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        python: \$(python2.7 --version | sed 's/Python //g')
+        python: \$(python2 --version 2>&1 | sed 's/Python //g')
     END_VERSIONS
     """
 }

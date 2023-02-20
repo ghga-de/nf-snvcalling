@@ -4,7 +4,7 @@ process GREP_SAMPLENAME {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
+    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
 
     input:
     tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai)
@@ -25,7 +25,7 @@ process GREP_SAMPLENAME {
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+            samtools: \$(echo \$(samtools 2>&1) | sed -e 's/.*Version: //; s/ Usage.*//')
         END_VERSIONS
 
         """
@@ -37,7 +37,7 @@ process GREP_SAMPLENAME {
         
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
-            samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+            samtools: \$(echo \$(samtools 2>&1) | sed -e 's/.*Version: //; s/ Usage.*//')
         END_VERSIONS
         """
     }

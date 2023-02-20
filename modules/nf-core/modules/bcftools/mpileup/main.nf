@@ -8,33 +8,36 @@ process BCFTOOLS_MPILEUP {
         'quay.io/biocontainers/bcftools:1.16--hfe4b78e_1' }"
 
     input:
-    tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai), val(tumorname), val(controlname), val(intervals), val(region)
-    tuple path(fasta), path(fai) 
+    tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai), val(tumorname), val(controlname), val(intervals), path(interval_file)
+    tuple path(fasta), path(fai)
 
     output:
     tuple val(meta), path("*.vcf")               , emit: vcf
     tuple val(meta), path("*.bcftools_stats.txt"), emit: stats 
-    tuple val(meta), val(intervals)              , emit: intervals 
+    tuple val(meta), val(interval_name)          , emit: intervals 
     path  "versions.yml"                         , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
-    def args2 = task.ext.args2 ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def ref_spec = params.ref_type == "hg38" ? "$args2 --ploidy GRCh38": "$args2"
+    def args     = task.ext.args ?: ''
+    def args2    = task.ext.args2 ?: ''
+    def args3    = task.ext.args3 ?: ''
+    def prefix   = task.ext.prefix ?: "${meta.id}"
+    def args_c   = interval_file ? "$args2 -R ${interval_file}" : "$args -r ${intervals}"
+    def ref_spec = params.ref_type == "hg38" ? "$args3 --ploidy GRCh38": "$args3"
+    interval_name = interval_file ? "contig" : "${intervals}"
+
     """
     bcftools \\
         mpileup \\
         --fasta-ref $fasta \\
-        $args \\
+        $args_c \\
         $tumor \\
-        -r $intervals \\
-        | bcftools call --output-type v $ref_spec > ${prefix}.${intervals}.vcf
+        | bcftools call --output-type v $ref_spec > ${prefix}.${interval_name}.vcf
 
-    bcftools stats ${prefix}.${intervals}.vcf > ${prefix}.${intervals}.bcftools_stats.txt
+    bcftools stats ${prefix}.${interval_name}.vcf > ${prefix}.${interval_name}.bcftools_stats.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

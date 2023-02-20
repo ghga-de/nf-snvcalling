@@ -4,17 +4,15 @@ process JSON_REPORT {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v7':'kubran/odcf_snvcalling:v7' }"
+    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
     
     input:
-    tuple val(meta), file(vcf), file(index)
+    tuple val(meta), file(somatic_vcf), file(insnp_file)
 
     output:
-    tuple val(meta), path('snv_*_somatic_functional_snvs_conf_*_to_10.vcf')        , emit: somatic_functional
-    tuple val(meta), path('snv_*_somatic_snvs_conf_*_to_10.vcf')                   , emit: somatic_snv
-    tuple val(meta), path('snv_*_somatic_functional_ncRNA_snvs_conf_*_to_10.vcf')               
-    tuple val(meta), path('snv_*_germline_functional_snvs_conf_*_to_10.vcf')         
-    path  "versions.yml"                                                            , emit: versions
+    tuple val(meta), path('*is_THA_affected.txt')   , emit: tha
+    tuple val(meta), path('*.json')                 , emit: json         
+    path  "versions.yml"                            , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -22,17 +20,22 @@ process JSON_REPORT {
     script:
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
+    def rerun      = params.rerunfiltering ? "1": "''"
     
     """
-    snv_extractor_v1.pl \\
-        --infile=$vcf \\
-        --minconf=$params.min_confidence_score \\
-        --pid=snv_$meta.id \\
-        $args 
-    
+    final_plots_and_json.sh \\
+        -p $prefix \\
+        -i $somatic_vcf \\
+        -s $insnp_file \\
+        -t $params.min_cov \\
+        -v $params.min_confidence_score \\
+        -b $params.tha_score_threshold \\
+        -r $rerun
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        perl: v5.28.1
+        perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
+        r-base: \$(echo \$(R --version 2>&1) | sed 's/^.*R version //; s/ .*\$//')
     END_VERSIONS
     """
 }

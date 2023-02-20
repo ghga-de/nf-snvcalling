@@ -6,10 +6,10 @@ process SNV_RELIABILITY_PIPE {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
+    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
     
     input:
-    tuple val(meta),                 file(ch_vcf),         file(dummy)
+    tuple val(meta),                 file(ch_vcf)
     tuple file(repeatmasker),        file(repeatmasker_i)
     tuple file(dacblacklist),        file(dacblacklist_i)
     tuple file(dukeexcluded),        file(dukeexcluded_i)
@@ -42,7 +42,7 @@ process SNV_RELIABILITY_PIPE {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        perl: v5.28.1
+        perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
     END_VERSIONS
     """
 }
