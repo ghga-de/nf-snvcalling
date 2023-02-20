@@ -1,3 +1,4 @@
+// v2 works here only!
 process SEQ_CONTEXT_ANNOTATOR {
     tag "$meta.id"
     label 'process_medium'
