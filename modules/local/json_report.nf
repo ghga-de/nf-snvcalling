@@ -11,7 +11,8 @@ process JSON_REPORT {
 
     output:
     tuple val(meta), path('*is_THA_affected.txt')   , emit: tha
-    tuple val(meta), path('*.json')                 , emit: json         
+    tuple val(meta), path('*.json')                 , emit: json
+    tuple val(meta), path('*.pdf')                  , emit: plot         
     path  "versions.yml"                            , emit: versions
 
     when:

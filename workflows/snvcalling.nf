@@ -71,7 +71,7 @@ if ((params.reference) && (params.chrlength) && (params.chr_prefix))
     if (params.ref_type == 'hg38') 
         { 
         fa_file = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38/sequence/GRCh38_decoy_ebv_alt_hla_phiX.fa"
-        chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hg19_1-22_X_Y_M.fa.chrLenOnlyACGT.tab'
+        chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38/stats/GRCh38_decoy_ebv_alt_hla_phiX.fa.chrLenOnlyACGT_realChromosomes.tsv'
         chr_prefix   = Channel.value("chr")
         // HLA and ALT contigs
         contig_file = 'assets/temp_ALT.txt'      
@@ -194,7 +194,6 @@ workflow SNVCALLING {
     //
     // SUBWORKFLOW: MPILEUP_SNV_CALL: Call SNVs
     //
-    
     MPILEUP_SNV_CALL(
         ch_sample, 
         ref, 
@@ -252,12 +251,13 @@ workflow SNVCALLING {
                     //sequence_spesific_error_plot_1, sequencing_spesific_error_plot_1, sequence_spesific_error_plot_2
                     //sequencing_spesific_error_plot_2, base_score_distribution_plot_1, base_score_distribution_plot_2
         vcf_ch   = SNV_ANNOTATION.out.vcf_ch
-        input_ch = vcf_ch.join(SNV_ANNOTATION.out.altbasequal)
-        input_ch = input_ch.join(SNV_ANNOTATION.out.refbasequal)
-        input_ch = input_ch.join(SNV_ANNOTATION.out.altreadpos)
-        input_ch = input_ch.join(SNV_ANNOTATION.out.refreadpos)
-        input_ch = input_ch.join(SNV_ANNOTATION.out.plots_ch.groupTuple())
-
+        vcf_ch.join(SNV_ANNOTATION.out.altbasequal)
+                .join(SNV_ANNOTATION.out.refbasequal)
+                .join(SNV_ANNOTATION.out.altreadpos)
+                .join(SNV_ANNOTATION.out.refreadpos)
+                .join(SNV_ANNOTATION.out.plots_ch.groupTuple())
+                .set{input_ch}
+        
         if (params.runSNVVCFFilter){
             FILTER_SNVS(
             input_ch, 
@@ -267,29 +267,41 @@ workflow SNVCALLING {
             )
             ch_versions = ch_versions.mix(FILTER_SNVS.out.versions)
         }
+        else{
+            println "Skipping SNV filtering"
+        }
+    }
+    else{
+        println "Skipping SNV annotation and filtering"
     }
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
 
-    //
-    // MODULE: MultiQC
-    //
-    workflow_summary    = WorkflowSnvcalling.paramsSummaryMultiqc(workflow, summary_params)
-    ch_workflow_summary = Channel.value(workflow_summary)
+    if (!params.skip_multiqc){
+        //
+        // MODULE: MultiQC
+        //
+        workflow_summary    = WorkflowSnvcalling.paramsSummaryMultiqc(workflow, summary_params)
+        ch_workflow_summary = Channel.value(workflow_summary)
 
-    ch_multiqc_files = Channel.empty()
-    ch_multiqc_files = ch_multiqc_files.mix(Channel.from(ch_multiqc_config))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_custom_config.collect().ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
+        ch_multiqc_files = Channel.empty()
+        ch_multiqc_files = ch_multiqc_files.mix(Channel.from(ch_multiqc_config))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_custom_config.collect().ifEmpty([]))
+        ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+        ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
 
-    MULTIQC (
-        ch_multiqc_files.collect()
-    )
-    multiqc_report = MULTIQC.out.report.toList()
-    ch_versions    = ch_versions.mix(MULTIQC.out.versions)
+        MULTIQC (
+            ch_multiqc_files.collect()
+        )
+        multiqc_report = MULTIQC.out.report.toList()
+        ch_versions    = ch_versions.mix(MULTIQC.out.versions)
+    }
+    else{
+        println "Skipping MultiQC"
+    }
+
 }
 
 /*
