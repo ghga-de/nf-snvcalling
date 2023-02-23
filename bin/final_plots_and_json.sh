@@ -57,22 +57,33 @@ snvindbSNP=` awk '{FS="\t"}{if(NR==2)print $5}'	${filenameSomaticSnvsIndbSNP}`
 echo "snvindbSNP is ${snvindbSNP}"
 
 # QC value $SNV_IN_DBSNP_RATIO will be written to $filenameQCvalues
+
+export TEMP=$(mktemp -d)
+export TMPDIR=$TEMP
+
 if [ "$snvindbSNP" != "0" ]; then
+	if [ "$snvnum" != "0" ]; then
+		MAF_plots.r ${prefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt ${snvnum} ${prefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf ${prefix} ${snvindbSNP}
+		[[ "$?" != 0 ]] && echo "There was a non-zero exit code in MAF plotting" && exit 7
+		echo "MAF plots done"
+	else
+		gs -sDEVICE=pdfwrite -o empty.pdf -c showpage
 	# calculate SNV_IN_DBSNP_RATIO snvindbSNP/snvnum (QC value)
+	fi
 	SNV_IN_DBSNP_RATIO=$(expr $snvnum / $snvindbSNP)
 	echo "SNV_IN_DBSNP_RATIO is ${SNV_IN_DBSNP_RATIO}"
-	# make MAF plot - from Natalie
 else
 	SNV_IN_DBSNP_RATIO="NA" # no output produced, don't include in "convert" later
+	gs -sDEVICE=pdfwrite -o empty.pdf -c showpage
 fi
-
+rm -rf $TEMP
 echo "check 1"
 
 # infer baseQuality bias (PV4)-related THA score (QC value)
 THA_SCORE=`determine_THA_score.R -i ${filenameSomaticSnvs}`
 echo $THA_SCORE
 [[ "$?" != 0 ]] && echo "There was a non-zero exit code in THA score determination script." && exit 24
-[[ $(echo "${THA_SCORE} > ${THA_SCORE_THRESHOLD}") ]] && echo -e "THA score\t${THA_SCORE}\n" >${prefix}_is_THA_affected.txt
+[[ $(echo "${THA_SCORE} > ${THA_SCORE_THRESHOLD}" | bc -l) ]] && echo -e "THA score\t${THA_SCORE}\n" >${prefix}_is_THA_affected.txt
 
 echo "check 2"
 # determine fraction of SNVs called as "synonymous SNV" among all exonic SNVs (QC value)
@@ -89,3 +100,4 @@ echo -e "\t\"snvInDbsnpRatio\": ${SNV_IN_DBSNP_RATIO:-NA}," >>${prefix}_QC_value
 echo -e "\t\"synonymousRatio\": ${SYNONYMOUS_RATIO:-NA}," >>${prefix}_QC_values${rerun}.json
 echo -e "\t\"thaScore\": ${THA_SCORE:-NA}" >>${prefix}_QC_values${rerun}.json
 echo -e "}" >>${prefix}_QC_values${rerun}.json
+echo "done"

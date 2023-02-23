@@ -170,8 +170,9 @@ workflow SNV_ANNOTATION {
         if (params.generateExtendedQcPlots){
             // create input channel with error matrixes: 
             //Somatic SVC Temp,reference_allele_base_qualities, alternative_allele_base_qualities 
-            somatic_ch = somatic_vcf.join(refbasequal)
-            somatic_ch = somatic_ch.join(altbasequal)
+            somatic_vcf.join(refbasequal)
+                .join(altbasequal)
+                .set{ somatic_ch }
             
             PLOT_BASESCORE_BIAS_1(
                 somatic_ch, 
@@ -180,6 +181,8 @@ workflow SNV_ANNOTATION {
                 )
             versions = versions.mix(PLOT_BASESCORE_BIAS_1.out.versions)
             plots_ch = plots_ch.mix(PLOT_BASESCORE_BIAS_1.out.plot) 
+        }else{
+            println "Extended QC plots not generated because generateExtendedQcPlots is set to ${params.generateExtendedQcPlots}"
         }
 
         //
@@ -187,11 +190,14 @@ workflow SNV_ANNOTATION {
         //
         // create input channel for flag bias with error matrixes from error plots
         // error_ch: meta, _peoverlap.vcf, _sequence_error_matrix.txt, _sequencing_error_matrix.txt
-        error_ch = FILTER_PEOVERLAP_1.out.vcf.join(ERROR_PLOTS_2.out.error_matrix)
-        error_ch = error_ch.join(ERROR_PLOTS_1.out.error_matrix)
+        FILTER_PEOVERLAP_1.out.vcf.join(ERROR_PLOTS_2.out.error_matrix)
+            .join(ERROR_PLOTS_1.out.error_matrix)
+            .set{ error_ch }
         
         FLAG_BIAS_1(
-            error_ch, ref, 1
+            error_ch, 
+            ref, 
+            1
             )
         versions = versions.mix(FLAG_BIAS_1.out.versions)
 
@@ -228,8 +234,9 @@ workflow SNV_ANNOTATION {
         // Run plot_basescore_bias.r only if generateExtendedQcPlots is true, this step only generates a pdf!
         if (params.generateExtendedQcPlots){
             // create input channel with error matrixes: somatic_vcf,reference_allele_base_qualities, alternative_allele_base_qualities 
-            som2_ch = somatic_vcf.join(refbasequal)
-            som2_ch = som2_ch.join(altbasequal)
+            somatic_vcf.join(refbasequal)
+                .join(altbasequal)
+                .set{ som2_ch }
 
             PLOT_BASESCORE_BIAS_2(
                 som2_ch, 
@@ -237,14 +244,17 @@ workflow SNV_ANNOTATION {
                 'Base Quality Bias Plot for PID after first round of guanine oxidation filter'
                 )
             plots_ch = plots_ch.mix(PLOT_BASESCORE_BIAS_2.out.plot) 
+        }else{
+            println "Extended QC plots not generated because generateExtendedQcPlots is set to ${params.generateExtendedQcPlots}"
         }
 
         //
         // MODULE: FLAG_BIAS
         //
         // create input channel for flag bias with error matrixes from error plots
-        error2_ch = FLAG_BIAS_1.out.vcf.join(ERROR_PLOTS_2.out.error_matrix)
-        error2_ch = error2_ch.join(ERROR_PLOTS_1.out.error_matrix)
+        FLAG_BIAS_1.out.vcf.join(ERROR_PLOTS_2.out.error_matrix)
+            .join(ERROR_PLOTS_1.out.error_matrix)
+            .set{ error2_ch }
         // input_ch: meta, _peoverlap.vcf, _sequence_error_matrix.txt, _sequencing_error_matrix.txt
         FLAG_BIAS_2(
             error2_ch, 
@@ -256,6 +266,7 @@ workflow SNV_ANNOTATION {
     }
     // IF runArticantfilter is false run only FILTER_PEOVERLAP
     else{
+        println "QC filter not applied because runArticantfilter is set to ${params.runArticantfilter}"
         //
         // MODULE: FILTER_PEOVERLAP
         //
@@ -303,6 +314,9 @@ workflow SNV_ANNOTATION {
         )
         vcf_ch   = ANNOTATION_PIPES.out.vcf 
         versions = versions.mix(ANNOTATION_PIPES.out.versions)
+    }
+    else{
+        println "SNVDeep annotation not applied because runSNVDeepAnnotation is set to ${params.runSNVDeepAnnotation}"
     }
 
 emit:

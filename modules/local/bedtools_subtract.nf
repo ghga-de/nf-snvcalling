@@ -1,7 +1,7 @@
 // This process is not tested!
 process BEDTOOLS_SUBTRACT {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_medium'
 
     conda "bioconda::bedtools=2.30.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -26,7 +26,6 @@ process BEDTOOLS_SUBTRACT {
     grep '^#' ${somatic_vcf} >${filtered}; bedtools subtract -a ${somatic_vcf} -b ${filtered} >>${prefix}_somatic_functional_snvs_conf_${params.min_confidence_score}_to_10_removedByMedian${params.median_filter_threshold}Filter.vcf  
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
         bedtools: \$(bedtools --version | sed -e "s/bedtools v//g")
     END_VERSIONS
     """

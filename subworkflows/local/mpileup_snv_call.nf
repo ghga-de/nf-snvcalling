@@ -32,7 +32,8 @@ workflow MPILEUP_SNV_CALL {
     // RUN bcftools mpileup and bcftools call to call variants. This process is scattered by chr intervals
     combined_inputs = combined_inputs.map {it -> tuple( it[0], it[1], it[2], it[3], it[4], it[5], it[6], it[7], [])} 
     BCFTOOLS_MPILEUP_1 (
-        combined_inputs, ref
+        combined_inputs, 
+        ref
     )
     versions = versions.mix(BCFTOOLS_MPILEUP_1.out.versions)
 
@@ -56,18 +57,20 @@ workflow MPILEUP_SNV_CALL {
 
     // If reference is hg38, run HLA and ALT contigs as seperate runs
     if (params.ref_type == 'hg38'){
-
+        println "Running HLA and ALT contigs as seperate runs"
         // Generate input set for HLA and ALT runs
         hla_alt_inputs = sample_ch.combine(contigs)
         hla_alt_inputs = hla_alt_inputs.map {it -> tuple( it[0], it[1], it[2], it[3], it[4], it[5], it[6], [], it[7])} 
         BCFTOOLS_MPILEUP_2 (
-            hla_alt_inputs, ref
+            hla_alt_inputs, 
+            ref
         )
         BCFTOOLS_MPILEUP_2.out.vcf
                     .join(BCFTOOLS_MPILEUP_2.out.intervals)
                     .join(BCFTOOLS_MPILEUP_2.out.stats)
                     .filter{meta, vcf, intervals, stats -> WorkflowCommons.getNumVariantsFromBCFToolsStats(stats) > 0 }
                     .set{ch_vcf_stats_hla_alt}
+
         ch_vcf_stats_hla_alt
             .map { meta, vcf, intervals, stats -> [meta, vcf]} 
             .set {ch_vcf_2}
@@ -84,7 +87,8 @@ workflow MPILEUP_SNV_CALL {
     //
     // RUN seqContext_annotator.pl and filterVcfForBias.py
     SEQ_CONTEXT_ANNOTATOR(
-        ch_vcf.join(ch_intervals, by: [0]), ref
+        ch_vcf.join(ch_intervals, by: [0]), 
+        ref
     )
     versions = versions.mix(SEQ_CONTEXT_ANNOTATOR.out.versions) 
 
@@ -107,7 +111,8 @@ workflow MPILEUP_SNV_CALL {
     // RUN bcftools mpileup and vcf_pileup_compare_allin1_basecount.pl to compare germline variants.
     // This process only applies of there is control and runCompareGermline is true
     MPILEUP_COMPARE(
-        ch_vcf.join(ch_intervals, by: [0]), ref
+        ch_vcf.join(ch_intervals, by: [0]), 
+        ref
     )
     versions = versions.mix(MPILEUP_COMPARE.out.versions) 
 

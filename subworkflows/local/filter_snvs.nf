@@ -9,8 +9,6 @@ include { DBSNP_COUNTER          } from '../../modules/local/dbsnp_counter.nf'  
 include { MUTATION_DISTANCE      } from '../../modules/local/mutation_distance.nf'       addParams( options: params.options )
 include { INTERMUTATION_DISTANCE } from '../../modules/local/intermutation_distance.nf'  addParams( options: params.options )
 include { PER_CHROM_PLOT         } from '../../modules/local/per_chrom_plot.nf'          addParams( options: params.options )
-include { MAKE_MAF_INPUT         } from '../../modules/local/make_maf_input.nf'          addParams( options: params.options )
-include { MAF_PLOTS              } from '../../modules/local/maf_plots.nf'               addParams( options: params.options )
 include { CONTEXT_FREQUENCIES    } from '../../modules/local/context_frequencies.nf'     addParams( options: params.options )
 include { CONTEXT_PLOT           } from '../../modules/local/context_plot.nf'            addParams( options: params.options )
 include { PURITY_RELOADED        } from '../../modules/local/purity_reloaded.nf'         addParams( options: params.options )
@@ -68,13 +66,15 @@ workflow FILTER_SNVS {
     // Rerun Filtering
     if (params.rerunfiltering)
     {
+        println "This run is rerun filtering"
         ///!!! This part is not working for now !!!!!
         //
         // MODULE: TRIPLET_PLOTTER
         //
         // Run tripletBased_BQDistribution_plotter.R
         TRIPLET_PLOTTER_1(
-            som_and_pos_ch, "Base score distribution of PID \nafter Median'${params.median_filter_threshold}' filtering"
+            som_and_pos_ch, 
+            "Base score distribution of PID \nafter Median'${params.median_filter_threshold}' filtering"
         )
         versions = version.mix(TRIPLET_PLOTTER_1.out.versions)
 
@@ -85,16 +85,23 @@ workflow FILTER_SNVS {
         TRIPLET_PLOTTER_1.out.filtered_vcf 
 
         )
+        // filter out the lists if no variant exists for visualization
+        SNV_EXTRACTOR_2.out.somatic_snv
+            .filter{meta, somatic_snv -> WorkflowCommons.getNumLinesInFile(somatic_snv) > 1}
+            .set{somatic_vcf_ch}
+        // som_and_pos_ch=meta, somatic_vcf,  altbasequal, refbasequal, altreadpos, refreadpos
+
         //
         // MODULE: BEDTOOLS_SUBTRACT
         //
-        temp3_ch = SNV_EXTRACTOR_2.out.somatic_snv.join(TRIPLET_PLOTTER.out.filtered_vcf)
+        temp3_ch = somatic_vcf_ch.join(TRIPLET_PLOTTER.out.filtered_vcf)
         BEDTOOLS_SUBTRACT(
             temp3_ch
         )
         versions = versions.mix(BEDTOOLS_SUBTRACT.out.versions)
     }
     else {
+        // if rerun is false
         // Rest is the usual pipeline. if rerun is false
         if (params.runplots){
 
@@ -113,12 +120,14 @@ workflow FILTER_SNVS {
             //
             // prepare report json file
             // determine fraction of SNVs called as "synonymous SNV" among all exonic SNVs (QC value)
+            // MAF plots are generated in the JSON_REPORT module
             // and THA detection
             temp5_ch = somatic_vcf_ch.join(DBSNP_COUNTER.out.indbsnp)
             JSON_REPORT(
             temp5_ch
             )
-            //versions = versions.mix(JSON_REPORT.out.versions)
+            versions = versions.mix(JSON_REPORT.out.versions)
+            plots_ch = plots_ch.mix(JSON_REPORT.out.plot)
 
             // Exclude Y is false. No gender info is collected. 
             //exy="--excludedChromosomes=chrY", ignoreY=1
@@ -154,31 +163,6 @@ workflow FILTER_SNVS {
             )  
             versions = versions.mix(PER_CHROM_PLOT.out.versions)
             plots_ch = plots_ch.mix(PER_CHROM_PLOT.out.plot) 
-
-            // 2. MAF plots
-            //get mutant allele frequency ("MAF") for extracted somatic high confidence SNVs
-            //
-            // MODULE: MAKE_MAF_INPUT
-            //
-            // RUN makeMAFinput.pl
-            MAKE_MAF_INPUT(
-            somatic_vcf_ch    
-            )
-            versions = versions.mix(MAKE_MAF_INPUT.out.versions)
-            
-            //
-            // MODULE: MAF_PLOTS
-            // 
-            //Run MAF_plots.r
-            //temp2_ch = meta, SNV_EXTRACTOR.out.somatic_snv, MAKE_MAF_INPUT.out.maf_values, DBSNP_COUNTER.out.indbsnp 
-            // !!!!!! Will only run if snvnum > 0 !!!! not implemented yet
-            temp2_ch = somatic_vcf_ch.join(MAKE_MAF_INPUT.out.maf_values)
-            temp2_ch = temp2_ch.join(DBSNP_COUNTER.out.indbsnp )
-            MAF_PLOTS(
-            temp2_ch
-            )
-            versions = versions.mix(MAF_PLOTS.out.versions)
-            plots_ch = plots_ch.mix(MAF_PLOTS.out.plot)
 
             //
             // MODULE: CONTEXT_FREQUENCIES
@@ -231,6 +215,7 @@ workflow FILTER_SNVS {
                 // create input channel: meta, sometic_vcf,  refbasequal, altbasequal
                 filt_ch  = input_ch.map{it -> tuple( it[0], it[4], it[3] )}
                 temp4_ch = somatic_vcf_ch.join(filt_ch)
+
                 PLOT_BASESCORE_BIAS_3(
                 temp4_ch, 
                 "base_score_bias_plot_conf_${params.min_confidence_score}_to_10", 
@@ -262,30 +247,42 @@ workflow FILTER_SNVS {
                 //versions = versions.mix(TRIPLET_PLOTTER_2.out.versions)
                 //plots_ch = plots_ch.mix(TRIPLET_PLOTTER_2.out.plot) 
             }
-
-            //
-            // MODULE: MERGE_PLOTS
-            // 
-            // run ghostscript
-            // !!!! Check if all plots were generated !!!
-            temp_ch = input_ch.map{ it -> tuple( it[0], it[7])} 
-            temp2_ch = plots_ch.groupTuple().map {it -> tuple( it[0], it[1] )}            
-            plots2_ch = temp_ch.join(temp2_ch)
-            MERGE_PLOTS(
-            plots2_ch
-            )
-            versions = versions.mix(MERGE_PLOTS.out.versions)  
+            else{
+                println "Extended QC plots not generated because generateExtendedQcPlots is set to ${params.generateExtendedQcPlots}"
+            } 
         }
+        else{
+            println "Plots not generated because runplots is set to ${params.runplots}"
+        }
+
+        //
+        // MODULE: MERGE_PLOTS
+        // 
+        // run ghostscript
+        temp_ch = input_ch.map{ it -> tuple( it[0], it[7])} 
+        temp2_ch = plots_ch.groupTuple().map {it -> tuple( it[0], it[1] )}            
+        plots2_ch = temp_ch.join(temp2_ch)
+
+        MERGE_PLOTS(
+        plots2_ch
+        )
+        versions = versions.mix(MERGE_PLOTS.out.versions) 
+
         // 3. Run purityEST
         if (params.runpurest){
-            //
-            // MODULE: PURITY_RELOADED
-            //
-            // Run PurityReloaded.py
-            PURITY_RELOADED(
-            rawvcf_ch
-            )
-            versions = versions.mix(PURITY_RELOADED.out.versions) 
+            if (params.min_confidence_score > 7){
+                //
+                // MODULE: PURITY_RELOADED
+                //
+                // Run PurityReloaded.py
+                PURITY_RELOADED(
+                rawvcf_ch
+                )
+                versions = versions.mix(PURITY_RELOADED.out.versions) 
+                }else{
+                    println "PurityEST not run because min_confidence_score is set to ${params.min_confidence_score} and purityEST requires a min_confidence_score of 8 or higher"
+                }
+
         }
     }
 
