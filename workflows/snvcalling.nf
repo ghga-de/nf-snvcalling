@@ -212,35 +212,35 @@ workflow SNVCALLING {
 
     if (params.runSNVAnnotation){ 
         SNV_ANNOTATION(
-        ch_vcf, 
-        ref, 
-        kgenome, 
-        dbsnpsnv, 
-        localcontrolwgs,
-        localcontrolwes, 
-        gnomadgenomes, 
-        gnomadexomes, 
-        annodb, 
-        repeatmasker, 
-        dacblacklist, 
-        dukeexcluded, 
-        hiseqdepth, 
-        selfchain, 
-        mapability, 
-        simpletandemrepeats, 
-        enchangers, 
-        cpgislands, 
-        tfbscons, 
-        encode_dnase,
-        mirnas_snornas, 
-        cosmic, 
-        mirbase, 
-        mir_targets, 
-        cgi_mountains, 
-        phastconselem, 
-        encode_tfbs, 
-        mirnas_sncrnas, 
-        chr_prefix
+            ch_vcf, 
+            ref, 
+            kgenome, 
+            dbsnpsnv, 
+            localcontrolwgs,
+            localcontrolwes, 
+            gnomadgenomes, 
+            gnomadexomes, 
+            annodb, 
+            repeatmasker, 
+            dacblacklist, 
+            dukeexcluded, 
+            hiseqdepth, 
+            selfchain, 
+            mapability, 
+            simpletandemrepeats, 
+            enchangers, 
+            cpgislands, 
+            tfbscons, 
+            encode_dnase,
+            mirnas_snornas, 
+            cosmic, 
+            mirbase, 
+            mir_targets, 
+            cgi_mountains, 
+            phastconselem, 
+            encode_tfbs, 
+            mirnas_sncrnas, 
+            chr_prefix
         )
         ch_versions = ch_versions.mix(SNV_ANNOTATION.out.versions)
 
@@ -260,10 +260,10 @@ workflow SNVCALLING {
         
         if (params.runSNVVCFFilter){
             FILTER_SNVS(
-            input_ch, 
-            ref, 
-            chr_prefix, 
-            chrlength    
+                input_ch, 
+                ref, 
+                chr_prefix, 
+                chrlength    
             )
             ch_versions = ch_versions.mix(FILTER_SNVS.out.versions)
         }

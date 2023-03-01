@@ -20,14 +20,14 @@ process PER_CHROM_PLOT {
     script:
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
-    def rerun_suffix = params.rerunfiltering ? "1": ""     
+    def rerun      = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": ""     
     
     """
     snvsPerChromPlot.r \\
         -i $distance \\
         -l $chr_file \\
         -s ${prefix} \\
-        -o ${prefix}_perChromFreq_conf_${params.min_confidence_score}_to_10${rerun_suffix}.pdf
+        -o ${prefix}_perChromFreq_conf_${params.min_confidence_score}_to_10${rerun}.pdf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

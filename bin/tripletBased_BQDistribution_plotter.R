@@ -9,6 +9,7 @@
 # This script creates QC plots
 # More specific: cumulative distributions of base qualities of the somatic SNVs.
 # Distribution are grouped according to the context triplet.
+# 27.02.2023: The script is lately changed by kuebra.narci@dkfz-de to be used in nf-snvcalling pipeline 
 
 library(getopt)
 library(ggplot2)
@@ -471,7 +472,7 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet,
                 molten.alt$nBases=transitionSubset[molten.alt$sample,"nBQ.alt"]
                 molten.alt[,ReadPositionsQuantile_ColName] = sapply(transitionSubset[molten.alt$sample,"RP_string.alt"], function(positionsString) {
                   positions = as.integer(unlist(strsplit(positionsString, ",")))
-                  return (round(quantile(positions, ReadPositionQuantile)))
+                  return (round(quantile(positions, ReadPositionQuantile, na.rm=TRUE)))
                 })                
                 # molten.altReadPos = melt(baseScores.alt.counts.normalized.cumul, id.vars = "sample")
                 if  (whatToPlot == "BQD_sampleIndividual_ColoredByChromosome") {
@@ -838,15 +839,15 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
     print("BQ vs. ReadPosition Scatterplot")
     plot_altBQ_vs_altReadPos(data.bq.triplet = data.bq.triplet.filtered,
     transitions = transitions, AUC_threshold=0.25,
-    RESULT_PDF = paste0(MPILEUP_FOLDER,"Scatterplot_BQ_ReadPos.pdf"))
+    RESULT_PDF = paste0("","Scatterplot_BQ_ReadPos.pdf"))
   }
 
 # write out the filtered file named ${SNV_FILE_WITH_MAF_filtered}
   VCF = read.table(pipe(paste0("cat ",vcfInputFile," | grep -v '^##' ")), comment.char = '', sep = "\t", header = T, stringsAsFactors = F, check.names = F)
   colnames(VCF)[1] = "CHROM"
   VCF.filtered = merge(VCF, data.bq.triplet.filtered[,c("CHROM","POS","REF","ALT")])
-  chrOrder <-c((1:22),"X","Y")
-  VCF.filtered$CHROM =  factor(VCF.filtered$CHROM, chrOrder, ordered=TRUE)
+  #chrOrder <-c((1:22),"X","Y")
+  VCF.filtered$CHROM =  factor(VCF.filtered$CHROM,ordered=FALSE)
   VCF.filtered = VCF.filtered[with(data=VCF.filtered, order(CHROM, POS)),]
   colnames(VCF.filtered)[1] = "#CHROM"
   ncol=ncol(VCF.filtered)
@@ -886,7 +887,7 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
     print("BQ vs. ReadPosition Scatterplot")
     plot_altBQ_vs_altReadPos(data.bq.triplet = data.bq.triplet, 
                              transitions = transitions, AUC_threshold=0.25, 
-                             RESULT_PDF = paste0(MPILEUP_FOLDER,"Scatterplot_BQ_ReadPos.pdf"))
+                             RESULT_PDF = paste0("","Scatterplot_BQ_ReadPos.pdf"))
     
   }
 }
