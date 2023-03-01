@@ -65,6 +65,8 @@ The pipeline has 5 main steps: SNV calling using mpileup, basic annotations, dee
    Produces pipeline level analytics and reports. 
 
 
+**Please read** [usage](https://github.com/kubranarci/nf-snvcalling/blob/main/docs/usage.md)  before you start your won analysis. 
+
  
 ## Quick Start
 

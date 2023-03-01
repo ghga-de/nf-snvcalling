@@ -19,15 +19,17 @@ process PLOT_BASESCORE_DISTRIBUTION {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
+    def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def rerun  = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": ""     
+
     """
     plotBaseScoreDistribution.R \\
         -v $vcf \\
         -r $reference_allele_base_qualities \\
         -a $alternative_allele_base_qualities \\
         -t ${params.basequal} \\
-        -o ${prefix}_${pdfname}.pdf \\
+        -o ${prefix}_${pdfname}${rerun}.pdf \\
         -d "${prefix} ${title}"
 
     cat <<-END_VERSIONS > versions.yml

@@ -19,12 +19,13 @@ process CONTEXT_PLOT {
     script:
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
+    def rerun      = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": ""
     
     """
     SNVSeqContext.R \\
         $frequency \\
         somatic \\
-        ${prefix}_snvs_with_context_conf_${params.min_confidence_score}_to_10.pdf
+        ${prefix}_snvs_with_context_conf_${params.min_confidence_score}_to_10${rerun}.pdf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -21,8 +21,7 @@ process JSON_REPORT {
     script:
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
-    def rerun      = params.rerunfiltering ? "1": "''"
-    
+    def rerun      = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": "''"    
     """
     final_plots_and_json.sh \\
         -p $prefix \\

@@ -6,8 +6,8 @@ params.options = [:]
 
 include { BCFTOOLS_MPILEUP as BCFTOOLS_MPILEUP_1 } from '../../modules/nf-core/modules/bcftools/mpileup/main'  addParams( options: params.options )
 include { BCFTOOLS_MPILEUP as BCFTOOLS_MPILEUP_2 } from '../../modules/nf-core/modules/bcftools/mpileup/main'  addParams( options: params.options )
-include { SEQ_CONTEXT_ANNOTATOR } from '../../modules/local/seq_context_annotator.nf'         addParams( options: params.options )
 include { MPILEUP_COMPARE       } from '../../modules/local/mpileup_compare.nf'               addParams( options: params.options )
+include { SEQ_CONTEXT_ANNOTATOR } from '../../modules/local/seq_context_annotator.nf'         addParams( options: params.options )
 include { FILE_CONCATENATOR     } from '../../modules/local/file_concatenator.nf'             addParams( options: params.options )
 
 
