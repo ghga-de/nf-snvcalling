@@ -22,7 +22,7 @@ process TRIPLET_PLOTTER {
     tuple val(meta), path("*_Q70.pdf")                , emit: plot_6 , optional: true
     tuple val(meta), path("*_Q80.pdf")                , emit: plot_7 , optional: true
     tuple val(meta), path("*_VAFcolored.pdf")         , emit: plot_8 , optional: true
-    tuple val(meta), path("*withMAF.vcf")             
+    tuple val(meta), path("*withMAF.vcf")             , emit: withmaf
     path "versions.yml"                               , emit: versions
 
     when:

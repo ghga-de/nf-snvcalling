@@ -14,8 +14,6 @@ include { FLAG_BIAS as FLAG_BIAS_2 } from '../../modules/local/flag_bias.nf'    
 include { TABIX_BGZIPTABIX         } from '../../modules/nf-core/modules/tabix/bgziptabix/main'            addParams( options: params.options )
 include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_1  } from '../../modules/local/filter_peoverlap.nf'         addParams( options: params.options )
 include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_2  } from '../../modules/local/filter_peoverlap.nf'         addParams( options: params.options )
-include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_3  } from '../../modules/local/filter_peoverlap.nf'         addParams( options: params.options )
-include { FILTER_PEOVERLAP as FILTER_PEOVERLAP_4  } from '../../modules/local/filter_peoverlap.nf'         addParams( options: params.options )
 include { ERROR_PLOTS as ERROR_PLOTS_1            } from '../../modules/local/error_plots.nf'              addParams( options: params.options )
 include { ERROR_PLOTS as ERROR_PLOTS_2            } from '../../modules/local/error_plots.nf'              addParams( options: params.options )
 include { ERROR_PLOTS as ERROR_PLOTS_3            } from '../../modules/local/error_plots.nf'              addParams( options: params.options )
@@ -127,10 +125,9 @@ workflow SNV_ANNOTATION {
         //
         FILTER_PEOVERLAP_1(
             CONFIDENCE_ANNOTATION.out.vcf, 
-            ref, 
-            0 
+            ref
         )
-        //versions    = versions.mix(FILTER_PEOVERLAP_1.out.versions)
+        versions    = versions.mix(FILTER_PEOVERLAP_1.out.versions)
         altbasequal = FILTER_PEOVERLAP_1.out.alternative_allele_base_qualities
         refbasequal = FILTER_PEOVERLAP_1.out.reference_allele_base_qualities 
         altreadpos  = FILTER_PEOVERLAP_1.out.alternative_allele_read_positions 
@@ -278,8 +275,7 @@ workflow SNV_ANNOTATION {
         //
         FILTER_PEOVERLAP_2(
             CONFIDENCE_ANNOTATION.out.vcf, 
-            ref, 
-            0  
+            ref 
         )
         out_vcf     = FILTER_PEOVERLAP_2.out.vcf
         altbasequal = FILTER_PEOVERLAP_2.out.alternative_allele_base_qualities
