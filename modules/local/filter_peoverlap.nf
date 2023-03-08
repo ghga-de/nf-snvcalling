@@ -12,7 +12,6 @@ process FILTER_PEOVERLAP {
     input:
     tuple val(meta),   file(vcf)
     tuple path(fasta), path(fai)
-    val(round)
 
     output:
     tuple val(meta), path('*_peoverlap.vcf')                         , emit: vcf
@@ -48,7 +47,7 @@ process FILTER_PEOVERLAP {
             confidenceAnnotation_SNVs.py $controlflag\\
                 -i - \\
                 $confoptions \\
-                -a $round \\
+                -a 0 \\
                 --gnomAD_WGS_maxMAF=${params.crit_gnomad_genomes_maxmaf} \\
                 --gnomAD_WES_maxMAF=${params.crit_gnomad_exomes_maxmaf} \\
                 --localControl_WGS_maxMAF=${params.crit_localcontrol_maxmaf} \\
