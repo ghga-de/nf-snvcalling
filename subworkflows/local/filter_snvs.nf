@@ -253,10 +253,12 @@ workflow FILTER_SNVS {
             triplet_ch     = input_ch.map{ it -> tuple( it[0], it[3], it[4], it[5], it[6] )}
             som_and_pos_ch = somatic_ch.join(triplet_ch)
 
+            som_and_pos_ch.view()
+            
             TRIPLET_PLOTTER_2(
                 som_and_pos_ch, 
                 "Base score distribution of PID",
-                ""
+                0
             )
             versions = versions.mix(TRIPLET_PLOTTER_2.out.versions)
             plots_ch = plots_ch.mix(TRIPLET_PLOTTER_2.out.plot_1)

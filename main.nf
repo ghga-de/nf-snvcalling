@@ -48,7 +48,6 @@ workflow NF_SNVCALLING {
 
 //
 // WORKFLOW: Execute a single named workflow for the pipeline
-// See: https://github.com/nf-core/rnaseq/issues/619
 //
 workflow {
     NF_SNVCALLING ()

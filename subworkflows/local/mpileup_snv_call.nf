@@ -56,7 +56,7 @@ workflow MPILEUP_SNV_CALL {
     ch_intervals = ch_intervals.mix(ch_intervals_1)
 
     // If reference is hg38, run HLA and ALT contigs as seperate runs
-    if (params.ref_type == 'hg38'){
+    if ((params.ref_type == 'hg38') && (params.runaltcontigs)){
         println "Running HLA and ALT contigs as seperate runs"
         // Generate input set for HLA and ALT runs
         hla_alt_inputs = sample_ch.combine(contigs)
