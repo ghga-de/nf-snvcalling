@@ -19,7 +19,7 @@
 
 <!-- TODO nf-core: Write a 1-2 sentence summary of what data the pipeline is for and what it does -->
 
-**nf-snvcalling** is a bioinformatics best-practice analysis pipeline from ODCF-OTP SNV Calling pipeline for somatic samples. It calls SNVs from both germline and somatic samples using bcftools mpileup, compares and filter outs germline spesific ones with samtools mpileup compare. This workflow uses various annotations from different databases, and applies broad filters accordingly.  Extensive QC plots serves functionality for high functional somatic mutation prioritization. 
+**nf-snvcalling** is a bioinformatics best-practice analysis pipeline from ODCF-OTP SNV Calling pipeline for somatic samples. It calls SNVs from both germline and somatic samples using bcftools mpileup, compares and filter outs germline spesific ones with samtools mpileup compare. This workflow uses various annotations from publicly avaliable databases like 1000G variants, dbSNP and gnomAD. The functional effect of the mutations are annotated using Annovar and the variants are assested for their consecouence and split into somatic and non-somatic calls. Besides, extensive QC plots serves functionality for high functional somatic mutation prioritization.
 
 For now, this workflow is only optimal to work in ODCF Cluster. The config file (conf/dkfz_cluster.config) can be used as an example. Running Annotation, DeepAnnotation and Filter steps are optinal and can be turned off using [runsnvAnnotation, runSNVDeepAnnotation, runSNVVCFFilter] parameters sequentialy.
 

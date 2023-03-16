@@ -31,9 +31,9 @@ process TRIPLET_PLOTTER {
     script:
     def args         = task.ext.args ?: ''
     def prefix       = task.ext.prefix ?: "${meta.id}"
-    def mft          = rerun == 1  ? "${params.median_filter_threshold}" : '-1'
-    def skip_force   = rerun == 1  ? '1': '0'
-    def rerun_suffix = rerun ? "_filteredAltMedian${params.median_filter_threshold}": ""     
+    def mft          = rerun == 1 ? "${params.median_filter_threshold}" : '-1'
+    def forcererun   = rerun == 1 ? '0': '1'
+    def rerun_suffix = rerun == 1 ? "_filteredAltMedian${params.median_filter_threshold}": ""
 
     """
     cat $somaticvcf | perl -ne 'chomp; my \$line=\$_; if (/DP4=(\\d+),(\\d+),(\\d+),(\\d+);/) {my \$fR=\$1; my \$rR=\$2; my \$fA=\$3; my \$rA=\$4; my \$MAF=(\$fA+\$rA)/(\$fR+\$rR+\$fA+\$rA); print "\$line\\t\$MAF\\n";} else { if (/^#CHROM/) { print "\$line\\tMAF\\n";} else {print "\$line\\n";} };' >${prefix}.withMAF.vcf
@@ -48,14 +48,14 @@ process TRIPLET_PLOTTER {
         -p $prefix \\
         -t "${prefix} ${title}" \\
         -o ${prefix}_tripletSpecific_base_score_distribution${rerun_suffix} \\
-        -R $skip_force \\
+        -R $forcererun \\
         -c 1 \\
         -f $mft \\
         -s \$SEQUENCE_CONTEXT_COLUMN_INDEX \\
         --MAFColumnIndex \$MAF_COLUMN_INDEX \\
         -i 1 \\
         -b 0 \\
-        --skipPlots $skip_force \\
+        --skipPlots $rerun \\
         --refBaseQual $refbasequal \\
         --altBaseQual $altbasequal \\
         --altReadPos $altreadpos \\

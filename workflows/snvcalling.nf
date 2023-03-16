@@ -74,7 +74,7 @@ if ((params.reference) && (params.chrlength) && (params.chr_prefix))
         chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38/stats/GRCh38_decoy_ebv_alt_hla_phiX.fa.chrLenOnlyACGT_realChromosomes.tsv'
         chr_prefix   = Channel.value("chr")
         // HLA and ALT contigs
-        contig_file = 'assets/temp_ALT.txt'      
+        contig_file = 'assets/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.contig.bed'      
         }
     }
 

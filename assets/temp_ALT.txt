@@ -1,7 +1,0 @@
-chr1_KI270706v1_random
-chr1_KI270707v1_random
-chr1_KI270708v1_random
-chr1_KI270709v1_random
-chr1_KI270710v1_random
-chr1_KI270711v1_random
-chr1_KI270712v1_random

@@ -13,6 +13,7 @@
 
 library(getopt)
 library(ggplot2)
+library(stringr)
 library(Biostrings) # for reverseComplement
 library(grid) # for unit,gpar
 library(reshape2)
@@ -502,18 +503,20 @@ plot_BQD_to_pdf = function(PDF_OUTPUT_FILE, data.bq.triplet,
                 
                 AUC.BQ30.ref = round(sum(molten[with(molten, BQ <= 30 & type == 'REF'),"value"])*100,1)
                 AUC.BQ30.alt = round(sum(molten[with(molten, BQ <= 30 & type == 'ALT'),"value"])*100,1)                
-                
+                print(AUC.BQ30.alt )
                 # Define highlighting of triplets due to high number of reads with low quality alternative base calls
                 # black | >30%:orange font | >40%:red font | >50% red font+border
-                if (AUC.BQ30.alt > 30) {
-                  fontface.numbers = "bold"
-                  if (AUC.BQ30.alt > 40) {
-                    color.numbers = "red"
-                    if (AUC.BQ30.alt > 50) {
-                      color.panel.border = "red"
+                if (!is.na(AUC.BQ30.alt)){
+                  if (AUC.BQ30.alt > 30) {
+                    fontface.numbers = "bold"
+                    if (AUC.BQ30.alt > 40) {
+                      color.numbers = "red"
+                      if (AUC.BQ30.alt > 50) {
+                        color.panel.border = "red"
+                      }
+                    } else {
+                      color.numbers = "orange"
                     }
-                  } else {
-                    color.numbers = "orange"
                   }
                 }                   
               } else if (whatToPlot == "BQ_CoV") {
@@ -847,7 +850,7 @@ if (ALT.MEDIAN.THRESHOLD > -1) {
   colnames(VCF)[1] = "CHROM"
   VCF.filtered = merge(VCF, data.bq.triplet.filtered[,c("CHROM","POS","REF","ALT")])
   #chrOrder <-c((1:22),"X","Y")
-  VCF.filtered$CHROM =  factor(VCF.filtered$CHROM,ordered=FALSE)
+  VCF.filtered$CHROM =  factor(VCF.filtered$CHROM,ordered=TRUE)
   VCF.filtered = VCF.filtered[with(data=VCF.filtered, order(CHROM, POS)),]
   colnames(VCF.filtered)[1] = "#CHROM"
   ncol=ncol(VCF.filtered)
