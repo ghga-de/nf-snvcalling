@@ -29,7 +29,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 ## Pipeline summary
 
-The pipeline has 5 main steps: SNV calling using mpileup, basic annotations, deep annotations, and filtering. Annotation and filtering steps are embeded with many plot generations. 
+The pipeline has  main steps: SNV calling using mpileup, basic annotations, deep annotations, filtering and reporting. Annotation and filtering steps are embeded with many plot generations. 
 
 
 1. SNC Calling: 
