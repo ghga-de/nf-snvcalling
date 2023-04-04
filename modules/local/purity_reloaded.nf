@@ -21,11 +21,12 @@ process PURITY_RELOADED {
     script:
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
-    
+    def rerun      = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": ""     
+
     """
     PurityReloaded.py \\
         $vcf \\
-        `findConfColumn.pl ${vcf}` > ${prefix}_purityEST.txt
+        `findConfColumn.pl ${vcf}` > ${prefix}_purityEST${rerun}.txt
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -8,13 +8,14 @@ process SNV_EXTRACTOR {
     
     input:
     tuple val(meta), file(vcf), file(index)
+    val(rerun)
 
     output:
-    tuple val(meta), path('*_somatic_functional_snvs_conf_*_to_10.vcf')        , emit: somatic_functional
-    tuple val(meta), path('*_somatic_snvs_conf_*_to_10.vcf')                   , emit: somatic_snv
-    tuple val(meta), path('*_somatic_functional_ncRNA_snvs_conf_*_to_10.vcf')               
-    tuple val(meta), path('*_germline_functional_snvs_conf_*_to_10.vcf')         
-    path  "versions.yml"                                                       , emit: versions
+    tuple val(meta), path('*_somatic_functional_snvs_conf_*_to_10*')        , emit: somatic_functional
+    tuple val(meta), path('*_somatic_snvs_conf_*_to_10*')                   , emit: somatic_snv
+    tuple val(meta), path('*_somatic_functional_ncRNA_snvs_conf_*_to_10*')               
+    tuple val(meta), path('*_germline_functional_snvs_conf_*_to_10*')         
+    path  "versions.yml"                                                    , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -22,7 +23,7 @@ process SNV_EXTRACTOR {
     script:
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
-    def suffix     = params.rerunfiltering ? "--suffix=1": ""
+    def suffix     = rerun == 1 ? "--suffix=1": ""
     
     """
     snv_extractor_v1.pl \\

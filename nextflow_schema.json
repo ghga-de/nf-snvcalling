@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/nf/snvcalling/master/nextflow_schema.json",
-    "title": "nf/snvcalling pipeline parameters",
-    "description": "ODCF SNVCalling pipeline",
+    "$id": "https://raw.githubusercontent.com/nf-nsvcalling/master/nextflow_schema.json",
+    "title": "nf-snvcalling pipeline parameters",
+    "description": "ODCF SNV calling pipeline",
     "type": "object",
     "definitions": {
         "input_output_options": {
@@ -42,12 +42,588 @@
                 }
             }
         },
+        "post_processes": {
+            "title": "Post process options",
+            "type": "object",
+            "description": "Options for post-processing after SNV calling",
+            "default": "",
+            "properties": {
+                "runSNVAnnotation": {
+                    "type": "boolean",
+                    "default": "true",
+                    "fa_icon": "fas fa-post_processes",
+                    "description": "Enable SNV Annotation"
+                },
+                "runSNVDeepAnnotation": {
+                    "type": "boolean",
+                    "default": "true",
+                    "fa_icon": "fas fa-post_processes",
+                    "description": "Enable SNV Deep Annotation with extra annotation files" 
+                },
+                "runSNVVCFFilter": {
+                    "type": "boolean",
+                    "default": "true",
+                    "fa_icon": "fas fa-post_processes",
+                    "description": "Enable variant filtration" 
+                },
+                "rerunfiltering": {
+                    "type": "boolean",
+                    "default": "true",
+                    "fa_icon": "fas fa-post_processes",
+                    "description": "Only reruns filtering on the filtered VCF file" 
+                },
+                "runArtifactFilter": {
+                    "type": "boolean",
+                    "default": "true",
+                    "fa_icon": "fas fa-post_processes",
+                    "description": "Enable Artifact filtration during annotation" 
+                },
+                "runplots": {
+                    "type": "boolean",
+                    "default": "true",
+                    "fa_icon": "fas fa-post_processes",
+                    "description": "Produce plots for bias and error check"
+                },
+                "generateExtendedQcPlots": {
+                    "type": "boolean",
+                    "default": "true",
+                    "fa_icon": "fas fa-post_processes",
+                    "description": "Generate extended QC plots"
+                },
+                "runCompareGermline": {
+                    "type": "boolean",
+                    "default": "true",
+                    "fa_icon": "fas fa-post_processes",
+                    "description": "Enable comparison with germline variants (if available) during SNV call"
+                },
+                "runpurest": {
+                    "type": "boolean",
+                    "default": "true",
+                    "fa_icon": "fas fa-post_processes",
+                    "description": "Enable purest analysis"
+                },
+                "skip_multiqc": {
+                    "type": "boolean",
+                    "default": "false",
+                    "fa_icon": "fas fa-post_processes",
+                    "description": "Skip MultiQC" 
+                }
+            }
+        },
+        "annotation_params": {
+            "title": "Annotation options",
+            "type": "object",
+            "description": "Options for Annotations",
+            "default": "",
+            "properties": {
+                "confidenceoptions": {
+                    "type": "string",
+                    "default": "-t 500",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "List of options for confidence calculation"
+                },
+                "k_genome": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.vcf(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "1K genome VCF file, should be indexed" 
+                },
+                "dbsnp_snv": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.vcf(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "dbSNP SNV VCF file, should be indexed" 
+                },
+                "local_control_wgs": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.vcf(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Local Exclusion list for WGS, VCF file, should be indexed" 
+                },
+                "local_control_wes": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.vcf(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Local Exclusion list for WES, VCF file, should be indexed" 
+                },
+                "gnomad_genomes": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.vcf(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Gnomad genomes VCF file, should be indexed." 
+                },
+                "gnomad_exomes": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.vcf(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Gnomad exomes VCF file, should be indexed." 
+                }
+            }
+        },
+        "annovar_params": {
+            "title": "Annovar options",
+            "type": "object",
+            "description": "Options for Annovar",
+            "default": "",
+            "properties": {
+                "buildver": {
+                    "type": "string",
+                    "default": "hg19",
+                    "fa_icon": "fas fa-annovar",
+                    "description": "Annovar build version"
+                },
+                "dbtype": {
+                    "type": "string",
+                    "default": "wgEncodeGencodeCompV19",
+                    "fa_icon": "fas fa-annovar",
+                    "description": "Annovar dbtype" 
+                },
+                "segdupcol": {
+                    "type": "string",
+                    "default": "SEGDUP",
+                    "fa_icon": "fas fa-annovar",
+                    "description": "Segmental duplication column name" 
+                },
+                "cytobandcol": {
+                    "type": "string",
+                    "default": "CYTOBAND",
+                    "fa_icon": "fas fa-annovar",
+                    "description": "Cytobad column name" 
+                },
+                "geneannocols": {
+                    "type": "string",
+                    "default": "ANNOVAR_FUNCTION,GENE,EXONIC_CLASSIFICATION,ANNOVAR_TRANSCRIPTS",
+                    "fa_icon": "fas fa-annovar",
+                    "description": "Column names seperated with ',' for annovar " 
+                },
+                "annovar_path": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "File path to annovar execution file: annovar/annovar_Feb2016/" 
+                }
+            }
+        },
+        "snv_reliability_params": {
+            "title": "Indel Reability files",
+            "type": "object",
+            "description": "Options for indel reability",
+            "default": "",
+            "properties": {
+                "repeat_masker": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC repeat masker BED.GZ, should be indexed. NOTE: This file also used in Visualizations!" 
+                },
+                "dac_blacklist": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC DAC blacklist BED.GZ, should be indexed" 
+                },
+                "duke_excluded": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC Duke Excluded BED.GZ, should be indexed" 
+                },
+                "hiseq_depth": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC HiSeq Depth BED.GZ, should be indexed" 
+                },
+                "self_chain": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC self chain BED.GZ, should be indexed" 
+                },
+                "mapability_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC wg Encode Mapability BED.GZ, should be indexed" 
+                },
+                "simple_tandemrepeats": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC simple tandem repeats BED.GZ, should be indexed" 
+                }              
+            }
+        },
+        "deep_annotation_options": {
+            "title": "SNV Deep Annotation files",
+            "type": "object",
+            "description": "Options for runIndelDeepAnnotation",
+            "default": "",
+            "properties": {
+                "enchancer_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC Enhancers BED.GZ, should be indexed" 
+                },
+                "cpgislands_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC CpG islands BED.GZ, should be indexed" 
+                },
+                "tfbscons_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC TFBS sites BED.GZ, should be indexed" 
+                },
+                "encode_dnase_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC DNase cluster BED.GZ, should be indexed" 
+                },
+                "mirnas_snornas_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "mirBase snoRNAs BED.GZ, should be indexed" 
+                },
+                "mirna_sncrnas_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "mirBase sncRNAs BED.GZ, should be indexed" 
+                },
+                "mirbase_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "mirBase miRNAs BED.GZ, should be indexed" 
+                },
+                "cosmic_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "COSMIC db coding SNVs BED.GZ, should be indexed" 
+                },
+                "mir_targets_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "mirBase miRNA Target sites BED.GZ, should be indexed" 
+                },
+                "cgi_mountains_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Cgi Mountains BED.GZ, should be indexed" 
+                },
+                "phastconselem_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC phast cons elements BED.GZ, should be indexed" 
+                } ,
+                "encode_tfbs_file": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed(\\.gz)?$",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "UCSC TFBS clusters BED.GZ, should be indexed" 
+                }                
+            }
+        },
+        "filtration_params": {
+            "title": "Filtration options",
+            "type": "object",
+            "description": "Options for VCF Filtering",
+            "default": "",
+            "properties": {
+                "min_confidence_score": {
+                    "type": "integer",
+                    "default": "8",
+                    "fa_icon": "fas fa-filter",
+                    "description": "Minimum confidence score for filtration"
+                },
+                "allele_freq": {
+                    "type": "integer",
+                    "default": "0",
+                    "fa_icon": "fas fa-filter",
+                    "description": "ignore SNVs with MAF below that value (rainfall plot)"
+                },
+                "min_cov": {
+                    "type": "integer",
+                    "default": "0",
+                    "fa_icon": "fas fa-filter",
+                    "description": "minimal coverage for somatic SNVs (MAF plot)"
+                },
+                "filter_gnomad_genomes": {
+                    "type": "boolean",
+                    "default": "false",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Apply gnomad genomes filtration" 
+                },
+                "filter_gnomad_exomes": {
+                    "type": "boolean",
+                    "default": "false",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Apply gnomed exomes filtration" 
+                },
+                "filter_1kgenomes": {
+                    "type": "boolean",
+                    "default": "false",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Apply 1K_GENOME filtration" 
+                },
+                "filter_non_clinic": {
+                    "type": "boolean",
+                    "default": "false",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Apply dbSNP filtration" 
+                },
+                "filter_localcontrol": {
+                    "type": "boolean",
+                    "default": "false",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Apply Local Control af filtration" 
+                },
+                "crit_1kgenomes_maxmaf": {
+                    "type": "number",
+                    "default": "",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Max MAF for 1K_GENOME filtration" 
+                },
+                "crit_gnomad_exomes_maxmaf": {
+                    "type": "number",
+                    "default": "",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Max MAF for gnomad genomes filtration" 
+                },
+                "crit_gnomad_genomes_maxmaf": {
+                    "type": "number",
+                    "default": "",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Max MAF for gnomad exomes filtration" 
+                },
+                "crit_localcontrol_maxmaf": {
+                    "type": "number",
+                    "default": "",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Max MAF for Local Control filtration" 
+                }
+            }
+        },
+        "visualization_params": {
+            "title": "Visualization options",
+            "type": "object",
+            "description": "Options for screenshots",
+            "default": "",
+            "properties": {
+                "plot_type": {
+                    "type": "string",
+                    "default": "Differences",
+                    "fa_icon": "fas fa-filter",
+                    "description": "Differences or Ratios "
+                    }
+                }
+            },
+        "filter_bias_params": {
+            "title": "Filter Bias options",
+            "type": "object",
+            "description": "Options for filter_bias.py",
+            "default": "",
+            "properties": {
+                "biasPValThreshold": {
+                    "type": "number",
+                    "default": "0.01",
+                    "fa_icon": "fas fa-filter",
+                    "description": "probability threshold to accept bias. The p value gives the probability to observe the same or stronger bias by chance when assuming a binomial distribution with event probability of 0.5"
+                    },
+                "biasRatioMinimum": {
+                    "type": "number",
+                    "default": "0.53",
+                    "fa_icon": "fas fa-filter",
+                    "description": "minimum fraction of reads in direction of bias / total variant reads we require to call a field biased"
+                    },
+                "biasRatioThreshold": {
+                    "type": "number",
+                    "default": "0.63",
+                    "fa_icon": "fas fa-filter",
+                    "description": "threshold for fraction of reads in direction of bias / total variant reads above which it will be considered a strong bias"
+                    },
+                "nReads": {
+                    "type": "number",
+                    "default": "20",
+                    "fa_icon": "fas fa-filter",
+                    "description": " number of reads in one field above which a bias is possible"
+                    }, 
+                "nMuts": {
+                    "type": "number",
+                    "default": "4",
+                    "fa_icon": "fas fa-filter",
+                    "description": "number of muts above which a bias is possible"
+                    }, 
+                "tha_score_threshold": {
+                    "type": "number",
+                    "default": "0.15",
+                    "fa_icon": "fas fa-filter",
+                    "description": "THA score threshold, Threshold for calling sample THA affected. Threshold refers to fraction of SNVs with BaseQ pVal below 0.05"
+                    },                 
+                "median_filter_threshold": {
+                    "type": "number",
+                    "default": "20",
+                    "fa_icon": "fas fa-filter",
+                    "description": "SNVs with median of alternative base qualities below this threshold will be removed in the rerun filter step. Value of -1 means no filtering"
+                    },  
+                "rVcf": {
+                    "type": "number",
+                    "default": "0.1",
+                    "fa_icon": "fas fa-filter",
+                    "description": "max fraction of reads (reads/total reads) we tolerate in the direction opposite to the bias for it to be called an artefact"
+                    }, 
+                "maxNumOppositeReadsSequencingWeakBias": {
+                    "type": "number",
+                    "default": "0",
+                    "fa_icon": "fas fa-filter",
+                    "description": "Maximum number of opposite reads for sequencing weak bias"
+                    },   
+                "maxNumOppositeReadsSequenceWeakBias": {
+                    "type": "number",
+                    "default": "0",
+                    "fa_icon": "fas fa-filter",
+                    "description": "Maximum number of opposite reads for sequence weak bias"
+                    }, 
+                "maxNumOppositeReadsSequencingStrongBias": {
+                    "type": "number",
+                    "default": "1",
+                    "fa_icon": "fas fa-filter",
+                    "description": "Maximum number of reads for sequencing strong bias"
+                    },  
+                "maxNumOppositeReadsSequenceStrongBias": {
+                    "type": "number",
+                    "default": "1",
+                    "fa_icon": "fas fa-filter",
+                    "description": "Maximum number of reads for sequence strong bias"
+                    }            
+                }
+             },
+        "filter_pe_overlap_params": {
+            "title": "Filter_PE_Overlap options",
+            "type": "object",
+            "description": "Options for filter_PEoverlap.py",
+            "default": "",
+            "properties": {
+                "basequal": {
+                    "type": "number",
+                    "default": "13",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Base Quality used for SNV calling" 
+                },
+                "mapqual": {
+                    "type": "number",
+                    "default": "30",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "MAP Quality used for SNV calling" 
+                }, 
+                "bottom_border": {
+                    "type": "number",
+                    "default": "0.01",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Bottom border for Canopy based clustering" 
+                },
+                "qualityscore": {
+                    "type": "string",
+                    "default": "Phred",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Quality score type" 
+                },
+                "mismatch_threshold": {
+                    "type": "number",
+                    "default": "-1",
+                    "fa_icon": "fas fa-annotation",
+                    "description": "Mismatch threshold for PE overlap filtration" 
+                }
+            }
+        },
         "reference_genome_options": {
             "title": "Reference genome options",
             "type": "object",
             "fa_icon": "fas fa-dna",
             "description": "Reference genome related files and options required for the workflow.",
             "properties": {
+                "genome": {
+                    "type": "string",
+                    "description": "Name of iGenomes reference.",
+                    "fa_icon": "fas fa-book",
+                    "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`. \n\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
+                },
+                "ref_type": {
+                    "type": "string",
+                    "description": "Name of reference.",
+                    "fa_icon": "fas fa-book",
+                    "help_text": "If using a reference genome configured in ODCF cluster, use this parameter to give the ID for the reference.hg 37 or hg19."
+                },
+                "fasta": {
+                    "type": "string",
+                    "format": "file-path",
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
+                    "description": "Path to FASTA genome file.",
+                    "help_text": "This parameter is *mandatory* if `--ref_type` is not specified.",
+                    "fa_icon": "far fa-file-code"
+                },
                 "igenomes_base": {
                     "type": "string",
                     "format": "directory-path",

@@ -11,7 +11,8 @@ process JSON_REPORT {
 
     output:
     tuple val(meta), path('*is_THA_affected.txt')   , emit: tha
-    tuple val(meta), path('*.json')                 , emit: json         
+    tuple val(meta), path('*.json')                 , emit: json
+    tuple val(meta), path('*.pdf')                  , emit: plot         
     path  "versions.yml"                            , emit: versions
 
     when:
@@ -20,8 +21,7 @@ process JSON_REPORT {
     script:
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
-    def rerun      = params.rerunfiltering ? "1": "''"
-    
+    def rerun      = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": "''"    
     """
     final_plots_and_json.sh \\
         -p $prefix \\

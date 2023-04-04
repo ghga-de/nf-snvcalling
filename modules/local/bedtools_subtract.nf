@@ -1,17 +1,16 @@
 // This process is not tested!
 process BEDTOOLS_SUBTRACT {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_medium'
 
-    conda "bioconda::bedtools=2.30.0"
+    conda ""
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/bedtools:2.30.0--h7d7f7ad_2':
-        'quay.io/biocontainers/bedtools:2.30.0--h7d7f7ad_2' }"   
+        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"   
     input:
-    tuple val(meta), file(somatic_vcf), file(filtered)
+    tuple val(meta), file(orjinal_somatic_vcf), file(filtered)
 
     output:
-    tuple val(meta), path("*_to_10_removedByMedian*.vcf")        , emit: somatic_functional      
+    tuple val(meta), path("*_to_10_removedByMedian*.vcf")        , emit: subtracted_file      
     path  "versions.yml"                                         , emit: versions
 
     when:
@@ -21,12 +20,16 @@ process BEDTOOLS_SUBTRACT {
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
     def suffix     = params.rerunfiltering ? "1": ""
+    def outfile    = "${prefix}_somatic_functional_snvs_conf_${params.min_confidence_score}_to_10_removedByMedian${params.median_filter_threshold}Filter.vcf"
     
     """
-    grep '^#' ${somatic_vcf} >${filtered}; bedtools subtract -a ${somatic_vcf} -b ${filtered} >>${prefix}_somatic_functional_snvs_conf_${params.min_confidence_score}_to_10_removedByMedian${params.median_filter_threshold}Filter.vcf  
+    mv ${orjinal_somatic_vcf} ${orjinal_somatic_vcf}.bed
+    mv ${filtered} ${filtered}.bed
+    touch $outfile
+    grep '^#' ${orjinal_somatic_vcf}.bed >$outfile; bedtools subtract -a ${orjinal_somatic_vcf}.bed -b ${filtered}.bed >>$outfile  
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
         bedtools: \$(bedtools --version | sed -e "s/bedtools v//g")
     END_VERSIONS
     """
