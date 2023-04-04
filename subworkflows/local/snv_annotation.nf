@@ -133,6 +133,11 @@ workflow SNV_ANNOTATION {
         altreadpos  = FILTER_PEOVERLAP_1.out.alternative_allele_read_positions 
         refreadpos  = FILTER_PEOVERLAP_1.out.reference_allele_read_positions
 
+        // filter out the lists if no variant exists for visualization
+        FILTER_PEOVERLAP_1.out.somatic_snvs
+            .filter{meta, somatic_snvs -> WorkflowCommons.getNumLinesInFile(somatic_snvs) > 1}
+            .set{somatic_vcf}
+
         ////////////////////////////////////////
         //// First round of plot generation ////
         ////////////////////////////////////////
@@ -140,7 +145,6 @@ workflow SNV_ANNOTATION {
         // MODULE: ERROR_PLOTS
         //
         // Sequencing Error plot
-        somatic_vcf = FILTER_PEOVERLAP_1.out.somatic_snvs 
         ERROR_PLOTS_1(
             somatic_vcf,
             'sequencing_specific', 
