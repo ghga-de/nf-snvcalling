@@ -1,3 +1,0 @@
-sample,tumor,control
-withcontrol,seq2_testdata/WES_LL_T_1_test.bam,seq2_testdata/WES_LL_N_1_test.bam
-nocontrol,seq2_testdata/WES_LL_T_1_test.bam,

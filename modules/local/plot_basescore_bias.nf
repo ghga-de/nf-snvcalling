@@ -10,6 +10,7 @@ process PLOT_BASESCORE_BIAS {
     tuple val(meta), path(vcf), path(reference_allele_base_qualities), path(alternative_allele_base_qualities)
     val(pdfname)
     val(title)
+    val(step)
 
     output:
     tuple val(meta), path("*.pdf") , emit: plot  
@@ -19,15 +20,17 @@ process PLOT_BASESCORE_BIAS {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
+    def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def rerun  = (params.rerunfiltering) & (step == "filtration") ? "_filteredAltMedian${params.median_filter_threshold}": ""
+
     """
     tripletBased_BQRatio_plotter.R \\
         -v $vcf \\
         -r $reference_allele_base_qualities \\
         -a $alternative_allele_base_qualities \\
         -t ${params.basequal} \\
-        -o ${prefix}_${pdfname}.pdf \\
+        -o ${prefix}_${pdfname}${rerun}.pdf \\
         -p ${params.plot_type} \\
         -d "${prefix} ${title}"
 

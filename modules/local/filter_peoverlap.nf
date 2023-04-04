@@ -3,7 +3,7 @@
 // v2 works here!!!!! important
 process FILTER_PEOVERLAP {
     tag "$meta.id"
-    label 'process_high'
+    label 'process_medium_high'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -12,7 +12,6 @@ process FILTER_PEOVERLAP {
     input:
     tuple val(meta),   file(vcf)
     tuple path(fasta), path(fai)
-    val(round)
 
     output:
     tuple val(meta), path('*_peoverlap.vcf')                         , emit: vcf
@@ -30,12 +29,11 @@ process FILTER_PEOVERLAP {
     def args       = task.ext.args ?: ''
     def args2      = task.ext.args2 ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
-    def controlflag   = meta.iscontrol == "1" ? "" : "--nocontrol"
+    def controlflag   = meta.iscontrol == "1" ? "" : "--nocontrol "
     def confoptions   = params.ref_type == "hg38" ? "${params.confidenceoptions} --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz": "${params.confidenceoptions}"
 
     """
-    cat < $vcf | filter_PEoverlap.py \\
-        $controlflag \\
+    cat < $vcf | filter_PEoverlap.py $controlflag\\
         --alignmentFile=$meta.tumor_bam \\
         --mapq=${params.mapqual} \\
         --baseq=${params.basequal} \\
@@ -46,10 +44,10 @@ process FILTER_PEOVERLAP {
         --altBasePositionsFile=${prefix}_alternative_allele_read_positions.txt \\
         --refBasePositionsFile=${prefix}_reference_allele_read_positions.txt \\
         --referenceFile=$fasta | \\
-            confidenceAnnotation_SNVs.py $controlflag \\
+            confidenceAnnotation_SNVs.py $controlflag\\
                 -i - \\
                 $confoptions \\
-                -a $round \\
+                -a 0 \\
                 --gnomAD_WGS_maxMAF=${params.crit_gnomad_genomes_maxmaf} \\
                 --gnomAD_WES_maxMAF=${params.crit_gnomad_exomes_maxmaf} \\
                 --localControl_WGS_maxMAF=${params.crit_localcontrol_maxmaf} \\

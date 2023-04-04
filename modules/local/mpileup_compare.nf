@@ -1,16 +1,14 @@
 process MPILEUP_COMPARE {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_single'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
-
-    debug true
+        'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
 
     input:
     tuple val(meta), path(vcf), val(intervals)
-    tuple path(fasta), path(fai) 
+    tuple path(fasta), path(fai)
 
     output:
     tuple val(meta), path("*.nppileup.vcf")     , emit: vcf
@@ -22,13 +20,13 @@ process MPILEUP_COMPARE {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def args_c = intervals == "contig" ? "$args" : "$args -r ${intervals}"
 
     if (meta.iscontrol == '1' && params.runCompareGermline)
     {
         """
         samtools mpileup \\
-            $args \\
-            -r $intervals \\
+            $args_c \\
             -l $vcf \\
             -f $fasta \\
             $meta.control_bam > ${prefix}.${intervals}.control.temp
@@ -41,7 +39,6 @@ process MPILEUP_COMPARE {
             perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
             samtools: \$(echo \$(samtools 2>&1) | sed -e 's/.*Version: //; s/ Usage.*//')
         END_VERSIONS
-
         """
 
     }

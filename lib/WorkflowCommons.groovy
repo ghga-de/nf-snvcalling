@@ -1,5 +1,5 @@
 //
-// This file holds several functions common to the multiple workflows in the nf-core/viralrecon pipeline
+// This file holds several functions common to the multiple workflows in the nf-snvcalling pipeline
 //
 
 class WorkflowCommons {

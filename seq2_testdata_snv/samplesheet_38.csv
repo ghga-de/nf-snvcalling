@@ -1,0 +1,2 @@
+sample,tumor,control
+withcontrol,WES_LL_T_1_test.bam,WES_LL_N_1_test.bam

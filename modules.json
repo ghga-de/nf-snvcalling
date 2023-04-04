@@ -1,6 +1,6 @@
 {
-    "name": "nf/snvcalling",
-    "homePage": "https://github.com/nf/snvcalling",
+    "name": "nf-snvcalling",
+    "homePage": "https://github.com/nf/nf-snvcalling",
     "repos": {
         "nf-core/modules": {
             "git_url": "https://github.com/nf-core/modules.git",

@@ -1,4 +1,3 @@
-// This process will be asked!
 
 process TRIPLET_PLOTTER {
     tag "$meta.id"
@@ -11,23 +10,30 @@ process TRIPLET_PLOTTER {
     input:
     tuple val(meta), path(somaticvcf), path(altbasequal), path(refbasequal), path(altreadpos), path(refreadpos)
     val(title)
+    val(rerun)
 
     output:
-    tuple val(meta), path("*.withMAF.vcf")             , emit: withmaf_vcf
-    tuple val(meta), path("*filteredAltMedian*.vcf")  , emit: filtered_vcf
-    tuple val(meta), path("*.pdf")                    , emit: plot
+    tuple val(meta), path("*withMAF_filtered*.vcf")   , emit: vcf    , optional: true
+    tuple val(meta), path("*_combined.pdf")           , emit: plot_1 , optional: true
+    tuple val(meta), path("*_CoV.pdf")                , emit: plot_2 , optional: true
+    tuple val(meta), path("*_CHROMcolored.pdf")       , emit: plot_3 , optional: true
+    tuple val(meta), path("*_Q50.pdf")                , emit: plot_4 , optional: true
+    tuple val(meta), path("*_Q60.pdf")                , emit: plot_5 , optional: true
+    tuple val(meta), path("*_Q70.pdf")                , emit: plot_6 , optional: true
+    tuple val(meta), path("*_Q80.pdf")                , emit: plot_7 , optional: true
+    tuple val(meta), path("*_VAFcolored.pdf")         , emit: plot_8 , optional: true
+    tuple val(meta), path("*withMAF.vcf")             , emit: withmaf
     path "versions.yml"                               , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def force = params.rerunfiltering ? '1': '0'
-    def median_filter_threshold = params.rerunfiltering  ? "${params.median_filter_threshold}" : '-1'
-    def skipplots    = params.rerunfiltering  ? '1': '0'
-    def rerun_suffix = params.rerunfiltering  ? '1': "''"
+    def args         = task.ext.args ?: ''
+    def prefix       = task.ext.prefix ?: "${meta.id}"
+    def mft          = rerun == 1 ? "${params.median_filter_threshold}" : '-1'
+    def forcererun   = rerun == 1 ? '0': '1'
+    def rerun_suffix = rerun == 1 ? "_filteredAltMedian${params.median_filter_threshold}": ""
 
     """
     cat $somaticvcf | perl -ne 'chomp; my \$line=\$_; if (/DP4=(\\d+),(\\d+),(\\d+),(\\d+);/) {my \$fR=\$1; my \$rR=\$2; my \$fA=\$3; my \$rA=\$4; my \$MAF=(\$fA+\$rA)/(\$fR+\$rR+\$fA+\$rA); print "\$line\\t\$MAF\\n";} else { if (/^#CHROM/) { print "\$line\\tMAF\\n";} else {print "\$line\\n";} };' >${prefix}.withMAF.vcf
@@ -42,14 +48,14 @@ process TRIPLET_PLOTTER {
         -p $prefix \\
         -t "${prefix} ${title}" \\
         -o ${prefix}_tripletSpecific_base_score_distribution${rerun_suffix} \\
-        -R $force \\
+        -R $forcererun \\
         -c 1 \\
-        -f $median_filter_threshold \\
+        -f $mft \\
         -s \$SEQUENCE_CONTEXT_COLUMN_INDEX \\
         --MAFColumnIndex \$MAF_COLUMN_INDEX \\
         -i 1 \\
-        -b "0" \\
-        --skipPlots $skipplots \\
+        -b 0 \\
+        --skipPlots $rerun \\
         --refBaseQual $refbasequal \\
         --altBaseQual $altbasequal \\
         --altReadPos $altreadpos \\
