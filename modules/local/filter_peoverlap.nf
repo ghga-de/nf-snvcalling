@@ -30,7 +30,7 @@ process FILTER_PEOVERLAP {
     def args2      = task.ext.args2 ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
     def controlflag   = meta.iscontrol == "1" ? "" : "--nocontrol "
-    def confoptions   = params.ref_type == "hg38" ? "${params.confidenceoptions} --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz": "${params.confidenceoptions}"
+    def confoptions   = params.fasta.contains("38") ? "${params.confidenceoptions} --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz": "${params.confidenceoptions}"
 
     """
     cat < $vcf | filter_PEoverlap.py $controlflag\\
