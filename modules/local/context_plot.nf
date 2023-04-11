@@ -17,9 +17,9 @@ process CONTEXT_PLOT {
     task.ext.when == null || task.ext.when
 
     script:
-    def args       = task.ext.args ?: ''
-    def prefix     = task.ext.prefix ?: "${meta.id}"
-    def rerun      = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": ""
+    def args   = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def rerun  = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": ""
     
     """
     SNVSeqContext.R \\
