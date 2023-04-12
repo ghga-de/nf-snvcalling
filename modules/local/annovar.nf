@@ -18,21 +18,21 @@ process ANNOVAR {
     output:
     tuple val(meta),path('*.temp.vcf')                    , emit: vcf
     tuple val(meta), path('*.log')                        , emit: log
-    path  "versions.yml"                                  , emit: versions
     tuple val(meta), path('*_genomicSuperDups')                         
     tuple val(meta), path('*_cytoBand')                                 
     tuple val(meta), path('*variant_function')                          
     tuple val(meta), path('*exonic_variant_function')                  
+    path  "versions.yml"                                  , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args   = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
-    def av_segdup        = "${prefix}.${params.buildver}_genomicSuperDups"
-    def av_cytoband      = "${prefix}.${params.buildver}_cytoBand"
-    def newcol           = "${prefix}.newcol.tsv"
+    def args        = task.ext.args ?: ''
+    def prefix      = task.ext.prefix ?: "${meta.id}"
+    def av_segdup   = "${prefix}.${params.buildver}_genomicSuperDups"
+    def av_cytoband = "${prefix}.${params.buildver}_cytoBand"
+    def newcol      = "${prefix}.newcol.tsv"
 
     """
     perl ${params.annovar_path}/annotate_variation.pl \\

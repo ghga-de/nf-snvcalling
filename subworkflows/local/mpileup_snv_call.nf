@@ -22,10 +22,12 @@ workflow MPILEUP_SNV_CALL {
     versions = Channel.empty()
 
     // Combine intervals with samples to create 'interval x sample' number of parallel run
+    intervals.take(24)
+            .set{intervals_ch}
     sample_ch
-        .combine(intervals)
-        .set { combined_inputs }
-
+            .combine(intervals_ch)
+            .set { combined_inputs }
+    
     //
     // MODULE:BCFTOOLS_MPILEUP 
     //

@@ -21,9 +21,9 @@ process SNV_EXTRACTOR {
     task.ext.when == null || task.ext.when
 
     script:
-    def args       = task.ext.args ?: ''
-    def prefix     = task.ext.prefix ?: "${meta.id}"
-    def suffix     = rerun == 1 ? "--suffix=1": ""
+    def args   = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def suffix = rerun == 1 ? "--suffix=1": ""
     
     """
     snv_extractor_v1.pl \\

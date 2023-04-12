@@ -1,3 +1,3 @@
 #!/bin/bash
 module load  nextflow/22.07.1-edge
-nextflow run main.nf -profile dkfz_cluster_hg37,singularity --outdir result_hg37
+nextflow run main.nf -profile test_refgenie_37,singularity --outdir ref_37
