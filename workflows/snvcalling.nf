@@ -10,7 +10,9 @@ def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 WorkflowSnvcalling.initialise(params, log)
 
 // Check input path parameters to see if they exist
-def checkPathParamList = [ params.input, params.multiqc_config]
+def checkPathParamList = [ params.input, 
+                         params.fasta,
+                         params.multiqc_config]
 
 def checkPathParamList_annotation = [params.k_genome,
                                     params.dbsnp_snv,
@@ -28,7 +30,7 @@ if (params.runSNVAnnotation){
 
 // If runIndelDeepAnnotation is true; at least one of the annotation files must be provided
 if ((params.runSNVDeepAnnotation) && (!params.enchancer_file && !params.cpgislands_file && !params.tfbscons_file && !params.encode_dnase_file && !params.mirnas_snornas_file && !params.mirna_sncrnas_file && !params.mirbase_file && !params.cosmic_file && !params.mir_targets_file && !params.cgi_mountains_file && !params.phastconselem_file && !params.encode_tfbs_file)) { 
-    log.error "Please specify at least one annotation file to perform INDEL Deep Annotation"
+    log.error "Please specify at least one annotation file to perform SNV Deep Annotation"
     exit 1
 }
 
@@ -44,77 +46,75 @@ else
     { annodb = Channel.empty() }
 
 // Set up reference depending on the genome choice
-// NOTE: link will be defined by aoutomatic reference generation when the pipeline ready!
-if ((params.reference) && (params.chrlength) && (params.chr_prefix))
-    {
-        fa_file    = params.reference
-        chr_file   = params.chrlength
-        chr_prefix = params.chr_prefix
+ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
+chr_prefix     = Channel.value(params.chr_prefix)
+chrlength      = params.chrom_sizes ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) : Channel.empty()   
+contigs        = params.contig_file ? Channel.fromPath(params.contig_file, checkIfExists: true) : Channel.empty()
 
-        if (params.contig_file) {
-            contig_file = params.contig_file
-        }
-    }
-    else{
-    if (params.ref_type == 'hg37')
-        { 
-        fa_file  = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/1KGRef_Phix/hs37d5_PhiX.fa"
-        chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hs37d5.fa.chrLenOnlyACGT_realChromosomes.tab'      
-        chr_prefix   = Channel.value("")                    
-        }
-    if (params.ref_type == 'hg19') 
-        { 
-        fa_file  = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/sequence/hg19_chr/hg19_1-22_X_Y_M.fa"
-        chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg19_GRCh37_1000genomes/stats/hg19_1-22_X_Y_M.fa.chrLenOnlyACGT.tab'
-        chr_prefix   = Channel.value("chr")
-        }
-    if (params.ref_type == 'hg38') 
-        { 
-        fa_file = "/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38/sequence/GRCh38_decoy_ebv_alt_hla_phiX.fa"
-        chr_file = '/omics/odcf/reference_data/legacy/ngs_share/assemblies/hg_GRCh38/stats/GRCh38_decoy_ebv_alt_hla_phiX.fa.chrLenOnlyACGT_realChromosomes.tsv'
-        chr_prefix   = Channel.value("chr")
-        // HLA and ALT contigs
-        contig_file = 'assets/GRCh38_decoy_ebv_phiX_alt_hla_chr.fa.contig.bed'      
-        }
-    }
-
-// prepare  channels
-ref          = Channel.fromPath([fa_file,fa_file +'.fai'], checkIfExists: true).collect()
-chrlength    = Channel.fromPath(chr_file, checkIfExists: true)
-interval_ch  = chrlength.splitCsv(sep: '\t', by:1)
-if (params.ref_type == 'hg38') { contigs = Channel.fromPath(contig_file, checkIfExists: true) } else { contigs = Channel.empty() }
+if (params.fasta.contains("38")){
+    ref_type = "hg38"   
+}
+else{
+    ref_type = "hg37"
+}
 
 // Annotation databases
-if (params.k_genome)             { kgenome = Channel.fromPath([params.k_genome,params.k_genome +'.tbi'], checkIfExists: true).collect() } else { kgenome = Channel.of([],[]) }
-if (params.dbsnp_snv)            { dbsnpsnv = Channel.fromPath([params.dbsnp_snv,params.dbsnp_snv +'.tbi' ], checkIfExists: true).collect() } else { dbsnpsnv = Channel.of([],[]) }
-if (params.local_control_wgs)    { localcontrolwgs = Channel.fromPath([params.local_control_wgs,params.local_control_wgs + '.tbi' ], checkIfExists: true).collect() } else { localcontrolwgs = Channel.of([],[]) }
-if (params.local_control_wes)    { localcontrolwes = Channel.fromPath([params.local_control_wes,params.local_control_wes + '.tbi' ], checkIfExists: true).collect() } else { localcontrolwes = Channel.of([],[]) }
-if (params.gnomad_genomes)       { gnomadgenomes = Channel.fromPath([params.gnomad_genomes, params.gnomad_genomes + '.tbi'], checkIfExists: true).collect() } else { gnomadgenomes = Channel.of([],[]) }
-if (params.gnomad_exomes)        { gnomadexomes = Channel.fromPath([params.gnomad_exomes, params.gnomad_exomes + '.tbi'], checkIfExists: true).collect() } else { gnomadexomes = Channel.of([],[]) }
-// Annovar table folder
-if (params.annovar_path)         { annodb = Channel.fromPath(params.annovar_path + '/humandb/', checkIfExists: true ) } else { annodb = Channel.empty() }
-// Realiability files
-if (params.repeat_masker)        { repeatmasker = Channel.fromPath([params.repeat_masker, params.repeat_masker + '.tbi'], checkIfExists: true).collect() } else { repeatmasker = Channel.of([],[]) }
-if (params.dac_blacklist)        { dacblacklist = Channel.fromPath([params.dac_blacklist, params.dac_blacklist + '.tbi'], checkIfExists: true).collect() } else { dacblacklist = Channel.of([],[]) }
-if (params.duke_excluded)        { dukeexcluded = Channel.fromPath([params.duke_excluded, params.duke_excluded + '.tbi'], checkIfExists: true).collect() } else { dukeexcluded = Channel.of([],[]) }
-if (params.hiseq_depth)          { hiseqdepth = Channel.fromPath([params.hiseq_depth, params.hiseq_depth + '.tbi'], checkIfExists: true).collect() } else { hiseqdepth = Channel.of([],[]) }
-if (params.self_chain)           { selfchain = Channel.fromPath([params.self_chain, params.self_chain + '.tbi'], checkIfExists: true).collect() } else { selfchain = Channel.of([],[]) }
-if (params.mapability_file)      { mapability = Channel.fromPath([params.mapability_file, params.mapability_file + '.tbi'], checkIfExists: true).collect() } else { mapability = Channel.of([],[]) }
-if (params.simple_tandemrepeats) { simpletandemrepeats = Channel.fromPath([params.simple_tandemrepeats, params.simple_tandemrepeats + '.tbi'], checkIfExists: true).collect() } else { simpletandemrepeats = Channel.of([],[]) }
-// Indel Deep Annotation files
-if (params.enchancer_file)       { enchangers = Channel.fromPath([params.enchancer_file, params.enchancer_file + '.tbi'], checkIfExists: true).collect() } else { enchangers = Channel.of([],[]) }
-if (params.cpgislands_file)      { cpgislands = Channel.fromPath([params.cpgislands_file, params.cpgislands_file + '.tbi'], checkIfExists: true).collect() } else { cpgislands = Channel.of([],[]) }
-if (params.tfbscons_file)        { tfbscons = Channel.fromPath([params.tfbscons_file, params.tfbscons_file + '.tbi'], checkIfExists: true).collect() } else { tfbscons = Channel.of([],[]) }
-if (params.encode_dnase_file)    { encode_dnase = Channel.fromPath([params.encode_dnase_file, params.encode_dnase_file + '.tbi'], checkIfExists: true).collect() } else { encode_dnase = Channel.of([],[]) }
-if (params.mirnas_snornas_file)  { mirnas_snornas = Channel.fromPath([params.mirnas_snornas_file, params.mirnas_snornas_file + '.tbi'], checkIfExists: true).collect() } else { mirnas_snornas = Channel.of([],[]) }
-if (params.mirna_sncrnas_file)   { mirnas_sncrnas = Channel.fromPath([params.mirna_sncrnas_file, params.mirna_sncrnas_file + '.tbi'], checkIfExists: true).collect() } else { mirnas_sncrnas = Channel.of([],[]) }
-if (params.cosmic_file)          { cosmic = Channel.fromPath([params.cosmic_file, params.cosmic_file + '.tbi'], checkIfExists: true).collect() } else { cosmic = Channel.of([],[]) }
-if (params.mirbase_file)         { mirbase = Channel.fromPath([params.mirbase_file, params.mirbase_file + '.tbi'], checkIfExists: true).collect() } else { mirbase = Channel.of([],[]) }
-if (params.mir_targets_file)     { mir_targets = Channel.fromPath([params.mir_targets_file, params.mir_targets_file + '.tbi'], checkIfExists: true).collect() } else { mir_targets = Channel.of([],[]) }
-if (params.cgi_mountains_file)   { cgi_mountains = Channel.fromPath([params.cgi_mountains_file, params.cgi_mountains_file + '.tbi'], checkIfExists: true).collect() } else { cgi_mountains = Channel.of([],[]) }
-if (params.phastconselem_file)   { phastconselem = Channel.fromPath([params.phastconselem_file, params.phastconselem_file + '.tbi'], checkIfExists: true).collect() } else { phastconselem = Channel.of([],[]) }
-if (params.encode_tfbs_file)     { encode_tfbs = Channel.fromPath([params.encode_tfbs_file, params.encode_tfbs_file + '.tbi'], checkIfExists: true).collect() } else { encode_tfbs = Channel.of([],[]) }
+kgenome             =  params.k_genome            ? Channel.fromPath([params.k_genome,params.k_genome +'.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+dbsnpsnv            =  params.dbsnp_snv         ? Channel.fromPath([params.dbsnp_snv, params.dbsnp_snv + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])                                        
+localcontrolwgs     = params.local_control_wgs    ? Channel.fromPath([params.local_control_wgs,params.local_control_wgs + '.tbi' ], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+localcontrolwes     = params.local_control_wes    ? Channel.fromPath([params.local_control_wes,params.local_control_wes + '.tbi' ], checkIfExists: true).collect()     
+                                                  : Channel.of([],[])
+gnomadgenomes       = params.gnomad_genomes       ? Channel.fromPath([params.gnomad_genomes, params.gnomad_genomes + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+gnomadexomes        = params.gnomad_exomes        ? Channel.fromPath([params.gnomad_exomes, params.gnomad_exomes + '.tbi'], checkIfExists: true).collect()     
+                                                  : Channel.of([],[])
 
+// Annovar table folder
+annodb              = params.annovar_path         ? Channel.fromPath(params.annovar_path + '/humandb/', checkIfExists: true ) 
+                                                  : Channel.empty()
+// Realiability files
+repeatmasker        = params.repeat_masker        ? Channel.fromPath([params.repeat_masker, params.repeat_masker + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+dacblacklist        = params.dac_blacklist        ? Channel.fromPath([params.dac_blacklist, params.dac_blacklist + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+dukeexcluded        = params.duke_excluded        ? Channel.fromPath([params.duke_excluded, params.duke_excluded + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+hiseqdepth          = params.hiseq_depth          ? Channel.fromPath([params.hiseq_depth, params.hiseq_depth + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+selfchain           = params.self_chain           ? Channel.fromPath([params.self_chain, params.self_chain + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+mapability          = params.mapability_file      ? Channel.fromPath([params.mapability_file, params.mapability_file + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+simpletandemrepeats = params.simple_tandemrepeats ? Channel.fromPath([params.simple_tandemrepeats, params.simple_tandemrepeats + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+// Indel Deep Annotation files
+enchangers          = params.enchancer_file       ? Channel.fromPath([params.enchancer_file, params.enchancer_file + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+cpgislands          = params.cpgislands_file      ? Channel.fromPath([params.cpgislands_file, params.cpgislands_file + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+tfbscons            = params.tfbscons_file        ? Channel.fromPath([params.tfbscons_file, params.tfbscons_file + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+encode_dnase        = params.encode_dnase_file    ? Channel.fromPath([params.encode_dnase_file, params.encode_dnase_file + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+mirnas_snornas      = params.mirnas_snornas_file  ? Channel.fromPath([params.mirnas_snornas_file, params.mirnas_snornas_file + '.tbi'], checkIfExists: true).collect()
+                                                  : Channel.of([],[])
+mirnas_sncrnas      = params.mirna_sncrnas_file   ? Channel.fromPath([params.mirna_sncrnas_file, params.mirna_sncrnas_file + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+cosmic              = params.cosmic_file          ? Channel.fromPath([params.cosmic_file, params.cosmic_file + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+mirbase             = params.mirbase_file         ? Channel.fromPath([params.mirbase_file, params.mirbase_file + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+mir_targets         = params.mir_targets_file     ? Channel.fromPath([params.mir_targets_file, params.mir_targets_file + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+cgi_mountains       = params.cgi_mountains_file   ? Channel.fromPath([params.cgi_mountains_file, params.cgi_mountains_file + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+phastconselem       = params.phastconselem_file   ? Channel.fromPath([params.phastconselem_file, params.phastconselem_file + '.tbi'], checkIfExists: true).collect() 
+                                                  : Channel.of([],[])
+encode_tfbs         = params.encode_tfbs_file     ? Channel.fromPath([params.encode_tfbs_file, params.encode_tfbs_file + '.tbi'], checkIfExists: true).collect()
+                                                  : Channel.of([],[])
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CONFIG FILES
@@ -155,7 +155,7 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/
 //
 
 include { GREP_SAMPLENAME   } from '../modules/local/grep_samplename.nf'
-
+include { GETCHROMSIZES     } from '../modules/local/getchromsizes.nf'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
@@ -178,6 +178,18 @@ workflow SNVCALLING {
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
     sample_ch   = INPUT_CHECK.out.ch_sample
+
+    if ( !params.chrom_sizes) {
+        //
+        // MODULE: Prepare chromosome size file if not provided
+        //
+        GETCHROMSIZES(
+            ref
+            )
+        ch_versions = ch_versions.mix(GETCHROMSIZES.out.versions)
+        chrlength   = GETCHROMSIZES.out.sizes
+    }
+    interval_ch  = chrlength.splitCsv(sep: '\t', by:1)
 
     //
     // MODULE: Extract sample name from BAM
