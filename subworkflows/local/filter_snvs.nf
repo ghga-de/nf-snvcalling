@@ -12,16 +12,13 @@ include { PER_CHROM_PLOT         } from '../../modules/local/per_chrom_plot.nf' 
 include { CONTEXT_FREQUENCIES    } from '../../modules/local/context_frequencies.nf'     addParams( options: params.options )
 include { CONTEXT_PLOT           } from '../../modules/local/context_plot.nf'            addParams( options: params.options )
 include { PURITY_RELOADED        } from '../../modules/local/purity_reloaded.nf'         addParams( options: params.options )
-include { BEDTOOLS_SUBTRACT      } from '../../modules/local/bedtools_subtract.nf'       addParams( options: params.options )
 include { JSON_REPORT            } from '../../modules/local/json_report.nf'             addParams( options: params.options )
 include { MERGE_PLOTS            } from '../../modules/local/merge_plots.nf'             addParams( options: params.options )
+include { SNV_EXTRACTOR          } from '../../modules/local/snv_extractor.nf'           addParams( options: params.options )
+include { TRIPLET_PLOTTER        } from '../../modules/local/triplet_plotter.nf'         addParams( options: params.options )
 include { ERROR_PLOTS as ERROR_PLOTS_5     } from '../../modules/local/error_plots.nf'   addParams( options: params.options )
 include { ERROR_PLOTS as ERROR_PLOTS_6     } from '../../modules/local/error_plots.nf'   addParams( options: params.options )
-include { SNV_EXTRACTOR as SNV_EXTRACTOR_1 } from '../../modules/local/snv_extractor.nf' addParams( options: params.options )
-include { SNV_EXTRACTOR as SNV_EXTRACTOR_2 } from '../../modules/local/snv_extractor.nf' addParams( options: params.options )
 include { PLOT_BASESCORE_DISTRIBUTION      } from '../../modules/local/plot_basescore_distribution.nf'     addParams( options: params.options )
-include { TRIPLET_PLOTTER as TRIPLET_PLOTTER_1         } from '../../modules/local/triplet_plotter.nf'     addParams( options: params.options )
-include { TRIPLET_PLOTTER as TRIPLET_PLOTTER_2         } from '../../modules/local/triplet_plotter.nf'     addParams( options: params.options )
 include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_3 } from '../../modules/local/plot_basescore_bias.nf' addParams( options: params.options )
 include { TABIX_BGZIPTABIX as TABIX_BGZIPTABIX_2       } from '../../modules/nf-core/modules/tabix/bgziptabix/main' addParams( options: params.options )
 
@@ -51,64 +48,17 @@ workflow FILTER_SNVS {
     // MODULE: SNV_EXTRACTOR
     //
     // run snv_extractor_v1.pl
-    SNV_EXTRACTOR_1(
-        FILTER_BY_CRIT.out.vcf,
-        ""  
+    SNV_EXTRACTOR(
+        FILTER_BY_CRIT.out.vcf 
     )
-    versions = versions.mix(SNV_EXTRACTOR_1.out.versions)
+    versions = versions.mix(SNV_EXTRACTOR.out.versions)
 
     // filter out the lists if no variant exists for visualization
-    SNV_EXTRACTOR_1.out.somatic_snv
+    SNV_EXTRACTOR.out.somatic_snv
         .filter{meta, somatic_snv -> WorkflowCommons.getNumLinesInFile(somatic_snv) > 1}
         .set{orjinal_somatic_ch}
 
-    // Rerun Filtering
-    if (params.rerunfiltering)
-    {
-        println "This run is rerun filtering"
-        ///!!! This part is not working for now !!!!!
-        //
-        // MODULE: TRIPLET_PLOTTER
-        //
-        // Run tripletBased_BQDistribution_plotter.R
-            // som_and_pos_ch=meta, orjinal_somatic_ch,  altbasequal, refbasequal, altreadpos, refreadpos
-        triplet_ch     = input_ch.map{ it -> tuple( it[0], it[3], it[4], it[5], it[6] )}
-        som_and_pos_ch = orjinal_somatic_ch.join(triplet_ch)
-        TRIPLET_PLOTTER_1(
-            som_and_pos_ch, 
-            "Base score distribution of PID after Median ${params.median_filter_threshold} filtering",
-            1
-        )
-        //
-        // MODULE: SNV_EXTRACTOR
-        //
-        // run snv_extractor_v1.pl
-        // orinal_somatic_ch only added to make the structure true
-        input_ch = TRIPLET_PLOTTER_1.out.vcf.join(orjinal_somatic_ch)
-        SNV_EXTRACTOR_2(
-            input_ch,
-            1 
-        )
-        // filter out the lists if no variant exists for visualization
-        SNV_EXTRACTOR_2.out.somatic_snv
-            .filter{meta, somatic_snv -> WorkflowCommons.getNumLinesInFile(somatic_snv) > 1}
-            .set{filtered_ch}
-            
-        filtered_ch.view()
-        //
-        // MODULE: BEDTOOLS_SUBTRACT
-        //
-        temp3_ch = orjinal_somatic_ch.join(filtered_ch)
-        temp3_ch.view()
-        BEDTOOLS_SUBTRACT(
-            temp3_ch
-        )
-        versions = versions.mix(BEDTOOLS_SUBTRACT.out.versions)
-        orjinal_somatic_ch = BEDTOOLS_SUBTRACT.out.subtracted_file
-    }
-
     somatic_ch = orjinal_somatic_ch
-    somatic_ch.view()
     // if rerun is false
     // Rest is the usual pipeline. if rerun is false
     if (params.runplots){
@@ -200,8 +150,7 @@ workflow FILTER_SNVS {
             'sequencing_specific', 
             "sequencing_specific_error_plot_conf_${params.min_confidence_score}_to_10", 
             "sequencing_specific_error_Matrix_conf_${params.min_confidence_score}_to_10", 
-            'Final sequencing strand bias from vcf filter script',
-            "filtration"
+            'Final sequencing strand bias from vcf filter script'
         )
         plots_ch = plots_ch.mix(ERROR_PLOTS_5.out.plot)
         // Sequence Error plot
@@ -210,8 +159,7 @@ workflow FILTER_SNVS {
             'sequence_specific',
             "sequence_specific_error_plot_conf_${params.min_confidence_score}_to_10",
             "sequence_specific_error_Matrix_conf_${params.min_confidence_score}_to_10", 
-            'Final PCR strand bias from vcf filter script',
-            "filtration"
+            'Final PCR strand bias from vcf filter script'
         )
         plots_ch = plots_ch.mix(ERROR_PLOTS_6.out.plot)
             
@@ -229,8 +177,7 @@ workflow FILTER_SNVS {
             PLOT_BASESCORE_BIAS_3(
                 temp4_ch, 
                 "base_score_bias_plot_conf_${params.min_confidence_score}_to_10", 
-                "Final Base Quality Bias Plot for PID",
-                "filtration"
+                "Final Base Quality Bias Plot for PID"
             )
             plots_ch = plots_ch.mix(PLOT_BASESCORE_BIAS_3.out.plot) 
 
@@ -255,20 +202,20 @@ workflow FILTER_SNVS {
 
             som_and_pos_ch.view()
             
-            TRIPLET_PLOTTER_2(
+            TRIPLET_PLOTTER(
                 som_and_pos_ch, 
                 "Base score distribution of PID",
                 0
             )
-            versions = versions.mix(TRIPLET_PLOTTER_2.out.versions)
-            plots_ch = plots_ch.mix(TRIPLET_PLOTTER_2.out.plot_1)
-            plots_ch = plots_ch.mix(TRIPLET_PLOTTER_2.out.plot_2)
-            plots_ch = plots_ch.mix(TRIPLET_PLOTTER_2.out.plot_3)
-            plots_ch = plots_ch.mix(TRIPLET_PLOTTER_2.out.plot_4)
-            plots_ch = plots_ch.mix(TRIPLET_PLOTTER_2.out.plot_5)
-            plots_ch = plots_ch.mix(TRIPLET_PLOTTER_2.out.plot_6)
-            plots_ch = plots_ch.mix(TRIPLET_PLOTTER_2.out.plot_7)
-            plots_ch = plots_ch.mix(TRIPLET_PLOTTER_2.out.plot_8)
+            versions = versions.mix(TRIPLET_PLOTTER.out.versions)
+            plots_ch = plots_ch.mix(TRIPLET_PLOTTER.out.plot_1)
+            plots_ch = plots_ch.mix(TRIPLET_PLOTTER.out.plot_2)
+            plots_ch = plots_ch.mix(TRIPLET_PLOTTER.out.plot_3)
+            plots_ch = plots_ch.mix(TRIPLET_PLOTTER.out.plot_4)
+            plots_ch = plots_ch.mix(TRIPLET_PLOTTER.out.plot_5)
+            plots_ch = plots_ch.mix(TRIPLET_PLOTTER.out.plot_6)
+            plots_ch = plots_ch.mix(TRIPLET_PLOTTER.out.plot_7)
+            plots_ch = plots_ch.mix(TRIPLET_PLOTTER.out.plot_8)
         }
         else{
             println "Extended QC plots not generated because generateExtendedQcPlots is set to ${params.generateExtendedQcPlots}"

@@ -19,13 +19,12 @@ process MERGE_PLOTS {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def rerun  = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": ""     
 
     """
     export TEMP=\$(mktemp -d)
     export TMPDIR=\$TEMP
     gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite \\
-        -sOutputFile=${prefix}_allSNVdiagnosticsPlots${rerun}.pdf \\
+        -sOutputFile=${prefix}_allSNVdiagnosticsPlots.pdf \\
         $plot1 $plot2
     rm -rf \$TEMP
     
