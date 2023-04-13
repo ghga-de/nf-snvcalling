@@ -21,13 +21,12 @@ process INTERMUTATION_DISTANCE {
     script:
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
-    def rerun      = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": ""    
     
     """
     intermutationDistance_Coord_color.r \\
         -i $vcf \\
         -s $prefix \\
-        -o ${prefix}_intermutation_distance_conf_${params.min_confidence_score}_to_10${rerun}.pdf \\
+        -o ${prefix}_intermutation_distance_conf_${params.min_confidence_score}_to_10.pdf \\
         -a "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y" \\
         -l $chr_file \\
         -p "${chr_prefix}" \\

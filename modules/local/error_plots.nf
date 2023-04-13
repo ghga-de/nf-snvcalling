@@ -12,7 +12,6 @@ process ERROR_PLOTS {
     val(pdfname)
     val(errorfilename)
     val(plottitle)
-    val(step)
 
     output:
     tuple val(meta), path("*txt"),  emit: error_matrix
@@ -25,14 +24,13 @@ process ERROR_PLOTS {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def rerun  = (params.rerunfiltering) & (step == "filtration") ? "_filteredAltMedian${params.median_filter_threshold}": ""
 
     """
     createErrorPlots.py --vcfFile=$vcf \\
         --referenceFile=NA \\
-        --outputFile=${prefix}_${pdfname}${rerun}.pdf \\
+        --outputFile=${prefix}_${pdfname}.pdf \\
         --errorType=$errortype \\
-        --errorFile=${prefix}_${errorfilename}${rerun}.txt \\
+        --errorFile=${prefix}_${errorfilename}.txt \\
         --plot_title="${plottitle}"
 
     cat <<-END_VERSIONS > versions.yml

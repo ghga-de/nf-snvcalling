@@ -66,12 +66,6 @@
                     "fa_icon": "fas fa-post_processes",
                     "description": "Enable variant filtration" 
                 },
-                "rerunfiltering": {
-                    "type": "boolean",
-                    "default": "true",
-                    "fa_icon": "fas fa-post_processes",
-                    "description": "Only reruns filtering on the filtered VCF file" 
-                },
                 "runArtifactFilter": {
                     "type": "boolean",
                     "default": "true",
