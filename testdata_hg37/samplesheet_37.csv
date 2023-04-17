@@ -1,3 +1,0 @@
-sample,tumor,control
-testcontrol,testdata_hg37/tumor.bam,testdata_hg37/control.bam
-testnocontrol_hg37,testdata_hg37/tumor.bam,
