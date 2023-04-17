@@ -4,7 +4,7 @@ process MERGE_PLOTS {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
+        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
     tuple val(meta), file(plot1), file(plot2)
@@ -19,13 +19,12 @@ process MERGE_PLOTS {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def rerun  = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": ""     
 
     """
     export TEMP=\$(mktemp -d)
     export TMPDIR=\$TEMP
     gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite \\
-        -sOutputFile=${prefix}_allSNVdiagnosticsPlots${rerun}.pdf \\
+        -sOutputFile=${prefix}_allSNVdiagnosticsPlots.pdf \\
         $plot1 $plot2
     rm -rf \$TEMP
     

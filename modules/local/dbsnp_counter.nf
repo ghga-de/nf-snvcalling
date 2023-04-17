@@ -4,7 +4,7 @@ process DBSNP_COUNTER {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
+        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
     tuple val(meta), file(vcf)
@@ -19,12 +19,11 @@ process DBSNP_COUNTER {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def rerun  = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": ""
 
     """
     in_dbSNPcounter.pl \\
         $vcf \\
-        $params.min_confidence_score > ${prefix}_somatic_in_dbSNP_conf_${params.min_confidence_score}_to_10${rerun}.txt
+        $params.min_confidence_score > ${prefix}_somatic_in_dbSNP_conf_${params.min_confidence_score}_to_10.txt
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

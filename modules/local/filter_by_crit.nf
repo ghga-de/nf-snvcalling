@@ -5,7 +5,7 @@ process FILTER_BY_CRIT {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
+    'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
     tuple val(meta), file(vcfgz), file(vcf_tbi)
@@ -22,12 +22,11 @@ process FILTER_BY_CRIT {
     def args          = task.ext.args ?: ''
     def prefix        = task.ext.prefix ?: "${meta.id}"
     // recurrance is not implemented!!
-    def filter_values = [(params.filter_gnomad_genomes && params.crit_gnomad_genomes_maxmaf) ? "GNOMAD_GENOMES AF $params.crit_gnomad_genomes_maxmaf+": "",
-                        (params.filter_gnomad_exomes && params.crit_gnomad_exomes_maxmaf) ? "GNOMAD_EXOMES AF $params.crit_gnomad_exomes_maxmaf+": "",
-                        (params.filter_1kgenomes && params.crit_1kgenomes_maxmaf) ? "1K_GENOMES EUR_AF $params.crit_1kgenomes_maxmaf+": "",
-                        params.filter_non_clinic ? "DBSNP CLN,COMMON nonexist,exist": "", 
-                        (params.filter_localcontrol && params.crit_localcontrol_maxmaf) ? "LocalControlAF_WGS AF $params.crit_localcontrol_maxmaf+": "",
-                        (params.filter_localcontrol && params.crit_localcontrol_maxmaf) ? "LocalControlAF_WES AF $params.crit_localcontrol_maxmaf+": ""              
+    def filter_values = [( params.gnomad_genomes && params.crit_gnomad_genomes_maxmaf ) ? "GNOMAD_GENOMES AF $params.crit_gnomad_genomes_maxmaf+": "",
+                        ( params.gnomad_exomes && params.crit_gnomad_exomes_maxmaf) ? "GNOMAD_EXOMES AF $params.crit_gnomad_exomes_maxmaf+": "",
+                        ( params.k_genome && params.crit_1kgenomes_maxmaf) ? "1K_GENOMES EUR_AF $params.crit_1kgenomes_maxmaf+": "",
+                        ( params.dbsnp_snv && params.filter_non_clinic)? "DBSNP CLN,COMMON nonexist,exist": "", 
+                        ( params.local_control_wgs && params.local_control_wes && params.crit_localcontrol_maxmaf) ? "LocalControlAF_WGS AF $params.crit_localcontrol_maxmaf+ LocalControlAF_WES AF $params.crit_localcontrol_maxmaf+": "",
                         ].join(' ').trim() 
 
 // Filter variants only if there is no control, else do noting

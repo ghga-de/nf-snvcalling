@@ -150,8 +150,7 @@ workflow SNV_ANNOTATION {
             'sequencing_specific', 
             'sequencing_specific_error_plot_before_filter', 
             'sequencing_error_matrix_first', 
-            'Sequencing strand bias before guanine oxidation filter',
-            "annotation"
+            'Sequencing strand bias before guanine oxidation filter'
         )
         versions = versions.mix(ERROR_PLOTS_1.out.versions)
         plots_ch = plots_ch.mix(ERROR_PLOTS_1.out.plot)
@@ -161,8 +160,7 @@ workflow SNV_ANNOTATION {
             'sequence_specific', 
             'sequence_specific_error_plot_before_filter',
             'sequence_error_matrix_first', 
-            'PCR strand bias before guanine oxidation filter',
-            "annotation"
+            'PCR strand bias before guanine oxidation filter'
         )
         plots_ch = plots_ch.mix(ERROR_PLOTS_2.out.plot)
 
@@ -180,8 +178,7 @@ workflow SNV_ANNOTATION {
             PLOT_BASESCORE_BIAS_1(
                 somatic_ch, 
                 'base_score_bias_before_filter',
-                'Base Quality Bias Plot for PID before guanine oxidation filter',
-                "annotation"
+                'Base Quality Bias Plot for PID before guanine oxidation filter'
                 )
             versions = versions.mix(PLOT_BASESCORE_BIAS_1.out.versions)
             plots_ch = plots_ch.mix(PLOT_BASESCORE_BIAS_1.out.plot) 
@@ -218,8 +215,7 @@ workflow SNV_ANNOTATION {
             'sequencing_specific', 
             'sequencing_specific_error_plot_after_filter_once', 
             'sequencing_error_matrix_second', 
-            'Sequencing strand bias after first round of guanine oxidation filter',
-            "annotation"
+            'Sequencing strand bias after first round of guanine oxidation filter'
         )
         plots_ch = plots_ch.mix(ERROR_PLOTS_3.out.plot)
 
@@ -229,8 +225,7 @@ workflow SNV_ANNOTATION {
             'sequence_specific', 
             'sequence_specific_error_plot_after_filter_once',
             'sequence_error_matrix_second', 
-            'PCR strand bias after first round of guanine oxidation filter',
-            "annotation"
+            'PCR strand bias after first round of guanine oxidation filter'
         )
         plots_ch = plots_ch.mix(ERROR_PLOTS_4.out.plot)
 
@@ -247,8 +242,7 @@ workflow SNV_ANNOTATION {
             PLOT_BASESCORE_BIAS_2(
                 som2_ch, 
                 'base_score_bias_after_filter_once',
-                'Base Quality Bias Plot for PID after first round of guanine oxidation filter',
-                "annotation"
+                'Base Quality Bias Plot for PID after first round of guanine oxidation filter'
                 )
             plots_ch = plots_ch.mix(PLOT_BASESCORE_BIAS_2.out.plot) 
         }else{

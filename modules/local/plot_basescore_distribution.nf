@@ -4,7 +4,7 @@ process PLOT_BASESCORE_DISTRIBUTION {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
+        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
     tuple val(meta), path(vcf), path(reference_allele_base_qualities), path(alternative_allele_base_qualities)
@@ -21,7 +21,6 @@ process PLOT_BASESCORE_DISTRIBUTION {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def rerun  = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": ""     
 
     """
     plotBaseScoreDistribution.R \\
@@ -29,7 +28,7 @@ process PLOT_BASESCORE_DISTRIBUTION {
         -r $reference_allele_base_qualities \\
         -a $alternative_allele_base_qualities \\
         -t ${params.basequal} \\
-        -o ${prefix}_${pdfname}${rerun}.pdf \\
+        -o ${prefix}_${pdfname}.pdf \\
         -d "${prefix} ${title}"
 
     cat <<-END_VERSIONS > versions.yml

@@ -1,10 +1,12 @@
+// THA calculation depends in on PV4, DP4, RBS and VDB fileds in the vcf file. bcftool version may change those!
+// THA calculation may end with NA
 process JSON_REPORT {
     tag "$meta.id"
     label 'process_medium'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
+        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
     tuple val(meta), file(somatic_vcf), file(insnp_file)
@@ -12,16 +14,15 @@ process JSON_REPORT {
     output:
     tuple val(meta), path('*is_THA_affected.txt')   , emit: tha
     tuple val(meta), path('*.json')                 , emit: json
-    tuple val(meta), path('*.pdf')                  , emit: plot         
+    tuple val(meta), path('*.pdf')                  , emit: plot        
     path  "versions.yml"                            , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
-    def rerun      = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": "''"    
+
     """
     final_plots_and_json.sh \\
         -p $prefix \\
@@ -30,7 +31,7 @@ process JSON_REPORT {
         -t $params.min_cov \\
         -v $params.min_confidence_score \\
         -b $params.tha_score_threshold \\
-        -r $rerun
+        -r ''
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

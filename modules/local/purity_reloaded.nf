@@ -6,7 +6,7 @@ process PURITY_RELOADED {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
+        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
     tuple val(meta), file(vcf), file(index)
@@ -21,12 +21,11 @@ process PURITY_RELOADED {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def rerun  = params.rerunfiltering ? "_filteredAltMedian${params.median_filter_threshold}": ""     
 
     """
     PurityReloaded.py \\
         $vcf \\
-        `findConfColumn.pl ${vcf}` > ${prefix}_purityEST${rerun}.txt
+        `findConfColumn.pl ${vcf}` > ${prefix}_purityEST.txt
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

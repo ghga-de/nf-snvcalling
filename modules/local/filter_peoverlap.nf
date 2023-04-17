@@ -1,13 +1,12 @@
 //# create BaseScore FIFOs and their consumer processes (zip and write to target file)
 //# BaseScore FIFOS will be filled by ${TOOL_FILTER_PE_OVERLAP}
-// v2 works here!!!!! important
 process FILTER_PEOVERLAP {
     tag "$meta.id"
     label 'process_medium_high'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
+        'docker://kubran/samtools:v1.9':'kubran/samtools:v1.9' }"
     
     input:
     tuple val(meta),   file(vcf)

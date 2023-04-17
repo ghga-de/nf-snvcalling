@@ -1,10 +1,10 @@
 process ERROR_PLOTS {
     tag "$meta.id"
-    label 'process_high'
+    label 'process_medium'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
+        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
     tuple val(meta), path(vcf)
@@ -12,12 +12,11 @@ process ERROR_PLOTS {
     val(pdfname)
     val(errorfilename)
     val(plottitle)
-    val(step)
 
     output:
-    tuple val(meta), path("*txt"),  emit: error_matrix
+    tuple val(meta), path("*txt") ,  emit: error_matrix
     tuple val(meta), path("*.pdf"), emit: plot
-    path  "versions.yml"         ,  emit: versions
+    path  "versions.yml"          ,  emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -25,14 +24,13 @@ process ERROR_PLOTS {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def rerun  = (params.rerunfiltering) & (step == "filtration") ? "_filteredAltMedian${params.median_filter_threshold}": ""
 
     """
     createErrorPlots.py --vcfFile=$vcf \\
         --referenceFile=NA \\
-        --outputFile=${prefix}_${pdfname}${rerun}.pdf \\
+        --outputFile=${prefix}_${pdfname}.pdf \\
         --errorType=$errortype \\
-        --errorFile=${prefix}_${errorfilename}${rerun}.txt \\
+        --errorFile=${prefix}_${errorfilename}.txt \\
         --plot_title="${plottitle}"
 
     cat <<-END_VERSIONS > versions.yml

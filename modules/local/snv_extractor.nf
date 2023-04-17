@@ -4,11 +4,10 @@ process SNV_EXTRACTOR {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
+        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
     tuple val(meta), file(vcf), file(index)
-    val(rerun)
 
     output:
     tuple val(meta), path('*_somatic_functional_snvs_conf_*_to_10*')        , emit: somatic_functional
@@ -23,15 +22,13 @@ process SNV_EXTRACTOR {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def suffix = rerun == 1 ? "--suffix=1": ""
     
     """
     snv_extractor_v1.pl \\
         --infile=$vcf \\
         --minconf=$params.min_confidence_score \\
         --pid=$prefix \\
-        $args \\
-        $suffix
+        $args
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
