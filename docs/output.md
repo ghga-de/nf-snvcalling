@@ -1,4 +1,4 @@
-# nf/snvcalling: Output
+# nf-snvcalling: Output
 
 ## Introduction
 
@@ -12,30 +12,79 @@ The directories listed below will be created in the results directory after the 
 
 The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
-- [FastQC](#fastqc) - Raw read QC
+- [bcftools mpileup and call](#bcftools) - The first mpileup part generates genotype likelihoods at each genomic position with coverage. The second call part makes the actual calls.
+- [Annotation](#annotation) - Several databases like gnomAD, dbSNP, mirBASE, COSMIC and ExAC as well as the sequencing regions like selfchains, enhangers, repeat regions or mappability beds are used to create annotations to the variants. Annovar tool is used to annotate and make classifications. 
+- [Artifact Filtering](#filtering) - If runArtifactFilter is on, creates bias files for alternative and reference base and read positions and qualities, and plots error and basescore bias.  
+- [Deep Annotation](#annotation) - Several databases like gnomAD, dbSNP, mirBASE, COSMIC and ExAC as well as the sequencing regions like selfchains, enhangers, repeat regions or mappability beds are used to create annotations to the variants. Annovar tool is used to annotate and make classifications.  
+- [Filtering](#filtering) - Filtering can be applied to the annotated files for no-control samples. 
+- [SNV Extraction](#filtering) - Functional and somatic SNVs are extracted.
+- [Plots](#visualization) - Several plots including rainfall, mutation distance, context frequencies, error plots, basescore distrubutions are created.
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
 
-### FastQC
+### Variant Calling
 
 <details markdown="1">
 <summary>Output files</summary>
 
-- `fastqc/`
-  - `*_fastqc.html`: FastQC report containing quality metrics.
-  - `*_fastqc.zip`: Zip archive containing the FastQC report, tab-delimited data file and plot images.
+- `metaid/`
+  - `*snv_metaid.vcf.gz`: Raw variants.
 
 </details>
 
-[FastQC](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/) gives general quality metrics about your sequenced reads. It provides information about the quality score distribution across your reads, per base sequence content (%A/T/G/C), adapter contamination and overrepresented sequences. For further reading and documentation see the [FastQC help pages](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/).
+### Annotation
 
-![MultiQC - FastQC sequence counts plot](images/mqc_fastqc_counts.png)
+<details markdown="1">
+<summary>Output files</summary>
 
-![MultiQC - FastQC mean quality scores plot](images/mqc_fastqc_quality.png)
+- `metaid/`
+  - `metaid.deepanno.vcf.gz`: Annotated variants.
 
-![MultiQC - FastQC adapter content plot](images/mqc_fastqc_adapter.png)
+</details>
 
-> **NB:** The FastQC plots displayed in the MultiQC report shows _untrimmed_ reads. They may contain adapter sequence and potentially regions with low quality.
+### Filtration
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `metaid/`
+  - `metaid_somatic_functional_snvs_conf_*_to_10.vcf`: Functional somatic snvs filtered through the confidence score
+  - `metaid_somatic_snvs_conf_*_to_10.vcf`: Somatic snvs filtered through the confidence score
+  - `metaid_somatic_ncRNA_snvs_conf_*_to_10.vcf`: Somatic ncRNA snvs filtered through the confidence score
+  - `metaid_germline_functional_snvs_conf_*_to_10.vcf`: Functional germline snvs filtered through the confidence score
+  - `metaid_reference_allele_base_qualities`: Allele base qualities of reference
+  - `metaid_reference_allele_read_qualities`: Allele read qualities of reference
+  - `metaid_alternative_allele_base_qualities`: Allele base qualities of variant file
+  - `metaid_alternative_allele_read_qualities`: Allele read qualities of variant file
+  - `metaid_base_score_bias_before_filter.pdf`:  Base score error plot after bias filtration before filtration
+  - `metaid_base_score_bias_after_filter_once.pdf`: First round of base score error plot after bias filtration
+  - `metaid_sequence_specific_error_plot_before_filter.pdf`: Sequence spesific error plot after bias filtration before filtration
+  - `metaid_sequence_specific_error_plot_after_filter_one.pdf`: First round of sequence spesific error plot after bias filtration
+  - `metaid_sequencing_specific_error_plot_before_filter.pdf`: Sequencing spesific error plot after bias filtration before filtration
+  - `metaid_sequencing_specific_error_plot_after_filter_one.pdf`: First round of sequencing spesific error plot after bias filtration
+
+</details>
+
+### Plots
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `metaid/`
+  - `metaid_allSNVdiagnosticPlots`: Merge of all diagnostic plots on quality of the variant.
+
+</details>
+
+### Reports
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `metaid/`
+  - `metaid_QC_values`: Statistics on QC.
+  - `metaid_purityESTs`: Purity statistics.
+
+</details>
 
 ### MultiQC
 
