@@ -1,10 +1,12 @@
+// THA calculation depends in on PV4, DP4, RBS and VDB fileds in the vcf file. bcftool version may change those!
+// THA calculation may end with NA
 process JSON_REPORT {
     tag "$meta.id"
     label 'process_medium'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
+        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
     tuple val(meta), file(somatic_vcf), file(insnp_file)
@@ -19,7 +21,6 @@ process JSON_REPORT {
     task.ext.when == null || task.ext.when
 
     script:
-    def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
 
     """

@@ -8,7 +8,7 @@ process ANNOVAR {
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-    'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
+        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
     tuple val(meta)         , file(ch_vcf),  file(annovar_bed)
@@ -67,7 +67,7 @@ process ANNOVAR {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         annovar_table: ${annovar_table}
-        annovar_path: ${params.annovar_pat}
+        annovar_path: ${params.annovar_path}
         annovar_buildver: ${params.buildver}
         perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/') 
     END_VERSIONS

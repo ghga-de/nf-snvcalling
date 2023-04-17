@@ -5,7 +5,7 @@ process TRIPLET_PLOTTER {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
+        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
     tuple val(meta), path(somaticvcf), path(altbasequal), path(refbasequal), path(altreadpos), path(refreadpos)

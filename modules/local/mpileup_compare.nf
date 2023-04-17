@@ -4,7 +4,7 @@ process MPILEUP_COMPARE {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v2':'kubran/odcf_snvcalling:v2' }"
+        'docker://kubran/samtools:v1.9':'kubran/samtools:v1.9' }"
 
     input:
     tuple val(meta), path(vcf), val(intervals)
