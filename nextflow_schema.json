@@ -122,7 +122,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.vcf(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "1K genome VCF file, should be indexed" 
+                    "description": "1K genome VCF file, should be indexed. Column Name: 1K_GENOMES" 
                 },
                 "dbsnp_snv": {
                     "type": "string",
@@ -130,7 +130,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.vcf(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "dbSNP SNV VCF file, should be indexed" 
+                    "description": "dbSNP SNV VCF file, should be indexed. Column Name: DBSNP" 
                 },
                 "local_control_wgs": {
                     "type": "string",
@@ -138,7 +138,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.vcf(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "Local Exclusion list for WGS, VCF file, should be indexed" 
+                    "description": "Local Exclusion list for WGS, VCF file, should be indexed. Column Name: LocalControlAF_WGS" 
                 },
                 "local_control_wes": {
                     "type": "string",
@@ -146,7 +146,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.vcf(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "Local Exclusion list for WES, VCF file, should be indexed" 
+                    "description": "Local Exclusion list for WES, VCF file, should be indexed. Column Name: LocalControlAF_WeS" 
                 },
                 "gnomad_genomes": {
                     "type": "string",
@@ -154,7 +154,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.vcf(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "Gnomad genomes VCF file, should be indexed." 
+                    "description": "Gnomad genomes VCF file, should be indexed. Column Name: GNOMAD_GENOMES" 
                 },
                 "gnomad_exomes": {
                     "type": "string",
@@ -162,7 +162,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.vcf(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "Gnomad exomes VCF file, should be indexed." 
+                    "description": "Gnomad exomes VCF file, should be indexed. Column Name: GNOMAD_EXOMES" 
                 }
             }
         },
@@ -223,7 +223,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC repeat masker BED.GZ, should be indexed. NOTE: This file also used in Visualizations!" 
+                    "description": "UCSC repeat masker BED.GZ, should be indexed. Column Name:REPEAT_MASKER .NOTE: This file also used in Visualizations!" 
                 },
                 "dac_blacklist": {
                     "type": "string",
@@ -231,7 +231,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC DAC blacklist BED.GZ, should be indexed" 
+                    "description": "UCSC DAC blacklist BED.GZ, should be indexed. Column Name: DAC_BLACKLIST" 
                 },
                 "duke_excluded": {
                     "type": "string",
@@ -239,7 +239,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC Duke Excluded BED.GZ, should be indexed" 
+                    "description": "UCSC Duke Excluded BED.GZ, should be indexed. Column Name: DUKE_EXCLUDED" 
                 },
                 "hiseq_depth": {
                     "type": "string",
@@ -247,7 +247,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC HiSeq Depth BED.GZ, should be indexed" 
+                    "description": "UCSC HiSeq Depth BED.GZ, should be indexed. Column Name: HISEQDEPTH" 
                 },
                 "self_chain": {
                     "type": "string",
@@ -255,7 +255,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC self chain BED.GZ, should be indexed" 
+                    "description": "UCSC self chain BED.GZ, should be indexed. Column Name: SELFCHAIN" 
                 },
                 "mapability_file": {
                     "type": "string",
@@ -263,7 +263,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC wg Encode Mapability BED.GZ, should be indexed" 
+                    "description": "UCSC wg Encode Mapability BED.GZ, should be indexed. Column Name: MAPABILITY" 
                 },
                 "simple_tandemrepeats": {
                     "type": "string",
@@ -271,7 +271,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC simple tandem repeats BED.GZ, should be indexed" 
+                    "description": "UCSC simple tandem repeats BED.GZ, should be indexed. Column Name: SIMPLE_TANDEMREPEATS" 
                 }              
             }
         },
@@ -287,7 +287,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC Enhancers BED.GZ, should be indexed" 
+                    "description": "UCSC Enhancers BED.GZ, should be indexed. Column Name: Enhancers" 
                 },
                 "cpgislands_file": {
                     "type": "string",
@@ -295,7 +295,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC CpG islands BED.GZ, should be indexed" 
+                    "description": "UCSC CpG islands BED.GZ, should be indexed. Column Name: CpGislands" 
                 },
                 "tfbscons_file": {
                     "type": "string",
@@ -303,7 +303,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC TFBS sites BED.GZ, should be indexed" 
+                    "description": "UCSC TFBS sites BED.GZ, should be indexed. Column Name: TFBScons" 
                 },
                 "encode_dnase_file": {
                     "type": "string",
@@ -311,7 +311,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC DNase cluster BED.GZ, should be indexed" 
+                    "description": "UCSC DNase cluster BED.GZ, should be indexed. Column Name: ENCODE_DNASE" 
                 },
                 "mirnas_snornas_file": {
                     "type": "string",
@@ -319,7 +319,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "mirBase snoRNAs BED.GZ, should be indexed" 
+                    "description": "mirBase snoRNAs BED.GZ, should be indexed. Column Name: miRNAs_snoRNAs" 
                 },
                 "mirna_sncrnas_file": {
                     "type": "string",
@@ -327,7 +327,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "mirBase sncRNAs BED.GZ, should be indexed" 
+                    "description": "mirBase sncRNAs BED.GZ, should be indexed. Column Name: miRNAs_sncRNAs" 
                 },
                 "mirbase_file": {
                     "type": "string",
@@ -335,7 +335,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "mirBase miRNAs BED.GZ, should be indexed" 
+                    "description": "mirBase miRNAs BED.GZ, should be indexed. Column Name: miRBase18" 
                 },
                 "cosmic_file": {
                     "type": "string",
@@ -343,7 +343,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "COSMIC db coding SNVs BED.GZ, should be indexed" 
+                    "description": "COSMIC db coding SNVs BED.GZ, should be indexed. Column Name: COSMIC" 
                 },
                 "mir_targets_file": {
                     "type": "string",
@@ -351,7 +351,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "mirBase miRNA Target sites BED.GZ, should be indexed" 
+                    "description": "mirBase miRNA Target sites BED.GZ, should be indexed. Column Name: miRNAtargets" 
                 },
                 "cgi_mountains_file": {
                     "type": "string",
@@ -359,7 +359,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "Cgi Mountains BED.GZ, should be indexed" 
+                    "description": "Cgi Mountains BED.GZ, should be indexed. Column Name: CgiMountains" 
                 },
                 "phastconselem_file": {
                     "type": "string",
@@ -367,7 +367,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC phast cons elements BED.GZ, should be indexed" 
+                    "description": "UCSC phast cons elements BED.GZ, should be indexed. Column Name: phastConsElem20bp" 
                 } ,
                 "encode_tfbs_file": {
                     "type": "string",
@@ -375,7 +375,7 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed(\\.gz)?$",
                     "fa_icon": "fas fa-annotation",
-                    "description": "UCSC TFBS clusters BED.GZ, should be indexed" 
+                    "description": "UCSC TFBS clusters BED.GZ, should be indexed. Column Name: ENCODE_TFBS" 
                 }                
             }
         },
@@ -403,59 +403,29 @@
                     "fa_icon": "fas fa-filter",
                     "description": "minimal coverage for somatic SNVs (MAF plot)"
                 },
-                "filter_gnomad_genomes": {
-                    "type": "boolean",
-                    "default": "false",
-                    "fa_icon": "fas fa-annotation",
-                    "description": "Apply gnomad genomes filtration" 
-                },
-                "filter_gnomad_exomes": {
-                    "type": "boolean",
-                    "default": "false",
-                    "fa_icon": "fas fa-annotation",
-                    "description": "Apply gnomed exomes filtration" 
-                },
-                "filter_1kgenomes": {
-                    "type": "boolean",
-                    "default": "false",
-                    "fa_icon": "fas fa-annotation",
-                    "description": "Apply 1K_GENOME filtration" 
-                },
-                "filter_non_clinic": {
-                    "type": "boolean",
-                    "default": "false",
-                    "fa_icon": "fas fa-annotation",
-                    "description": "Apply dbSNP filtration" 
-                },
-                "filter_localcontrol": {
-                    "type": "boolean",
-                    "default": "false",
-                    "fa_icon": "fas fa-annotation",
-                    "description": "Apply Local Control af filtration" 
-                },
                 "crit_1kgenomes_maxmaf": {
                     "type": "number",
                     "default": "",
                     "fa_icon": "fas fa-annotation",
-                    "description": "Max MAF for 1K_GENOME filtration" 
+                    "description": "Max MAF for 1K_GENOME filtration. Only apply if annotation is done" 
                 },
                 "crit_gnomad_exomes_maxmaf": {
                     "type": "number",
                     "default": "",
                     "fa_icon": "fas fa-annotation",
-                    "description": "Max MAF for gnomad genomes filtration" 
+                    "description": "Max MAF for GNOMAD_GENOMES filtration. Only apply if annotation is done" 
                 },
                 "crit_gnomad_genomes_maxmaf": {
                     "type": "number",
                     "default": "",
                     "fa_icon": "fas fa-annotation",
-                    "description": "Max MAF for gnomad exomes filtration" 
+                    "description": "Max MAF for GNOMAD_EXOMES filtration. Only apply if annotation is done" 
                 },
                 "crit_localcontrol_maxmaf": {
                     "type": "number",
                     "default": "",
                     "fa_icon": "fas fa-annotation",
-                    "description": "Max MAF for Local Control filtration" 
+                    "description": "Max MAF for Local Control filtration for the columns: LocalControlAF_WGS and LocalControlAF_WES. Only apply if annotation is done" 
                 }
             }
         },
