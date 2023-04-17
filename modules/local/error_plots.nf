@@ -1,10 +1,10 @@
 process ERROR_PLOTS {
     tag "$meta.id"
-    label 'process_high'
+    label 'process_medium'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_snvcalling:v10':'kubran/odcf_snvcalling:v10' }"
+        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
     tuple val(meta), path(vcf)
@@ -14,9 +14,9 @@ process ERROR_PLOTS {
     val(plottitle)
 
     output:
-    tuple val(meta), path("*txt"),  emit: error_matrix
+    tuple val(meta), path("*txt") ,  emit: error_matrix
     tuple val(meta), path("*.pdf"), emit: plot
-    path  "versions.yml"         ,  emit: versions
+    path  "versions.yml"          ,  emit: versions
 
     when:
     task.ext.when == null || task.ext.when
