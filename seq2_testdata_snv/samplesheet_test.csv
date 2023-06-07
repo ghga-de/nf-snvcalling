@@ -1,0 +1,2 @@
+sample,tumor,tumor_index,control,control_index
+test_withcontrol,testdata/WES_LL_T_1_test.bam,testdata/WES_LL_T_1_test.bam.bai,testdata/WES_LL_N_1_test.bam,testdata/WES_LL_N_1_test.bam.bai
