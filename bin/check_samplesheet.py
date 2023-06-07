@@ -36,11 +36,11 @@ def print_error(error, context="Line", context_str=""):
 def check_samplesheet(file_in, file_out):
     """
     This function checks that the samplesheet follows the following structure:
-    sample,tumor,control
-    sample_WithControl,tumor1.bam,control1.bam
-    sample_WithoutControl,tumor2.bam,
+    sample,tumor,tumor_index, control, control_index
+    sample_WithControl,tumor1.bam,tumot1.bai, control1.bam, control1.bai
+    sample_WithoutControl,tumor2.bam,tumor2.bai,,
     For an example see:
-    https://github.com/kubranarci/nf-core-platypusindelcalling/blob/dev/assets/samplesheet.csv
+    https://github.com/ghga-de/nf-snvcalling/assets/samplesheet.csv
     """
 
     sample_mapping_dict = {}
@@ -48,7 +48,7 @@ def check_samplesheet(file_in, file_out):
 
         ## Check header
         MIN_COLS = 2
-        HEADER = ["sample", "tumor", "control"]
+        HEADER = ["sample", "tumor","tumor_index", "control","control_index" ]
         header = [x.strip('"') for x in fin.readline().strip().split(",")]
         if header[: len(HEADER)] != HEADER:
             print(
@@ -78,7 +78,7 @@ def check_samplesheet(file_in, file_out):
                     )
 
                 ## Check sample name entries
-                sample, tumor, control = lspl[: len(HEADER)]
+                sample, tumor, tumor_index, control, control_index = lspl[: len(HEADER)]
                 if sample.find(" ") != -1:
                     print(
                         f"WARNING: Spaces have been replaced by underscores for sample: {sample}"
@@ -91,9 +91,9 @@ def check_samplesheet(file_in, file_out):
                 ## Auto-detect with control/without control
                 sample_info = []  ## [sample, tumor, control, iscontrol]
                 if sample and tumor and control:  ## iscontrol true
-                    sample_info = [sample, tumor, control, "1"]
+                    sample_info = [sample, tumor, tumor_index, control, control_index , "1"]
                 elif sample and tumor and not control:  ## iscontrol false
-                    sample_info = [sample, tumor,'dummy',"0"]
+                    sample_info = [sample, tumor,tumor_index,"dummy.bam","dummy.bai","0"]
                 else:
                     print_error("Invalid combination of columns provided!", "Line", line)
 
@@ -112,7 +112,7 @@ def check_samplesheet(file_in, file_out):
         make_dir(out_dir)
         with open(file_out, "w") as fout:
             fout.write(
-                ",".join(["sample", "tumor", "control", "iscontrol"])
+                ",".join(["sample", "tumor","tumor_index", "control","control_index", "iscontrol"])
                 + "\n"
             )
             for sample in sorted(sample_mapping_dict.keys()):
