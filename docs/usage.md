@@ -152,20 +152,22 @@ The pipeline will auto-detect whether a sample is single- or paired-end using th
 
 ```console
 sample,tumor,control
-sample1,sample1_tumor.bam,sample1_control.bam
-sample2,sample2_tumor.bam,sample2_control.bam
-sample3,sample3_tumor.bam,sample3_control.bam
-sample4,sample4_tumor.bam,
-sample5,sample5_tumor.bam,
-sample6,sample6_tumor.bam,
-sample7,sample7_tumor.bam,
+sample1,sample1_tumor.bam,sample1_tumor.bai,sample1_control.bam,sample1_control.bai
+sample2,sample2_tumor.bam,sample2_tumor.bai,sample2_control.bam,sample2_control.bai
+sample3,sample3_tumor.bam,sample3_tumor.bai,sample3_control.bam,sample3_control.bai
+sample4,sample4_tumor.bam,sample4_tumor.bai,,
+sample5,sample5_tumor.bam,sample5_tumor.bai,,
+sample6,sample6_tumor.bam,sample6_tumor.bai,,
+sample7,sample7_tumor.bam,sample7_tumor.bai,,
 ```
 
 | Column    | Description                                                                                                                                                                            |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sample`  | Custom sample name. This entry will be used to name the output files and output directories |
 | `tumor` | Full path to BAM file for tumor samples.                                                          |
+| `tumor_index` | Full path to BAI file for tumor samples.                                                          |
 | `control` | Full path to BAM file for control (optional).                                                          |
+| `control_index` | Full path to BAI file for control (optional).                                                          |
 
 An [example samplesheet](../assets/samplesheet_test.csv) has been provided with the pipeline.
 
