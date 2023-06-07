@@ -72,7 +72,7 @@ workflow FILTER_SNVS {
             somatic_ch    
         )
         versions = versions.mix(DBSNP_COUNTER.out.versions)
-           
+        
         //
         // MODULE:JSON_REPORT
         //
@@ -80,9 +80,8 @@ workflow FILTER_SNVS {
         // determine fraction of SNVs called as "synonymous SNV" among all exonic SNVs (QC value)
         // MAF plots are generated in the JSON_REPORT module
         // and THA detection
-        temp5_ch = somatic_ch.join(DBSNP_COUNTER.out.indbsnp)
         JSON_REPORT(
-            temp5_ch
+            somatic_ch.join(DBSNP_COUNTER.out.indbsnp)
         )
         versions = versions.mix(JSON_REPORT.out.versions)
         plots_ch = plots_ch.mix(JSON_REPORT.out.plot)
@@ -172,10 +171,9 @@ workflow FILTER_SNVS {
             // run tripletBased_BQRatio_plotter.R
             // create input channel: meta, sometic_vcf,  refbasequal, altbasequal
             filt_ch  = input_ch.map{it -> tuple( it[0], it[4], it[3] )}
-            temp4_ch = somatic_ch.join(filt_ch)
 
             PLOT_BASESCORE_BIAS_3(
-                temp4_ch, 
+                somatic_ch.join(filt_ch), 
                 "base_score_bias_plot_conf_${params.min_confidence_score}_to_10", 
                 "Final Base Quality Bias Plot for PID"
             )
@@ -186,7 +184,7 @@ workflow FILTER_SNVS {
             //
             //run plotBaseScoreDistribution.R
             PLOT_BASESCORE_DISTRIBUTION(
-                temp4_ch,
+                somatic_ch.join(filt_ch),
                 "base_score_distribution", 
                 "for somatic SNVs for PID"
             )
@@ -198,12 +196,9 @@ workflow FILTER_SNVS {
             //
             // Run tripletBased_BQDistribution_plotter.R
             triplet_ch     = input_ch.map{ it -> tuple( it[0], it[3], it[4], it[5], it[6] )}
-            som_and_pos_ch = somatic_ch.join(triplet_ch)
-
-            som_and_pos_ch.view()
             
             TRIPLET_PLOTTER(
-                som_and_pos_ch, 
+                somatic_ch.join(triplet_ch), 
                 "Base score distribution of PID",
                 0
             )
@@ -231,10 +226,9 @@ workflow FILTER_SNVS {
     // run ghostscript
     temp_ch = input_ch.map{ it -> tuple( it[0], it[7])} 
     temp2_ch = plots_ch.groupTuple().map {it -> tuple( it[0], it[1] )}            
-    plots2_ch = temp_ch.join(temp2_ch)
 
     MERGE_PLOTS(
-        plots2_ch
+        temp_ch.join(temp2_ch)
     )
     versions = versions.mix(MERGE_PLOTS.out.versions) 
 

@@ -24,7 +24,7 @@ include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_2 } from '../../modules/loc
 
 workflow SNV_ANNOTATION {
     take:
-    vcf_ch               // channel: [val(meta), , vcf.gz, vcf.gz.tbi ,val(tumorname), val(controlname) ]
+    vcf_ch               // channel: [val(meta), vcf.gz, vcf.gz.tbi  ]
     ref                  // channel: [path(fasta), path(fai)]
     kgenome              // channel: [file.vcf.gz, file.vcf.gz.tbi]
     dbsnpsnv             // channel: [file.vcf.gz, file.vcf.gz.tbi]
@@ -75,10 +75,7 @@ workflow SNV_ANNOTATION {
         chr_prefix
     )
     versions  = versions.mix(ANNOTATE_VCF.out.versions)
-    // prepare input channel for annovar 
-    // input_ch = meta, vcf, for_annovar.bed
-    ch_vcf = ANNOTATE_VCF.out.unziped_vcf
-    input_ch = ch_vcf.join(ANNOTATE_VCF.out.forannovar)
+    ch_vcf    = ANNOTATE_VCF.out.unziped_vcf
 
     //
     // MODULE: ANNOVAR
@@ -86,7 +83,7 @@ workflow SNV_ANNOTATION {
     // RUN annovar, processAnnovarOutput.pl and newCols2vcf.pl: annovar annotates and classifies the variants, 
     // perl scripts re-creates vcfs. 
     ANNOVAR(
-        input_ch, 
+        ch_vcf.join(ANNOTATE_VCF.out.forannovar), 
         annodb, 
         chr_prefix
     )
@@ -170,7 +167,7 @@ workflow SNV_ANNOTATION {
         // Run tripletBased_BQRatio_plotter.R only if generateExtendedQcPlots is true, this step only generates a pdf!
         if (params.generateExtendedQcPlots){
             // create input channel with error matrixes: 
-            //Somatic SVC Temp,reference_allele_base_qualities, alternative_allele_base_qualities 
+            // Somatic SVC Temp,reference_allele_base_qualities, alternative_allele_base_qualities 
             somatic_vcf.join(refbasequal)
                 .join(altbasequal)
                 .set{ somatic_ch }
