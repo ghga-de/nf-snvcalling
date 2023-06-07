@@ -27,7 +27,7 @@ process SNV_EXTRACTOR {
     snv_extractor_v1.pl \\
         --infile=$vcf \\
         --minconf=$params.min_confidence_score \\
-        --pid=$prefix \\
+        --pid=snvs_$prefix \\
         $args
     
     cat <<-END_VERSIONS > versions.yml

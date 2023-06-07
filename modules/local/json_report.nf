@@ -12,7 +12,7 @@ process JSON_REPORT {
     tuple val(meta), file(somatic_vcf), file(insnp_file)
 
     output:
-    tuple val(meta), path('*is_THA_affected.txt')   , emit: tha
+    tuple val(meta), path('*.txt')                  , emit: txt
     tuple val(meta), path('*.json')                 , emit: json
     tuple val(meta), path('*.pdf')                  , emit: plot        
     path  "versions.yml"                            , emit: versions

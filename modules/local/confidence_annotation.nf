@@ -38,6 +38,7 @@ process CONFIDENCE_ANNOTATION {
             --nocontrol \\
             -i - \\
             -a 0 \\
+            -p \\
             $confoptions \\
             --gnomAD_WGS_maxMAF=${params.crit_gnomad_genomes_maxmaf} \\
             --gnomAD_WES_maxMAF=${params.crit_gnomad_exomes_maxmaf} \\

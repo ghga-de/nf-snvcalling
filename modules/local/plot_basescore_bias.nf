@@ -27,9 +27,9 @@ process PLOT_BASESCORE_BIAS {
         -v $vcf \\
         -r $reference_allele_base_qualities \\
         -a $alternative_allele_base_qualities \\
-        -t ${params.basequal} \\
-        -o ${prefix}_${pdfname}.pdf \\
-        -p ${params.plot_type} \\
+        -t $params.basequal \\
+        -o snvs_${prefix}_${pdfname}.pdf \\
+        -p $params.plot_type \\
         -d "${prefix} ${title}"
 
     cat <<-END_VERSIONS > versions.yml

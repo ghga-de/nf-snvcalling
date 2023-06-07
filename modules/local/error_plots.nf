@@ -14,9 +14,9 @@ process ERROR_PLOTS {
     val(plottitle)
 
     output:
-    tuple val(meta), path("*txt") ,  emit: error_matrix
-    tuple val(meta), path("*.pdf"), emit: plot
-    path  "versions.yml"          ,  emit: versions
+    tuple val(meta), path("*.txt") ,  emit: error_matrix
+    tuple val(meta), path("*.pdf") ,  emit: plot
+    path  "versions.yml"           ,  emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -28,9 +28,9 @@ process ERROR_PLOTS {
     """
     createErrorPlots.py --vcfFile=$vcf \\
         --referenceFile=NA \\
-        --outputFile=${prefix}_${pdfname}.pdf \\
+        --outputFile=snvs_${prefix}_${pdfname}.pdf \\
         --errorType=$errortype \\
-        --errorFile=${prefix}_${errorfilename}.txt \\
+        --errorFile=snvs_${prefix}_${errorfilename}.txt \\
         --plot_title="${plottitle}"
 
     cat <<-END_VERSIONS > versions.yml

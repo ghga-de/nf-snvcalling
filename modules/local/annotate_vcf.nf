@@ -8,7 +8,7 @@ process ANNOTATE_VCF {
     'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
-    tuple val(meta)            , file(vcf), file(vcf_tbi), val(tumorname), val(controlname)
+    tuple val(meta)            , file(vcf), file(vcf_tbi)
     tuple file(kgenome)        , file(kgenome_i)
     tuple file(dbsnpsnv)       , file(dbsnpsnv_i)
     tuple file(localcontrolwgs), file(localcontrolwgs_i)

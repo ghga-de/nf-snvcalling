@@ -21,9 +21,9 @@ process FILE_CONCATENATOR {
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     """
-    headeredFileConcatenator.pl $vcfs > snv_${prefix}.vcf
+    headeredFileConcatenator.pl $vcfs > snvs_${prefix}_raw.vcf
 
-    bgzip snv_${prefix}.vcf && tabix -p vcf snv_${prefix}.vcf.gz 
+    bgzip snvs_${prefix}_raw.vcf && tabix -p vcf snvs_${prefix}_raw.vcf.gz 
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
