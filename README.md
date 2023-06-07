@@ -4,7 +4,7 @@
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 
 <p align="center">
-    <img title="nf-platypusindelcalling workflow" src="docs/images/nf-snvcalling-2.png" width=70%>
+    <img title="nf-snvcalling workflow" src="docs/images/nf-snvcalling-2.png" width=70%>
 </p>
 <p align="right">
     <img title="GHGA" src="docs/images/GHGA_short_Logo_orange.png" width=20%>
@@ -12,14 +12,19 @@
 <p align="right">
     <img title="denbi" src="docs/images/denbi.png" width=20%>
 </p>
-
-
-
+<p align="left">
+    <img title="dkfz" src="docs/images/DKFZ_Logo.png" width=20%>
+</p>
+<p align="left">
+    <img title="dkfz" src="docs/images/odcf_blue.png" width=20%>
+</p>
 ## Introduction
 
 <!-- TODO nf-core: Write a 1-2 sentence summary of what data the pipeline is for and what it does -->
 
-**nf-snvcalling** is a bioinformatics best-practice analysis pipeline from ODCF-OTP SNV Calling pipeline for somatic samples. It calls SNVs from both germline and somatic samples using bcftools mpileup, compares and filter outs germline spesific ones with samtools mpileup compare. This workflow uses various annotations from publicly avaliable databases like 1000G variants, dbSNP and gnomAD. The functional effect of the mutations are annotated using Annovar and the variants are assested for their consecouence and split into somatic and non-somatic calls. Besides, extensive QC plots serves functionality for high functional somatic mutation prioritization.
+**nf-snvcalling** is a bioinformatics best-practice analysis nextflow pipeline adapted from [**ODCF-OTP SNV Calling**](https://github.com/DKFZ-ODCF/SNVCallingWorkflow) roddy based pipeline for somatic sample analysis. 
+
+It calls SNVs from both germline and somatic samples using bcftools mpileup, compares and filter outs germline spesific ones with samtools mpileup compare. This workflow uses various annotations from publicly avaliable databases like 1000G variants, dbSNP and gnomAD. The functional effect of the mutations are annotated using Annovar and the variants are assested for their consecouence and split into somatic and non-somatic calls. Besides, extensive QC plots serves functionality for high functional somatic mutation prioritization.
 
 For now, this workflow is only optimal to work in ODCF Cluster. The config file (conf/dkfz_cluster.config) can be used as an example. Running Annotation, DeepAnnotation and Filter steps are optinal and can be turned off using [runsnvAnnotation, runSNVDeepAnnotation, runSNVVCFFilter] parameters sequentialy.
 
@@ -65,7 +70,7 @@ The pipeline has  main steps: SNV calling using mpileup, basic annotations, deep
    Produces pipeline level analytics and reports. 
 
 
-**Please read** [usage](https://github.com/kubranarci/nf-snvcalling/blob/main/docs/usage.md)  before you start your won analysis. 
+**Please read** [usage](https://github.com/ghga-de/nf-snvcalling/blob/main/docs/usage.md)  before you start your won analysis. 
 
  
 ## Quick Start
@@ -83,7 +88,7 @@ annotate_variation.pl -downdb wgEncodeGencodeBasicV19 humandb/ -build hg19
 4. Download the pipeline and test it on a minimal dataset with a single command:
 
    ```console
-   git clone https://github.com/kubranarci/nf-snvcalling.git
+   git clone https://github.com/ghga-de/nf-snvcalling.git
     ```
 
   before run do this to bin directory, make it runnable!:
@@ -122,26 +127,65 @@ annotate_variation.pl -downdb wgEncodeGencodeBasicV19 humandb/ -build hg19
 
 **tumor**: The path to the tumor file
 
+**tumor_index**: The path to the tumor index file
+
 **control**: The path to the control file, if there is no control will be kept blank.
+
+**contro_index_**: The path to the control index file, if there is no control will be kept blank.
 
 ## Data Requirements
 
+Annotations are optional for the user. 
 All VCF and BED files need to be indexed with tabix and should be in the same folder!
 
-[This section is for further]
+**Basic Annotation Files**
 
+- dbSNP SNVs (vcf)
+- 1000K SNVs (vcf)
+- gnomAD Genome Sites for SNVs (vcf)
+- gnomAD Exome Sites for SNVs (vcf)
+- Local Control files (vcf)
+
+**SNV Reliability Files**
+
+- UCSC Repeat Masker region (bed)
+- UCSC Mappability regions (bed)
+- UCSC Simple tandem repeat regions (bed)
+- UCSC DAC Black List regions (bed)
+- UCSC DUKE Excluded List regions (bed)
+- UCSC Hiseq Deep sequencing regions (bed)
+- UCSC Self Chain regions (bed)
+
+**Deep Annotation Files**
+- UCSC Enhangers (bed)
+- UCSC CpG islands (bed)
+- UCSC TFBS noncoding sites (bed)
+- UCSC Encode DNAse cluster (bed.gz)
+- snoRNAs miRBase  (bed)
+- sncRNAs miRBase  (bed) 
+- miRBase (bed)
+- Cosmic coding SNVs (bed)
+- miRNA target sites (bed)
+- Cgi Mountains (bed)
+- UCSC Phast Cons Elements (bed)
+- UCSC Encode TFBS (bed)
 
 ## Documentation
 
-The nf-psnvcalling pipeline comes with documentation about the pipeline [usage](https://github.com/kubranarci/nf-snvcalling/blob/main/docs/usage.md) and [output](https://github.com/kubranarci/nf-snvcalling/blob/main/docs/output.md).
+The nf-snvcalling pipeline comes with documentation about the pipeline [usage](https://github.com/ghga-de/nf-snvcalling/blob/main/docs/usage.md) and [output](https://github.com/ghga-de/nf-snvcalling/blob/main/docs/output.md).
 
 ## Credits
 
-nf-snvcalling was originally written by Kuebra Narci kuebra.narci@dkfz-heidelberg.de.
+nf-snvcalling was originally translated from roddy based pipeline by Kuebra Narci kuebra.narci@dkfz-heidelberg.de.
 
 The pipeline is originally written in workflow management language Roddy. [Inspired github page](https://github.com/DKFZ-ODCF/SNVCallingWorkflow)
 
-We thank the following people for their extensive assistance in the development of this pipeline:
+The SNV workflow was in the pan-cancer analysis of whole genomes (PCAWG) and can be cited with the following publication:
+
+Pan-cancer analysis of whole genomes.
+The ICGC/TCGA Pan-Cancer Analysis of Whole Genomes Consortium.
+Nature volume 578, pages 82–93 (2020).
+DOI 10.1038/s41586-020-1969-6:
 
 **TODO**
 <!-- TODO nf-core: If applicable, make list of people who have also contributed -->
@@ -153,7 +197,7 @@ If you would like to contribute to this pipeline, please see the [contributing g
 ## Citations
 
 <!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi and badge at the top of this file. -->
-<!-- If you use  nf-core/platypusindelcalling for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
+<!-- If you use  ghga-de/snvcalling for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
 
 <!-- TODO nf-core: Add bibliography of tools and data used in your pipeline -->
 

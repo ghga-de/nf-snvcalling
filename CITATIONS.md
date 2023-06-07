@@ -1,5 +1,14 @@
 # nf/snvcalling: Citations
 
+SNV calling workflow was in the pan-cancer analysis of whole genomes (PCAWG) and can be cited with the following publication:
+
+Pan-cancer analysis of whole genomes.
+The ICGC/TCGA Pan-Cancer Analysis of Whole Genomes Consortium.
+Nature volume 578, pages 82–93 (2020).
+DOI 10.1038/s41586-020-1969-6
+
+Orijinal version of the workflow is [here](https://github.com/DKFZ-ODCF/SNVCallingWorkflow)
+
 ## [nf-core](https://pubmed.ncbi.nlm.nih.gov/32055031/)
 
 > Ewels PA, Peltzer A, Fillinger S, Patel H, Alneberg J, Wilm A, Garcia MU, Di Tommaso P, Nahnsen S. The nf-core framework for community-curated bioinformatics pipelines. Nat Biotechnol. 2020 Mar;38(3):276-278. doi: 10.1038/s41587-020-0439-x. PubMed PMID: 32055031.
@@ -10,10 +19,69 @@
 
 ## Pipeline tools
 
-- [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+- [Annovar](https://annovar.openbioinformatics.org/en/latest/)
+> Wang K, Li M, Hakonarson H. ANNOVAR: Functional annotation of genetic variants from next-generation sequencing data Nucleic Acids Research, 38:e164, 2010
+
+- [BCFTools](https://pubmed.ncbi.nlm.nih.gov/21903627/)
+
+  > Li H: A statistical framework for SNP calling, mutation discovery, association mapping and population genetical parameter estimation from sequencing data. Bioinformatics. 2011 Nov 1;27(21):2987-93. doi: 10.1093/bioinformatics/btr509. PubMed PMID: 21903627; PubMed Central PMCID: PMC3198575.
+
+- [BGZip](https://github.com/madler/pigz)
+
+- [SAMtools](https://pubmed.ncbi.nlm.nih.gov/19505943/)
+
+  > Li H, Handsaker B, Wysoker A, Fennell T, Ruan J, Homer N, Marth G, Abecasis G, Durbin R; 1000 Genome Project Data Processing Subgroup. The Sequence Alignment/Map format and SAMtools. Bioinformatics. 2009 Aug 15;25(16):2078-9. doi: 10.1093/bioinformatics/btp352. Epub 2009 Jun 8. PubMed PMID: 19505943; PubMed Central PMCID: PMC2723002.
+
+  - [Tabix](https://academic.oup.com/bioinformatics/article/27/5/718/262743)
+
+  > Li H, Tabix: fast retrieval of sequence features from generic TAB-delimited files, Bioinformatics, Volume 27, Issue 5, 1 March 2011, Pages 718–719, doi: 10.1093/bioinformatics/btq671. PubMed PMID: 21208982. PubMed Central PMCID: PMC3042176.
 
 - [MultiQC](https://pubmed.ncbi.nlm.nih.gov/27312411/)
   > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
+
+## R packages
+
+- [R](https://www.R-project.org/)
+
+  > R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria.
+
+- [tidyverse](https://www.tidyverse.org/)
+
+- [optparse](https://cran.r-project.org/web/packages/optparse/index.html) 
+
+- [Grid](https://cran.r-project.org/web/packages/gridExtra/index.html)
+
+- [gridExtra](https://cran.r-project.org/web/packages/gridExtra/index.html)
+
+- [Canopy](https://cran.r-project.org/web/packages/Canopy/index.html)
+
+- [jsonlite](https://cran.r-project.org/web/packages/jsonlite/citation.html)
+>Ooms J (2014). “The jsonlite Package: A Practical and Consistent Mapping Between JSON Data and R Objects.” arXiv:1403.2805 [stat.CO]. https://arxiv.org/abs/1403.2805.
+
+## Perl packages
+
+- [Perl](https://www.perl.org/)
+> Wall, L., Christiansen, T., & Orwant, J. (2000). Programming perl. " O&#x27;Reilly Media, Inc."
+
+- [JSON](https://metacpan.org/pod/JSON)
+
+- [String](https://metacpan.org/pod/String::String)
+
+## Pyhton packages
+
+- [Python 2.7](https://python.readthedocs.io/en/v2.7.2/)
+> Van Rossum, G., & Drake Jr, F. L. (1995). Python reference manual. Centrum voor Wiskunde en Informatica Amsterdam.
+
+- [VCFparser](https://pypi.org/project/vcfparser/)
+
+- [pysam](https://pypi.org/project/pysam/)
+
+- [numpy](https://pypi.org/project/numpy/)
+
+- [scipy](https://pypi.org/search/?q=scipy)
+
+- [matplotlib](https://pypi.org/project/matplotlib/)
+
 
 ## Software packaging/containerisation tools
 

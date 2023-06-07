@@ -96,6 +96,12 @@
                     "fa_icon": "fas fa-post_processes",
                     "description": "Enable purest analysis"
                 },
+                "runcontigs": {
+                    "type": "string",
+                    "default": "NULL",
+                    "fa_icon": "fas fa-post_processes",
+                    "description": "Specify extra contig processing"
+                },
                 "skip_multiqc": {
                     "type": "boolean",
                     "default": "false",
