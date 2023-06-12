@@ -26,7 +26,7 @@ process PER_CHROM_PLOT {
         -i $distance \\
         -l $chr_file \\
         -s ${prefix} \\
-        -o ${prefix}_perChromFreq_conf_${params.min_confidence_score}_to_10.pdf
+        -o snvs_${prefix}_perChromFreq_conf_${params.min_confidence_score}_to_10.pdf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

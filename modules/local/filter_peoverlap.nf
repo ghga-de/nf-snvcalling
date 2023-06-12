@@ -2,7 +2,7 @@
 //# BaseScore FIFOS will be filled by ${TOOL_FILTER_PE_OVERLAP}
 process FILTER_PEOVERLAP {
     tag "$meta.id"
-    label 'process_medium_high'
+    label 'process_high'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -19,6 +19,7 @@ process FILTER_PEOVERLAP {
     tuple val(meta), path('*_reference_allele_base_qualities.txt')   , emit: reference_allele_base_qualities 
     tuple val(meta), path('*_alternative_allele_read_positions.txt') , emit: alternative_allele_read_positions 
     tuple val(meta), path('*_reference_allele_read_positions.txt')   , emit: reference_allele_read_positions
+    path  "*.tsv"                                               
     path  "versions.yml"                                             , emit: versions
 
     when:
@@ -38,10 +39,10 @@ process FILTER_PEOVERLAP {
         --baseq=${params.basequal} \\
         --qualityScore=${params.qualityscore} \\
         --maxNumberOfMismatchesInRead=${params.mismatch_threshold} \\
-        --altBaseQualFile=${prefix}_alternative_allele_base_qualities.txt \\
-        --refBaseQualFile=${prefix}_reference_allele_base_qualities.txt \\
-        --altBasePositionsFile=${prefix}_alternative_allele_read_positions.txt \\
-        --refBasePositionsFile=${prefix}_reference_allele_read_positions.txt \\
+        --altBaseQualFile=snvs_${prefix}_alternative_allele_base_qualities.txt \\
+        --refBaseQualFile=snvs_${prefix}_reference_allele_base_qualities.txt \\
+        --altBasePositionsFile=snvs_${prefix}_alternative_allele_read_positions.txt \\
+        --refBasePositionsFile=snvs_${prefix}_reference_allele_read_positions.txt \\
         --referenceFile=$fasta | \\
             confidenceAnnotation_SNVs.py $controlflag\\
                 -i - \\
@@ -53,6 +54,9 @@ process FILTER_PEOVERLAP {
                 --localControl_WES_maxMAF=${params.crit_localcontrol_maxmaf} \\
                 --1000genome_maxMAF=${params.crit_1kgenomes_maxmaf} \\
                 -f ${prefix}_somatic_snvs_for_bias.vcf > ${prefix}_peoverlap.vcf
+
+    NRSOMSNV=`grep -v "^#" ${prefix}_somatic_snvs_for_bias.vcf | wc -l`
+    echo -e 'SOMATIC_SNVS_UNFILTERED\\t\$NRSOMSNV'>snvs_${prefix}_QC_values.tsv
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

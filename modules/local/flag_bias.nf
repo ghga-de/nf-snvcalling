@@ -32,18 +32,18 @@ process FLAG_BIAS {
         --referenceFile=$fasta \\
         --sequence_specificFile=$sequence_error_matrix \\
         --sequencing_specificFile=$sequencing_error_matrix \\
-        --numReads=${params.nReads} \\
-        --numMuts=${params.nMuts} \\
-        --biasPValThreshold=${params.biasPValThreshold} \\
-        --biasRatioThreshold=${params.biasRatioThreshold} \\
-        --biasRatioMinimum=${params.biasRatioMinimum} \\
-        --maxNumOppositeReadsSequencingWeakBias=${params.maxNumOppositeReadsSequencingWeakBias} \\
-        --maxNumOppositeReadsSequenceWeakBias=${params.maxNumOppositeReadsSequenceWeakBias} \\
-        --maxNumOppositeReadsSequencingStrongBias=${params.maxNumOppositeReadsSequencingStrongBias} \\
-        --maxNumOppositeReadsSequenceStrongBias=${params.maxNumOppositeReadsSequenceStrongBias} \\
-        --ratioVcf=${params.rVcf} \\
-        --bias_matrixSeqFile=${prefix}_sequence_specific_bias_matrix_${round}.txt \\
-        --bias_matrixSeqingFile=${prefix}_sequencing_specific_bias_matrix_${round}.txt \\
+        --numReads=$params.nReads \\
+        --numMuts=$params.nMuts \\
+        --biasPValThreshold=$params.biasPValThreshold \\
+        --biasRatioThreshold=$params.biasRatioThreshold \\
+        --biasRatioMinimum=$params.biasRatioMinimum \\
+        --maxNumOppositeReadsSequencingWeakBias=$params.maxNumOppositeReadsSequencingWeakBias \\
+        --maxNumOppositeReadsSequenceWeakBias=$params.maxNumOppositeReadsSequenceWeakBias \\
+        --maxNumOppositeReadsSequencingStrongBias=$params.maxNumOppositeReadsSequencingStrongBias \\
+        --maxNumOppositeReadsSequenceStrongBias=$params.maxNumOppositeReadsSequenceStrongBias \\
+        --ratioVcf=$params.rVcf \\
+        --bias_matrixSeqFile=snvs_${prefix}_sequence_specific_bias_matrix_${round}.txt \\
+        --bias_matrixSeqingFile=snvs_${prefix}_sequencing_specific_bias_matrix_${round}.txt \\
         --vcfFileFlagged=${prefix}.${round}.flagged.vcf
 
         cat < ${prefix}.${round}.flagged.vcf | confidenceAnnotation_SNVs.py \\
@@ -51,11 +51,11 @@ process FLAG_BIAS {
             -i - \\
             $confoptions \\
             -a $round \\
-            --gnomAD_WGS_maxMAF=${params.crit_gnomad_genomes_maxmaf} \\
-            --gnomAD_WES_maxMAF=${params.crit_gnomad_exomes_maxmaf} \\
-            --localControl_WGS_maxMAF=${params.crit_localcontrol_maxmaf} \\
-            --localControl_WES_maxMAF=${params.crit_localcontrol_maxmaf} \\
-            --1000genome_maxMAF=${params.crit_1kgenomes_maxmaf} \\
+            --gnomAD_WGS_maxMAF=$params.crit_gnomad_genomes_maxmaf \\
+            --gnomAD_WES_maxMAF=$params.crit_gnomad_exomes_maxmaf \\
+            --localControl_WGS_maxMAF=$params.crit_localcontrol_maxmaf \\
+            --localControl_WES_maxMAF=$params.crit_localcontrol_maxmaf \\
+            --1000genome_maxMAF=$params.crit_1kgenomes_maxmaf \\
             -f ${prefix}.${round}.somaticsnv.vcf > ${prefix}.${round}.flagbias.vcf
 
     cat <<-END_VERSIONS > versions.yml

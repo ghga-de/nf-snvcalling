@@ -40,7 +40,7 @@ process ANNOTATION_PIPES {
                 tfbscons.baseName !='input' ? " | annotate_vcf.pl -a - -b ${tfbscons} --bFileType=bed --columnName='TFBScons'" : '',
                 mirnas_snornas.baseName !='input' ? " | annotate_vcf.pl -a - -b ${mirnas_snornas} --bFileType=bed --columnName='miRNAs_snoRNAs'" : '',
                 encode_dnase.baseName !='input' ? " | annotate_vcf.pl -a - -b ${encode_dnase} --bFileType=bed --columnName='ENCODE_DNASE'" : '',
-                mirbase.baseName !='input' ? " | annotate_vcf.pl -a - -b ${mirbase} --bFileType=bed --columnName='miRBase18'" : '',
+                mirbase.baseName !='input' ? " | annotate_vcf.pl -a - -b ${mirbase} --bFileType=bed --columnName='miRBase'" : '',
                 cosmic.baseName !='input' ? " | annotate_vcf.pl -a - -b ${cosmic} --bFileType=bed --columnName='COSMIC' --bAdditionalColumns=7,8,9 --reportLevel=1" : '',
                 mir_targets.baseName !='input' ? " | annotate_vcf.pl -a - -b ${mir_targets} --columnName='miRNAtargets'" : '' ,
                 cgi_mountains.baseName !='input' ? " | annotate_vcf.pl -a - -b ${cgi_mountains} --bFileType=bed --columnName='CgiMountains' --bAdditionalColumns=4" : '',
@@ -49,9 +49,9 @@ process ANNOTATION_PIPES {
                 mirnas_sncrnas.baseName !='input' ? " | annotate_vcf.pl -a - -b ${mirnas_sncrnas} --bFileType=bed --columnName='miRNAs_sncRNAs'" : ''
                 ].join(' ').trim() 
     """
-    zcat < $vcf $pipe > ${prefix}.deepanno.vcf
-    bgzip -c ${prefix}.deepanno.vcf > ${prefix}.deepanno.vcf.gz
-    tabix ${prefix}.deepanno.vcf.gz
+    zcat < $vcf $pipe > snvs_${prefix}.deepanno.vcf
+    bgzip -c snvs_${prefix}.deepanno.vcf > snvs_${prefix}.deepanno.vcf.gz
+    tabix snvs_${prefix}.deepanno.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -28,7 +28,7 @@ process PLOT_BASESCORE_DISTRIBUTION {
         -r $reference_allele_base_qualities \\
         -a $alternative_allele_base_qualities \\
         -t ${params.basequal} \\
-        -o ${prefix}_${pdfname}.pdf \\
+        -o snvs_${prefix}_${pdfname}.pdf \\
         -d "${prefix} ${title}"
 
     cat <<-END_VERSIONS > versions.yml

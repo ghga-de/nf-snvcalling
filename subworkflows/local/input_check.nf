@@ -22,7 +22,7 @@ workflow INPUT_CHECK {
     versions = SAMPLESHEET_CHECK.out.versions
 }
 
-// Function to get list of [ sample, [ tumor], [control ] ]
+// Function to get list of [ sample, [ tumor],[ tumor_index], [control ], [control_index] ]
 def create_bam_channel(LinkedHashMap row) {
 // create meta map
     def meta = [:]
@@ -37,10 +37,10 @@ def create_bam_channel(LinkedHashMap row) {
         }
         if (row.iscontrol) {
             if (!file(row.control).exists()) {
-                if (row.control == 'dummy') {
-                    bam_meta = [  meta, file(row.tumor), file(row.tumor + '.bai'), [],[]  ]
+                if (row.control == 'dummy.bam') {
+                    bam_meta = [  meta, file(row.tumor), file(row.tumor_index), [],[]  ]
                     meta.tumor_bam = file(row.tumor)
-                    meta.tumor_bai = file(row.tumor + '.bai')
+                    meta.tumor_bai = file(row.tumor_index)
                     meta.control_bam = []
                     meta.control_bai = []
 
@@ -50,16 +50,16 @@ def create_bam_channel(LinkedHashMap row) {
                     }
             }
 
-            bam_meta = [ meta, file(row.tumor), file(row.tumor + '.bai'), file(row.control), file(row.control + '.bai') ]
+            bam_meta = [ meta, file(row.tumor), file(row.tumor_index), file(row.control), file(row.control_index) ]
             meta.tumor_bam = file(row.tumor)
-            meta.tumor_bai = file(row.tumor + '.bai')
+            meta.tumor_bai = file(row.tumor_index)
             meta.control_bam = file(row.control)
-            meta.control_bai = file(row.control + '.bai')
+            meta.control_bai = file(row.control_index)
 
         } else {
-            bam_meta = [  meta, file(row.tumor), file(row.tumor + '.bai'), [],[]  ]
+            bam_meta = [  meta, file(row.tumor), file(row.tumor_index), [],[]  ]
             meta.tumor_bam = file(row.tumor)
-            meta.tumor_bai = file(row.tumor + '.bai')
+            meta.tumor_bai = file(row.tumor_index)
             meta.control_bam = []
             meta.control_bai = []
         }

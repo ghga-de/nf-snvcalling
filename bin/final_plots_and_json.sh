@@ -70,7 +70,8 @@ if [ "$snvindbSNP" != "0" ]; then
 		gs -sDEVICE=pdfwrite -o empty.pdf -c showpage
 	# calculate SNV_IN_DBSNP_RATIO snvindbSNP/snvnum (QC value)
 	fi
-	SNV_IN_DBSNP_RATIO=$(expr $snvnum / $snvindbSNP)
+	##SNV_IN_DBSNP_RATIO=$( (expr $snvindbSNP / $snvnum) | bc -l)
+	SNV_IN_DBSNP_RATIO=$(echo "scale=5; $snvindbSNP / $snvnum" | bc)
 	echo "SNV_IN_DBSNP_RATIO is ${SNV_IN_DBSNP_RATIO}"
 else
 	SNV_IN_DBSNP_RATIO="NA" # no output produced, don't include in "convert" later

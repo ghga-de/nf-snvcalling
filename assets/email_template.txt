@@ -1,10 +1,10 @@
 Run Name: $runName
 
 <% if (success){
-    out << "## nf/snvcalling execution completed successfully! ##"
+    out << "## ghga-de/nf-snvcalling execution completed successfully! ##"
 } else {
     out << """####################################################
-## nf/snvcalling execution completed unsuccessfully! ##
+## ghga-de/nf-snvcalling execution completed unsuccessfully! ##
 ####################################################
 The exit status of the task that caused the workflow execution to fail was: $exitStatus.
 The full error message was:
@@ -27,5 +27,5 @@ Pipeline Configuration:
 <% out << summary.collect{ k,v -> " - $k: $v" }.join("\n") %>
 
 --
-nf/snvcalling
-https://github.com/nf/snvcalling
+ghga-de/nf-snvcalling
+https://github.com/ghga-de/nf-snvcalling

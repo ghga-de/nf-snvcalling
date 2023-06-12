@@ -23,7 +23,7 @@ process MUTATION_DISTANCE {
     """
     mutationDistance.py \\
         --inf=$vcf \\
-        --outf=${prefix}_somatic_mutation_dist_conf_${params.min_confidence_score}_to_10.txt \\
+        --outf=snvs_${prefix}_somatic_mutation_dist_conf_${params.min_confidence_score}_to_10.txt \\
         --alleleFreq=$params.allele_freq 
 
     cat <<-END_VERSIONS > versions.yml

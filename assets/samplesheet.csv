@@ -1,3 +1,2 @@
-sample,tumor,control
-WES_LL_T,/omics/groups/OE0608/internal/kubran/data/WES_LL_T_1.bwa.dedup.bam,/omics/groups/OE0608/internal/kubran/data/WES_LL_N_1.bwa.dedup.bam
-WES_LL_T_2,/omics/groups/OE0608/internal/kubran/data/WES_LL_T_1.bwa.dedup.bam,
+sample,tumor,tumor_index,control,control_index
+WGS_LL_1,/omics/odcf/transfer/public_data/seqc/wgs/WGS_LL_T_1.bwa.dedup.bam,/omics/odcf/transfer/public_data/seqc/wgs/WGS_LL_T_1.bwa.dedup.bai,/omics/odcf/transfer/public_data/seqc/wgs/WGS_LL_N_1.bwa.dedup.bam,/omics/odcf/transfer/public_data/seqc/wgs/WGS_LL_N_1.bwa.dedup.bai

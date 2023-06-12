@@ -24,7 +24,7 @@ process CONTEXT_PLOT {
     SNVSeqContext.R \\
         $frequency \\
         somatic \\
-        ${prefix}_snvs_with_context_conf_${params.min_confidence_score}_to_10.pdf
+        snvs_${prefix}_snvs_with_context_conf_${params.min_confidence_score}_to_10.pdf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

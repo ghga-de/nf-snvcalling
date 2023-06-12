@@ -25,7 +25,7 @@ process PURITY_RELOADED {
     """
     PurityReloaded.py \\
         $vcf \\
-        `findConfColumn.pl ${vcf}` > ${prefix}_purityEST.txt
+        `findConfColumn.pl ${vcf}` > snvs_${prefix}_purityEST.txt
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

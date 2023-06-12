@@ -24,7 +24,7 @@ process MERGE_PLOTS {
     export TEMP=\$(mktemp -d)
     export TMPDIR=\$TEMP
     gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite \\
-        -sOutputFile=${prefix}_allSNVdiagnosticsPlots.pdf \\
+        -sOutputFile=snvs_${prefix}_allSNVdiagnosticsPlots.pdf \\
         $plot1 $plot2
     rm -rf \$TEMP
     

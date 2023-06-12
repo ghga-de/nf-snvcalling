@@ -43,7 +43,7 @@ process TRIPLET_PLOTTER {
     tripletBased_BQDistribution_plotter.R -v ${prefix}.withMAF.vcf \\
         -p $prefix \\
         -t "${prefix} ${title}" \\
-        -o ${prefix}_tripletSpecific_base_score_distribution \\
+        -o snvs_${prefix}_tripletSpecific_base_score_distribution \\
         -s \$SEQUENCE_CONTEXT_COLUMN_INDEX \\
         --MAFColumnIndex \$MAF_COLUMN_INDEX \\
         --refBaseQual $refbasequal \\
