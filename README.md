@@ -3,21 +3,15 @@
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 
+|        |                     | | |
+| :-----------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: |
+| [![National Genomics Infrastructure](docs/images/denbi.png )](https://ngisweden.scilifelab.se/)|              [![National Bioinformatics Infrastructure Sweden](docs/images/odcf_blue.png)](https://nbis.se)         |[![QBiC](docs/images/DKFZ_Logo.png)](https://www.qbic.uni-tuebingen.de)|[![GHGA](docs/images/GHGA_short_Logo_orange.png)](https://www.ghga.de/)|
+
+
 <p align="center">
     <img title="nf-snvcalling workflow" src="docs/images/nf-snvcalling-2.png" width=70%>
 </p>
-<p align="right">
-    <img title="GHGA" src="docs/images/GHGA_short_Logo_orange.png" width=20%>
-</p>
-<p align="right">
-    <img title="denbi" src="docs/images/denbi.png" width=20%>
-</p>
-<p align="left">
-    <img title="dkfz" src="docs/images/DKFZ_Logo.png" width=20%>
-</p>
-<p align="left">
-    <img title="dkfz" src="docs/images/odcf_blue.png" width=20%>
-</p>
+
 
 ## Introduction
 
