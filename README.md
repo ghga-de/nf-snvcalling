@@ -25,7 +25,7 @@ For now, this workflow is only optimal to work in ODCF Cluster. The config file 
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies. 
 
-**Important Notice:** The whole workflow is only ready for DKFZ cluster users for now, It is strongly recommended that they read the whole documentation before usage. This workflow works better with nextflow/22.07.1-edge in the cluster, It is recommended to use >22.07.1. Only SNV Calling part can be used for outside users, reference files and chromosome length file must be given for this.
+**Important Notice:** The whole workflow is only ready for DKFZ cluster users for now, It is strongly recommended that they read the whole documentation before usage. It is recommended to use any version >22.07.1. Only SNV Calling part can be used for outside users, reference files and chromosome length files must be given for this.
 
 ## Pipeline summary
 
