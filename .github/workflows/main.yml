@@ -1,0 +1,44 @@
+name: Main
+# This workflow runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
+on:
+  push:
+    branches:
+      - dev
+      - 14-cicd-test-integration
+  pull_request:
+  release:
+    types: [published]
+
+# Uncomment if we need an edge release of Nextflow again
+# env: NXF_EDGE: 1
+
+jobs:
+  test:
+    name: Run workflow tests
+    runs-on: ubuntu-latest
+    env:
+      NXF_VER: ${{ matrix.nxf_ver }}
+      NXF_ANSI_LOG: false
+    strategy:
+      matrix:
+        # Nextflow versions: check pipeline minimum and current latest
+        nxf_ver: ['22.10.6']
+    steps:
+      - name: Check out pipeline code
+        uses: actions/checkout@v3
+
+      - name: Install Nextflow
+        env:
+          CAPSULE_LOG: none
+        run: |
+          wget -qO- get.nextflow.io | bash
+          sudo mv nextflow /usr/local/bin/
+      - name: HELPTEXT Run with the help flag
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} --help
+      - name: DELAY to try address some odd behaviour with what appears to be a conflict between parallel htslib jobs leading to CI hangs
+        run: | 
+          if [[ $NXF_VER = '' ]]; then sleep 1200; fi
+      - name: BASIC Run the basic pipeline only for INDEL calling with platypus with docker
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker
