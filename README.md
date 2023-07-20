@@ -3,38 +3,33 @@
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 
+|        |                     | | |
+| :-----------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: |
+| [![National Genomics Infrastructure](docs/images/denbi.png )](https://ngisweden.scilifelab.se/)|              [![National Bioinformatics Infrastructure Sweden](docs/images/odcf_blue.png)](https://nbis.se)         |[![QBiC](docs/images/DKFZ_Logo.png)](https://www.qbic.uni-tuebingen.de)|[![GHGA](docs/images/GHGA_short_Logo_orange.png)](https://www.ghga.de/)|
+
+
 <p align="center">
     <img title="nf-snvcalling workflow" src="docs/images/nf-snvcalling-2.png" width=70%>
 </p>
-<p align="right">
-    <img title="GHGA" src="docs/images/GHGA_short_Logo_orange.png" width=20%>
-</p>
-<p align="right">
-    <img title="denbi" src="docs/images/denbi.png" width=20%>
-</p>
-<p align="left">
-    <img title="dkfz" src="docs/images/DKFZ_Logo.png" width=20%>
-</p>
-<p align="left">
-    <img title="dkfz" src="docs/images/odcf_blue.png" width=20%>
-</p>
+
+
 ## Introduction
 
 <!-- TODO nf-core: Write a 1-2 sentence summary of what data the pipeline is for and what it does -->
 
 **nf-snvcalling** is a bioinformatics best-practice analysis nextflow pipeline adapted from [**ODCF-OTP SNV Calling**](https://github.com/DKFZ-ODCF/SNVCallingWorkflow) roddy based pipeline for somatic sample analysis. 
 
-It calls SNVs from both germline and somatic samples using bcftools mpileup, compares and filter outs germline spesific ones with samtools mpileup compare. This workflow uses various annotations from publicly avaliable databases like 1000G variants, dbSNP and gnomAD. The functional effect of the mutations are annotated using Annovar and the variants are assested for their consecouence and split into somatic and non-somatic calls. Besides, extensive QC plots serves functionality for high functional somatic mutation prioritization.
+It calls SNVs from both germline and somatic samples using bcftools mpileup, compares and filters outs germline specific ones with samtools mpileup compare. This workflow uses various annotations from publicly available databases like 1000G variants, dbSNP and gnomAD. The functional effect of the mutations are annotated using Annovar and the variants are assessed for their consequence and split into somatic and non-somatic calls. Besides, extensive QC plots serve functionality for high functional somatic mutation prioritization.
 
-For now, this workflow is only optimal to work in ODCF Cluster. The config file (conf/dkfz_cluster.config) can be used as an example. Running Annotation, DeepAnnotation and Filter steps are optinal and can be turned off using [runsnvAnnotation, runSNVDeepAnnotation, runSNVVCFFilter] parameters sequentialy.
+For now, this workflow is only optimal to work in ODCF Cluster. The config file (conf/dkfz_cluster.config) can be used as an example. Running Annotation, DeepAnnotation, and Filter steps are optional and can be turned off using [runsnvAnnotation, runSNVDeepAnnotation, runSNVVCFFilter] parameters sequentially.
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies. 
 
-**Important Notice:** The whole workflow is only ready for DKFZ cluster users for now, It is strongly recommended to them to read whole documentation before usage. This workflow works better with nextflow/22.07.1-edge in the cluster, It is recommended to use >22.07.1. Only SNV Calling part can be used for outside users, reference file and chromsome length file must be given for this.
+**Important Notice:** The whole workflow is only ready for DKFZ cluster users for now, It is strongly recommended that they read the whole documentation before usage. It is recommended to use any version >22.07.1. Only SNV Calling part can be used for outside users, reference files and chromosome length files must be given for this.
 
 ## Pipeline summary
 
-The pipeline has  main steps: SNV calling using mpileup, basic annotations, deep annotations, filtering and reporting. Annotation and filtering steps are embeded with many plot generations. 
+The pipeline has  main steps: SNV calling using mpileup, basic annotations, deep annotations, filtering and reporting. Annotation and filtering steps are embedded with many plot generations. 
 
 
 1. SNC Calling: 
@@ -47,27 +42,27 @@ The pipeline has  main steps: SNV calling using mpileup, basic annotations, deep
    In-house scripts to annotate with several databases like gnomAD and dbSNP.
 
    ANNOVAR ([`Annovar`](https://annovar.openbioinformatics.org/en/latest/))
-   : annotate_variation.pl is used to annotate variants. The tool makes classifications for intergenic, intogenic, nonsynoymous SNP, frameshift deletion or large-scale duplication regions.
+   : annotate_variation.pl is used to annotate variants. The tool makes classifications for intergenic, intogenic, nonsynonymous SNP, frameshift deletion or large-scale duplication regions.
    
-   Reliability and confidation annotations: It is an optional ste for mapability, hiseq, selfchain and repeat regions checks for reliability and confidence of those scores.
+   Reliability and confidation annotations: It is an optional ste for mappability, hiseq, self chain and repeat regions checks for reliability and confidence of those scores.
 
    Sequence ad Sequencing based error plots: Provides insights on predicted somatic SNVs.  
 
 3. Deep Annotation (--runSNVDeepAnnotation True): 
    
-   If basic annotations are applied, an extra optional step for number of extra indel annotations like enhancer, cosmic, mirBASE, encode databases can be applied too.
+   If basic annotations are applied, an extra optional step for the number of extra indel annotations like enhancer, cosmic, mirBASE, encode databases can be applied too.
 
 4. Filtering and Visualization (--runSNVVCFFilter True): 
 
-   It is an optional step. Filtering is only required for the tumor samples with no-control and filtering can only be applied if basic annotation is performed. 
+   It is an optional step. Filtering is only required for the tumor samples with no control and filtering can only be applied if basic annotation is performed. 
 
-   SNV Extraction and Visualizations: SNVs can be extracted by certain minimum confidence level
+   SNV Extraction and Visualizations: SNVs can be extracted by a certain minimum confidence level
 
    Visualization and json reports: Extracted SNVs are visualized and analytics of SNV categories are reported as JSON.
 
 5. MultiQC (--skipmultiqc False):
 
-   Produces pipeline level analytics and reports. 
+   Produces pipeline-level analytics and reports. 
 
 
 **Please read** [usage](https://github.com/ghga-de/nf-snvcalling/blob/main/docs/usage.md)  before you start your won analysis. 
@@ -176,11 +171,11 @@ The nf-snvcalling pipeline comes with documentation about the pipeline [usage](h
 
 ## Credits
 
-nf-snvcalling was originally translated from roddy based pipeline by Kuebra Narci kuebra.narci@dkfz-heidelberg.de.
+nf-snvcalling was originally translated from roddy-based pipeline by Kuebra Narci kuebra.narci@dkfz-heidelberg.de.
 
-The pipeline is originally written in workflow management language Roddy. [Inspired github page](https://github.com/DKFZ-ODCF/SNVCallingWorkflow)
+The pipeline is originally written in the workflow management language Roddy. [Inspired github page](https://github.com/DKFZ-ODCF/SNVCallingWorkflow)
 
-The SNV workflow was in the pan-cancer analysis of whole genomes (PCAWG) and can be cited with the following publication:
+The SNV workflow was in the pan-cancer analysis of whole genomes (PCAWG) and can be cited in the following publication:
 
 Pan-cancer analysis of whole genomes.
 The ICGC/TCGA Pan-Cancer Analysis of Whole Genomes Consortium.
