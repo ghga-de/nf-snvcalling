@@ -4,7 +4,7 @@
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 
 <p align="center">
-    <img title="nf-snvcalling workflow" src="docs/images/nf-snvcalling.png" width=70%>
+    <img title="nf-snvcalling workflow" src="docs/images/nf-snvcalling3.png" width=70%>
 </p>
 
 
