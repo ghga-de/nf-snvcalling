@@ -16,7 +16,6 @@ Main Swiches:
 - --runSNVVCFFilter: Run the filter step or stop the workflow before it. Works only if the basic annotation is applied. 
 - --runArtifactFilter: Run artifact filter as a quality control step and generate error plots.
 - --generateExtendedQcPlots: Generate base score bias plots.
-- --rerunfiltering: Re-run filter step and close. 
 - --runplots: Generate extra rainfall and MAF plots. 
 - --runpurest: Run purityReloaded script.  
 - --skip_multiqc: Skip MultiQC. 
@@ -24,8 +23,9 @@ Main Swiches:
 
 Reference Files:
 
-- --ref_type: Mandatory! Either hg19, hg37 or hg38 can be defined as reference type.
-- --reference: path/to/ref.fa with fai
+- --genome: To use igenome or refgenie. Either hg19 or hg38 to use refgenie or GRCh37 or GRCh38 for igenomes can be defined as reference type.
+- --fasta: path/to/ref.fa
+- --fasta_fai: path/to/ref.fa.fai
 - --chr_prefix: 'chr' or ''
 - --chrlenght: path/chrlength.tsv, tab seperated chromosome positions
 - --contig_file: path/contig_file.tsv, tab seperated contigpositions
@@ -36,12 +36,12 @@ If --runSNVAnnotation is true, the following files must be defined (with corresp
 
 **1. annotate.vcf Options:**
 
-- --k_genome           : 1000k genome SNV calls (vcf.gz)
-- --dbsnp_snv          : dbSNP SNV calls (vcf.gz)
-- --local_control_wgs  : Extra Local Control WGS file (vcf.gz)
-- --local_control_wes  : Extra Local Control WES file (vcf.gz)
-- --gnomad_genomes     : Gnomed Genome sites (vcf.gz)
-- --gnomad_exomes      : Gnomed Exome sites (vcf.gz)
+- --k_genome           : 1000k genome SNV calls (vcf.gz). Column Name added: 1K_GENOMES
+- --dbsnp_snv          : dbSNP SNV calls (vcf.gz). Column Name added: DBSNP
+- --local_control_wgs  : Extra Local Control WGS file (vcf.gz). Column Name added: LocalControlAF_WGS
+- --local_control_wes  : Extra Local Control WES file (vcf.gz). Column Name added: LocalControlAF_WES
+- --gnomad_genomes     : Gnomed Genome sites (vcf.gz). Column Name added: GNOMAD_GENOMES 
+- --gnomad_exomes      : Gnomed Exome sites (vcf.gz). Column Name added: GNOMAD_EXOMES
 
 **2. Annovar Options:**
 
@@ -58,30 +58,30 @@ annotate_variation.pl -downdb wgEncodeGencodeBasicV19 humandb/ -build hg19
 
 **3. SNV Reability Options:**
 
-- --repeat_masker       : UCSC Repeat Masker file (bed.gz)
-- --dac_blacklist       : UCSC DAC Black List (bed.gz) (Optional)
-- --duke_excluded       : UCSC DUKE Excluded List (bed.gz) (Optional)
-- --hiseq_depth         : UCSC Hiseq Deep sequencing regions (bed.gz) (Optional)
-- --self_chain          : UCSC SeLf Chain regions (bed.gz) (Optional)
-- --mapability_file     : UCSC Mappability regions (bed.gz)
-- --simple_tandemrepeats: UCSC Simple tandem repeats (bed.gz)
+- --repeat_masker       : UCSC Repeat Masker file (bed.gz). Column Name added: REPEAT_MASKER
+- --dac_blacklist       : UCSC DAC Black List (bed.gz) (Optional). Column Name added: DAC_BLACKLIST
+- --duke_excluded       : UCSC DUKE Excluded List (bed.gz) (Optional). Column Name added: DUKE_EXCLUDED
+- --hiseq_depth         : UCSC Hiseq Deep sequencing regions (bed.gz) (Optional). Column Name added: HISEQDEPTH
+- --self_chain          : UCSC SeLf Chain regions (bed.gz) (Optional). Column Name added: SELFCHAIN
+- --mapability_file     : UCSC Mappability regions (bed.gz). Column Name added: MAPABILITY
+- --simple_tandemrepeats: UCSC Simple tandem repeats (bed.gz). Column Name added: SIMPLE_TANDEMREPEATS
 
 **4. Deep Annotation Options:**
 
 If --runSNVDeepAnnotation is true, at least one of the following files must be defined (with corresponding indexes):
 
--  --enchancer_file      : UCSC Enhangers (bed.gz)  (Optional)
--  --cpgislands_file     : UCSC CpG islands (bed.gz) (Optional)
--  --tfbscons_file       : UCSC TFBS noncoding sites (bed.gz) (Optional)
--  --encode_dnase_file   : UCSC Encode DNAse cluster (bed.gz) (Optional)
--  --mirnas_snornas_file : snoRNAs miRBase  (bed.gz) (Optional)
--  --mirna_sncrnas_file : sncRNAs miRBase  (bed.gz) (Optional)
--  --mirbase_file        : miRBase (bed.gz) (Optional)
--  --cosmic_file         : Cosmic coding SNVs (bed.gz) (Optional)
--  --mir_targets_file    : miRNA target sites (bed.gz) (Optional)
--  --cgi_mountains_file  : Cgi Mountains (bed.gz) (Optional)
--  --phastconselem_file  : UCSC Phast Cons Elements (bed.gz) (Optional)
--  --encode_tfbs_file    : UCSC Encode TFBS (bed.gz) (Optional)
+-  --enchancer_file      : UCSC Enhangers (bed.gz)  (Optional). Column Name added: Enhancers
+-  --cpgislands_file     : UCSC CpG islands (bed.gz) (Optional). Column Name added: CpGislands
+-  --tfbscons_file       : UCSC TFBS noncoding sites (bed.gz) (Optional). Column Name added: TFBScons
+-  --encode_dnase_file   : UCSC Encode DNAse cluster (bed.gz) (Optional). Column Name added: ENCODE_DNASE
+-  --mirnas_snornas_file : snoRNAs miRBase  (bed.gz) (Optional). Column Name added: miRNAs_snoRNAs 
+-  --mirna_sncrnas_file : sncRNAs miRBase  (bed.gz) (Optional). Column Name added: miRNAs_sncRNAs
+-  --mirbase_file        : miRBase (bed.gz) (Optional). Column Name added: miRBase18
+-  --cosmic_file         : Cosmic coding SNVs (bed.gz) (Optional). Column Name added: COSMIC
+-  --mir_targets_file    : miRNA target sites (bed.gz) (Optional). Column Name added: miRNAtargets
+-  --cgi_mountains_file  : Cgi Mountains (bed.gz) (Optional). Column Name added: CgiMountains
+-  --phastconselem_file  : UCSC Phast Cons Elements (bed.gz) (Optional). Column Name added: phastConsElem20bp
+-  --encode_tfbs_file    : UCSC Encode TFBS (bed.gz) (Optional). Column Name added: ENCODE_TFBS
 
 **5. Confidence Annotation Options:**
 
@@ -97,11 +97,6 @@ Filtering is only applied into the samples without control!
 
 **BE CAREFULL** In order to apply below filtartions, annotations to the applied columns must be performed. 
 
-- --filter_1kgenomes      : Filter or not by 1KGENOMES
-- --filter_gnomad_genomes : Filter or not by gnomad GENOMES
-- --filter_gnomad_exomes  : Filter or not by gnomad EXOMES
-- --filter_localcontrol   : Filter or not by LOCAL CONTROL
-- --filter_non_clinic     : Filter or not by dbSNP
 - --crit_1kgenomes_maxmaf : Max MAF for 1KGENOMES
 - --crit_localcontrol_maxmaf : Max MAF for LOCAL CONTROL
 - --crit_gnomad_exomes_maxmaf: Max MAF for gnomad GENOMES
@@ -115,7 +110,7 @@ Filtering is only applied into the samples without control!
 
 - --basequal: integer value matching base qual score in mpileup
 - --mapqual: integer value matching mapping qual score in mpileup
-- -- qualityscore: quality score type - 'phred' 
+- --qualityscore: quality score type - 'phred' 
 - --mismatch_threshold: integer for mimatch treashold for overlaps
 
 **3. Visualize Options:**
