@@ -1,4 +1,3 @@
-
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A521.10.3-23aa62.svg)](https://www.nextflow.io/)
 [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
@@ -7,28 +6,26 @@
     <img title="nf-snvcalling workflow" src="docs/images/nf-snvcalling3.png" width=70%>
 </p>
 
-
 ## Introduction
 
 <!-- TODO nf-core: Write a 1-2 sentence summary of what data the pipeline is for and what it does -->
 
-**nf-snvcalling** is a bioinformatics best-practice analysis nextflow pipeline adapted from [**ODCF-OTP SNV Calling**](https://github.com/DKFZ-ODCF/SNVCallingWorkflow) roddy based pipeline for somatic sample analysis. 
+**nf-snvcalling** is a bioinformatics best-practice analysis nextflow pipeline adapted from [**ODCF-OTP SNV Calling**](https://github.com/DKFZ-ODCF/SNVCallingWorkflow) roddy based pipeline for somatic sample analysis.
 
 It calls SNVs from both germline and somatic samples using bcftools mpileup, compares and filters outs germline specific ones with samtools mpileup compare. This workflow uses various annotations from publicly available databases like 1000G variants, dbSNP and gnomAD. The functional effect of the mutations are annotated using Annovar and the variants are assessed for their consequence and split into somatic and non-somatic calls. Besides, extensive QC plots serve functionality for high functional somatic mutation prioritization.
 
 For now, this workflow is only optimal to work in ODCF Cluster. The config file (conf/dkfz_cluster.config) can be used as an example. Running Annotation, DeepAnnotation, and Filter steps are optional and can be turned off using [runsnvAnnotation, runSNVDeepAnnotation, runSNVVCFFilter] parameters sequentially.
 
-The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies. 
+The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies.
 
 **Important Notice:** The whole workflow is only ready for DKFZ cluster users for now, It is strongly recommended that they read the whole documentation before usage. It is recommended to use any version >22.07.1. Only SNV Calling part can be used for outside users, reference files and chromosome length files must be given for this.
 
 ## Pipeline summary
 
-The pipeline has  main steps: SNV calling using mpileup, basic annotations, deep annotations, filtering and reporting. Annotation and filtering steps are embedded with many plot generations. 
+The pipeline has main steps: SNV calling using mpileup, basic annotations, deep annotations, filtering and reporting. Annotation and filtering steps are embedded with many plot generations.
 
+1. SNC Calling:
 
-1. SNC Calling: 
-   
    Bcftools mpileup ([`Bcftools mpileup`](https://samtools.github.io/bcftools/bcftools.html))
    : Generate VCF or BCF containing genotype likelihoods for one or multiple alignment (BAM or CRAM) files. This is based on the original samtools mpileup command (with the -v or -g options) producing genotype likelihoods in VCF or BCF format, but not the textual pileup output.
 
@@ -38,18 +35,18 @@ The pipeline has  main steps: SNV calling using mpileup, basic annotations, deep
 
    ANNOVAR ([`Annovar`](https://annovar.openbioinformatics.org/en/latest/))
    : annotate_variation.pl is used to annotate variants. The tool makes classifications for intergenic, intogenic, nonsynonymous SNP, frameshift deletion or large-scale duplication regions.
-   
+
    Reliability and confidation annotations: It is an optional ste for mappability, hiseq, self chain and repeat regions checks for reliability and confidence of those scores.
 
-   Sequence ad Sequencing based error plots: Provides insights on predicted somatic SNVs.  
+   Sequence ad Sequencing based error plots: Provides insights on predicted somatic SNVs.
 
-3. Deep Annotation (--runSNVDeepAnnotation True): 
-   
+3. Deep Annotation (--runSNVDeepAnnotation True):
+
    If basic annotations are applied, an extra optional step for the number of extra indel annotations like enhancer, cosmic, mirBASE, encode databases can be applied too.
 
-4. Filtering and Visualization (--runSNVVCFFilter True): 
+4. Filtering and Visualization (--runSNVVCFFilter True):
 
-   It is an optional step. Filtering is only required for the tumor samples with no control and filtering can only be applied if basic annotation is performed. 
+   It is an optional step. Filtering is only required for the tumor samples with no control and filtering can only be applied if basic annotation is performed.
 
    SNV Extraction and Visualizations: SNVs can be extracted by a certain minimum confidence level
 
@@ -57,51 +54,49 @@ The pipeline has  main steps: SNV calling using mpileup, basic annotations, deep
 
 5. MultiQC (--skipmultiqc False):
 
-   Produces pipeline-level analytics and reports. 
+   Produces pipeline-level analytics and reports.
 
+**Please read** [usage](https://github.com/ghga-de/nf-snvcalling/blob/main/docs/usage.md) before you start your won analysis.
 
-**Please read** [usage](https://github.com/ghga-de/nf-snvcalling/blob/main/docs/usage.md)  before you start your won analysis. 
-
- 
 ## Quick Start
 
 1. Install [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=21.10.3`)
 
 2. Install any of [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) (you can follow [this tutorial](https://singularity-tutorial.github.io/01-installation/))
 
-3. Download [Annovar](https://annovar.openbioinformatics.org/en/latest/user-guide/download/) and set-up suitable annotation table directory to perform annotation. Example: 
+3. Download [Annovar](https://annovar.openbioinformatics.org/en/latest/user-guide/download/) and set-up suitable annotation table directory to perform annotation. Example:
 
- ```console
+```console
 annotate_variation.pl -downdb wgEncodeGencodeBasicV19 humandb/ -build hg19
- ```
+```
 
 4. Download the pipeline and test it on a minimal dataset with a single command:
 
    ```console
    git clone https://github.com/ghga-de/nf-snvcalling.git
-    ```
-
-  before run do this to bin directory, make it runnable!:
-
-  ```console
-  chmod +x bin/*
-  ```
-
-   ```console
-   nextflow run main.nf -profile test,YOURPROFILE --outdir <OUTDIR> --input <SAMPLESHEET>
    ```
 
-   Note that some form of configuration will be needed so that Nextflow knows how to fetch the required software. This is usually done in the form of a config profile (`YOURPROFILE` in the example command above). You can chain multiple config profiles in a comma-separated string.
+before run do this to bin directory, make it runnable!:
 
-   > - The pipeline comes with config profiles called `docker` and `singularity` which instruct the pipeline to use the named tool for software management. For example, `-profile test,docker`.
-   > - Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
-   > - If you are using `singularity`, please use the [`nf-core download`](https://nf-co.re/tools/#downloading-pipelines-for-offline-use) command to download images first, before running the pipeline. Setting the [`NXF_SINGULARITY_CACHEDIR` or `singularity.cacheDir`](https://www.nextflow.io/docs/latest/singularity.html?#singularity-docker-hub) Nextflow options enables you to store and re-use the images from a central location for future pipeline runs.
+```console
+chmod +x bin/*
+```
+
+```console
+nextflow run main.nf -profile test,YOURPROFILE --outdir <OUTDIR> --input <SAMPLESHEET>
+```
+
+Note that some form of configuration will be needed so that Nextflow knows how to fetch the required software. This is usually done in the form of a config profile (`YOURPROFILE` in the example command above). You can chain multiple config profiles in a comma-separated string.
+
+> - The pipeline comes with config profiles called `docker` and `singularity` which instruct the pipeline to use the named tool for software management. For example, `-profile test,docker`.
+> - Please check [nf-core/configs](https://github.com/nf-core/configs#documentation) to see if a custom config file to run nf-core pipelines already exists for your Institute. If so, you can simply use `-profile <institute>` in your command. This will enable either `docker` or `singularity` and set the appropriate execution settings for your local compute environment.
+> - If you are using `singularity`, please use the [`nf-core download`](https://nf-co.re/tools/#downloading-pipelines-for-offline-use) command to download images first, before running the pipeline. Setting the [`NXF_SINGULARITY_CACHEDIR` or `singularity.cacheDir`](https://www.nextflow.io/docs/latest/singularity.html?#singularity-docker-hub) Nextflow options enables you to store and re-use the images from a central location for future pipeline runs.
 
 5. Simple test run
 
    ```console
    nextflow run main.nf --outdir results -profile singularity,test
-   ``` 
+   ```
 
 6. Start running your own analysis!
 
@@ -110,7 +105,7 @@ annotate_variation.pl -downdb wgEncodeGencodeBasicV19 humandb/ -build hg19
    ```console
    nextflow run main.nf --input samplesheet.csv --outdir <OUTDIR> -profile <docker/singularity> --config test/institute.config
    ```
-   
+
 ## Samplesheet columns
 
 **sample**: The sample name will be tagged to the job
@@ -121,11 +116,11 @@ annotate_variation.pl -downdb wgEncodeGencodeBasicV19 humandb/ -build hg19
 
 **control**: The path to the control file, if there is no control will be kept blank.
 
-**contro_index_**: The path to the control index file, if there is no control will be kept blank.
+**contro*index***: The path to the control index file, if there is no control will be kept blank.
 
 ## Data Requirements
 
-Annotations are optional for the user. 
+Annotations are optional for the user.
 All VCF and BED files need to be indexed with tabix and should be in the same folder!
 
 **Basic Annotation Files**
@@ -147,12 +142,13 @@ All VCF and BED files need to be indexed with tabix and should be in the same fo
 - UCSC Self Chain regions (bed)
 
 **Deep Annotation Files**
+
 - UCSC Enhangers (bed)
 - UCSC CpG islands (bed)
 - UCSC TFBS noncoding sites (bed)
 - UCSC Encode DNAse cluster (bed.gz)
-- snoRNAs miRBase  (bed)
-- sncRNAs miRBase  (bed) 
+- snoRNAs miRBase (bed)
+- sncRNAs miRBase (bed)
 - miRBase (bed)
 - Cosmic coding SNVs (bed)
 - miRNA target sites (bed)
@@ -178,6 +174,7 @@ Nature volume 578, pages 82–93 (2020).
 DOI 10.1038/s41586-020-1969-6:
 
 **TODO**
+
 <!-- TODO nf-core: If applicable, make list of people who have also contributed -->
 
 ## Contributions and Support
