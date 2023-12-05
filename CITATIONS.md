@@ -20,7 +20,8 @@ Orijinal version of the workflow is [here](https://github.com/DKFZ-ODCF/SNVCalli
 ## Pipeline tools
 
 - [Annovar](https://annovar.openbioinformatics.org/en/latest/)
-> Wang K, Li M, Hakonarson H. ANNOVAR: Functional annotation of genetic variants from next-generation sequencing data Nucleic Acids Research, 38:e164, 2010
+
+  > Wang K, Li M, Hakonarson H. ANNOVAR: Functional annotation of genetic variants from next-generation sequencing data Nucleic Acids Research, 38:e164, 2010
 
 - [BCFTools](https://pubmed.ncbi.nlm.nih.gov/21903627/)
 
@@ -47,7 +48,7 @@ Orijinal version of the workflow is [here](https://github.com/DKFZ-ODCF/SNVCalli
 
 - [tidyverse](https://www.tidyverse.org/)
 
-- [optparse](https://cran.r-project.org/web/packages/optparse/index.html) 
+- [optparse](https://cran.r-project.org/web/packages/optparse/index.html)
 
 - [Grid](https://cran.r-project.org/web/packages/gridExtra/index.html)
 
@@ -56,12 +57,13 @@ Orijinal version of the workflow is [here](https://github.com/DKFZ-ODCF/SNVCalli
 - [Canopy](https://cran.r-project.org/web/packages/Canopy/index.html)
 
 - [jsonlite](https://cran.r-project.org/web/packages/jsonlite/citation.html)
->Ooms J (2014). “The jsonlite Package: A Practical and Consistent Mapping Between JSON Data and R Objects.” arXiv:1403.2805 [stat.CO]. https://arxiv.org/abs/1403.2805.
+  > Ooms J (2014). “The jsonlite Package: A Practical and Consistent Mapping Between JSON Data and R Objects.” arXiv:1403.2805 [stat.CO]. https://arxiv.org/abs/1403.2805.
 
 ## Perl packages
 
 - [Perl](https://www.perl.org/)
-> Wall, L., Christiansen, T., & Orwant, J. (2000). Programming perl. " O&#x27;Reilly Media, Inc."
+
+  > Wall, L., Christiansen, T., & Orwant, J. (2000). Programming perl. " O&#x27;Reilly Media, Inc."
 
 - [JSON](https://metacpan.org/pod/JSON)
 
@@ -70,7 +72,8 @@ Orijinal version of the workflow is [here](https://github.com/DKFZ-ODCF/SNVCalli
 ## Pyhton packages
 
 - [Python 2.7](https://python.readthedocs.io/en/v2.7.2/)
-> Van Rossum, G., & Drake Jr, F. L. (1995). Python reference manual. Centrum voor Wiskunde en Informatica Amsterdam.
+
+  > Van Rossum, G., & Drake Jr, F. L. (1995). Python reference manual. Centrum voor Wiskunde en Informatica Amsterdam.
 
 - [VCFparser](https://pypi.org/project/vcfparser/)
 
@@ -81,7 +84,6 @@ Orijinal version of the workflow is [here](https://github.com/DKFZ-ODCF/SNVCalli
 - [scipy](https://pypi.org/search/?q=scipy)
 
 - [matplotlib](https://pypi.org/project/matplotlib/)
-
 
 ## Software packaging/containerisation tools
 
