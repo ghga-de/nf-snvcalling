@@ -14,7 +14,9 @@
 
 It calls SNVs from both germline and somatic samples using bcftools mpileup, compares and filters outs germline specific ones with samtools mpileup compare. This workflow uses various annotations from publicly available databases like 1000G variants, dbSNP and gnomAD. The functional effect of the mutations are annotated using Annovar and the variants are assessed for their consequence and split into somatic and non-somatic calls. Besides, extensive QC plots serve functionality for high functional somatic mutation prioritization.
 
-For now, this workflow is only optimal to work in ODCF Cluster. The config file (conf/dkfz_cluster.config) can be used as an example. Running Annotation, DeepAnnotation, and Filter steps are optional and can be turned off using [runsnvAnnotation, runSNVDeepAnnotation, runSNVVCFFilter] parameters sequentially.
+This workflow is optimal to work in ODCF Cluster. The config file (conf/dkfz_cluster.config) can be used as an example. Running Annotation, DeepAnnotation, and Filter steps are optional and can be turned off using [runsnvAnnotation, runSNVDeepAnnotation, runSNVVCFFilter] parameters sequentially.
+
+Users outside of ODCF cluster, should prepare annotation files accordingly (check seq2_testdata_snv/annotations for example) to use whole functionality of this workflow. 
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies.
 
@@ -33,8 +35,12 @@ The pipeline has main steps: SNV calling using mpileup, basic annotations, deep 
 
    In-house scripts to annotate with several databases like gnomAD and dbSNP.
 
+   --annotation_tool: annovar or vep
    ANNOVAR ([`Annovar`](https://annovar.openbioinformatics.org/en/latest/))
-   : annotate_variation.pl is used to annotate variants. The tool makes classifications for intergenic, intogenic, nonsynonymous SNP, frameshift deletion or large-scale duplication regions.
+   : annotate_variation.pl is used to annotate variants. The tool makes classifications for intergenic, intogenic, nonsynonymous SNP, frameshift deletion or large-scale duplication regions. 
+
+   ENSEMBL VEP(['ENSEBL VEP'](https://www.ensembl.org/info/docs/tools/vep/index.html)) 
+   :can also be used alternative to annovar. Gene annotations will be extracted. 
 
    Reliability and confidation annotations: It is an optional ste for mappability, hiseq, self chain and repeat regions checks for reliability and confidence of those scores.
 
@@ -64,10 +70,26 @@ The pipeline has main steps: SNV calling using mpileup, basic annotations, deep 
 
 2. Install any of [`Docker`](https://docs.docker.com/engine/installation/) or [`Singularity`](https://www.sylabs.io/guides/3.0/user-guide/) (you can follow [this tutorial](https://singularity-tutorial.github.io/01-installation/))
 
-3. Download [Annovar](https://annovar.openbioinformatics.org/en/latest/user-guide/download/) and set-up suitable annotation table directory to perform annotation. Example:
+3. To use Annovar:
+
+Download [Annovar](https://annovar.openbioinformatics.org/en/latest/user-guide/download/) and set-up suitable annotation table directory to perform annotation. Example:
 
 ```console
 annotate_variation.pl -downdb wgEncodeGencodeBasicV19 humandb/ -build hg19
+```
+
+Gene annotation is also possible with ENSEMBL VEP tool, for test purposes only, it can be used online. But for big analysis, it is recommended to either download cache file or use --download_cache flag in parameters.
+
+Follow the documentation [here](https://www.ensembl.org/info/docs/tools/vep/script/vep_cache.html#cache)
+
+Example:
+
+Download [cache](https://ftp.ensembl.org/pub/release-110/variation/indexed_vep_cache/)
+
+```console
+cd $HOME/.vep
+curl -O https://ftp.ensembl.org/pub/release-110/variation/indexed_vep_cache/homo_sapiens_vep_110_GRCh38.tar.gz
+tar xzf homo_sapiens_vep_110_GRCh38.tar.gz
 ```
 
 4. Download the pipeline and test it on a minimal dataset with a single command:
@@ -162,7 +184,7 @@ The nf-snvcalling pipeline comes with documentation about the pipeline [usage](h
 
 ## Credits
 
-nf-snvcalling was originally translated from roddy-based pipeline by Kuebra Narci kuebra.narci@dkfz-heidelberg.de.
+nf-snvcalling was originally translated from roddy-based pipeline by Kuebra Narci [kuebra.narci@dkfz-heidelberg.de](mailto:kuebra.narci@dkfz.de).
 
 The pipeline is originally written in the workflow management language Roddy. [Inspired github page](https://github.com/DKFZ-ODCF/SNVCallingWorkflow)
 
@@ -171,11 +193,12 @@ The SNV workflow was in the pan-cancer analysis of whole genomes (PCAWG) and can
 Pan-cancer analysis of whole genomes.
 The ICGC/TCGA Pan-Cancer Analysis of Whole Genomes Consortium.
 Nature volume 578, pages 82–93 (2020).
-DOI 10.1038/s41586-020-1969-6:
+DOI 10.1038/s41586-020-1969-6
 
-**TODO**
+We tank the following people for their extensive assistance in the development of this pipeline:
 
-<!-- TODO nf-core: If applicable, make list of people who have also contributed -->
+Nagarajan Paramasivam (@NagaComBio) [n.paramasivam@dkfz.de](mailto:n.paramasivam@dkfz.de)
+
 
 ## Contributions and Support
 

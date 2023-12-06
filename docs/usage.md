@@ -19,6 +19,7 @@ Main Swiches:
 - --runplots: Generate extra rainfall and MAF plots.
 - --runpurest: Run purityReloaded script.
 - --skip_multiqc: Skip MultiQC.
+- --annotation_tool: Select either "annovar" or "vep"
 
 Reference Files:
 
@@ -55,7 +56,26 @@ annotate_variation.pl -downdb wgEncodeGencodeBasicV19 humandb/ -build hg19
 - --cytobandcol : "CYTOBAND_COL"
 - --geneannocols : '"ANNOVAR_FUNCTION,GENE,EXONIC_CLASSIFICATION,ANNOVAR_TRANSCRIPTS"'
 
-**3. SNV Reability Options:**
+**3. VEP Options:**
+
+ENSEMBL VEP tools requires a cache directory to work offline. Cache file can be either downloaded manually or be downloaded through workflow using --download_cache true flag. 
+
+Example:
+
+Download [cache](https://ftp.ensembl.org/pub/release-110/variation/indexed_vep_cache/)
+
+```console
+cd $HOME/.vep
+curl -O https://ftp.ensembl.org/pub/release-110/variation/indexed_vep_cache/homo_sapiens_vep_110_GRCh38.tar.gz
+tar xzf homo_sapiens_vep_110_GRCh38.tar.gz
+``
+- outdir_cache: if --download_cache = true, downloaded cache file can be saved into this directory for further usage. 
+- vep_cache: cache input directory, if the path is settled, use --download_cache = false
+- download_cache: If true, downloads cache as directory
+- vep_cache_version: VEP cache version to use (example: 110)
+- vep_genome : VEP genome to use (example: 'GRCh38')
+
+**4. SNV Reability Options:**
 
 - --repeat_masker : UCSC Repeat Masker file (bed.gz). Column Name added: REPEAT_MASKER
 - --dac_blacklist : UCSC DAC Black List (bed.gz) (Optional). Column Name added: DAC_BLACKLIST
@@ -65,7 +85,7 @@ annotate_variation.pl -downdb wgEncodeGencodeBasicV19 humandb/ -build hg19
 - --mapability_file : UCSC Mappability regions (bed.gz). Column Name added: MAPABILITY
 - --simple_tandemrepeats: UCSC Simple tandem repeats (bed.gz). Column Name added: SIMPLE_TANDEMREPEATS
 
-**4. Deep Annotation Options:**
+**5. Deep Annotation Options:**
 
 If --runSNVDeepAnnotation is true, at least one of the following files must be defined (with corresponding indexes):
 
@@ -82,7 +102,7 @@ If --runSNVDeepAnnotation is true, at least one of the following files must be d
 - --phastconselem_file : UCSC Phast Cons Elements (bed.gz) (Optional). Column Name added: phastConsElem20bp
 - --encode_tfbs_file : UCSC Encode TFBS (bed.gz) (Optional). Column Name added: ENCODE_TFBS
 
-**5. Confidence Annotation Options:**
+**6. Confidence Annotation Options:**
 
 - --confidenceoptions : confidence options should be listed here (string)
 

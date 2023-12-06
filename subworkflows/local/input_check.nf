@@ -29,40 +29,25 @@ def create_bam_channel(LinkedHashMap row) {
     meta.id           = row.sample
     meta.iscontrol    = row.iscontrol
 
-    // add path(s) of the fastq file(s) to the meta map
     def bam_meta = []
 
         if (!file(row.tumor).exists()) {
             exit 1, "ERROR: Please check input samplesheet -> Tumor file does not exist!\n${row.tumor}"
         }
-        if (row.iscontrol) {
-            if (!file(row.control).exists()) {
-                if (row.control == 'dummy.bam') {
-                    bam_meta = [  meta, file(row.tumor), file(row.tumor_index), [],[]  ]
-                    meta.tumor_bam = file(row.tumor)
-                    meta.tumor_bai = file(row.tumor_index)
-                    meta.control_bam = []
-                    meta.control_bai = []
-
-                }
-                else {
-                    exit 1, "ERROR: Please check input samplesheet -> Control file does not exist!\n${row.control}"
-                    }
-            }
-
-            bam_meta = [ meta, file(row.tumor), file(row.tumor_index), file(row.control), file(row.control_index) ]
-            meta.tumor_bam = file(row.tumor)
-            meta.tumor_bai = file(row.tumor_index)
-            meta.control_bam = file(row.control)
-            meta.control_bai = file(row.control_index)
-
-        } else {
+        if (row.iscontrol == "0") {
             bam_meta = [  meta, file(row.tumor), file(row.tumor_index), [],[]  ]
             meta.tumor_bam = file(row.tumor)
             meta.tumor_bai = file(row.tumor_index)
             meta.control_bam = []
             meta.control_bai = []
         }
+        else{
+            bam_meta = [ meta, file(row.tumor), file(row.tumor_index), file(row.control), file(row.control_index) ]
+            meta.tumor_bam = file(row.tumor)
+            meta.tumor_bai = file(row.tumor_index)
+            meta.control_bam = file(row.control)
+            meta.control_bai = file(row.control_index)
+        }      
     return bam_meta
 }
 

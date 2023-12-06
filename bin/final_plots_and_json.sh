@@ -1,6 +1,6 @@
 set -euo pipefail
 
-usage() { echo "Usage: $0 [-p prefix] [-i filenameSomaticSnvs]  [-s filenameSomaticSnvsIndbSNP] [-t mincov] [-v minconfidencescore] [-b thatreshold] [-r rerun]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [-p prefix] [-i filenameSomaticSnvs]  [-s filenameSomaticSnvsIndbSNP] [-t mincov] [-v minconfidencescore] [-b thatreshold] [-r rerun] [-j json_report]" 1>&2; exit 1; }
 
 while [[ $# -gt 0 ]]
 do
@@ -40,6 +40,11 @@ do
 			rerun=$2
 			shift # past argument
 	    	shift # past value
+			;;
+		-j)
+			json_report=$2
+			shift
+			shift
 			;;
 	esac
 done
@@ -87,18 +92,23 @@ echo $THA_SCORE
 [[ $(echo "${THA_SCORE} > ${THA_SCORE_THRESHOLD}" | bc -l) ]] && echo -e "THA score\t${THA_SCORE}\n" >${prefix}_is_THA_affected.txt
 
 echo "check 2"
-# determine fraction of SNVs called as "synonymous SNV" among all exonic SNVs (QC value)
-EXONIC_CLASSIFICATION_COLUMN_INDEX=`cat ${filenameSomaticSnvs} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "EXONIC_CLASSIFICATION"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
-export EXONIC_CLASSIFICATION_COLUMN_INDEX=$((${EXONIC_CLASSIFICATION_COLUMN_INDEX}-1))
-ANNOVAR_FUNCTION_COLUMN_INDEX=`cat ${filenameSomaticSnvs} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "ANNOVAR_FUNCTION"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
-export ANNOVAR_FUNCTION_COLUMN_INDEX=$((${ANNOVAR_FUNCTION_COLUMN_INDEX}-1))
-SYNONYMOUS_RATIO=`grep -v '^#' ${filenameSomaticSnvs} | perl -F'\t' -ae 'BEGIN { my $total=0; my $synonymous=0; } if ($F[$ENV{"ANNOVAR_FUNCTION_COLUMN_INDEX"}] eq "exonic" ) {$total++; if ($F[$ENV{"EXONIC_CLASSIFICATION_COLUMN_INDEX"}] eq "synonymous SNV") {$synonymous++;}} END { print $synonymous/$total; }'`
-echo "check 3"
-echo -e "{" >${prefix}_QC_values${rerun}.json
-echo -e "\t\"snvnum\": ${snvnum:-NA}," >>${prefix}_QC_values${rerun}.json
-echo -e "\t\"snvindbSNP\": ${snvindbSNP:-NA}," >>${prefix}_QC_values${rerun}.json
-echo -e "\t\"snvInDbsnpRatio\": ${SNV_IN_DBSNP_RATIO:-NA}," >>${prefix}_QC_values${rerun}.json
-echo -e "\t\"synonymousRatio\": ${SYNONYMOUS_RATIO:-NA}," >>${prefix}_QC_values${rerun}.json
-echo -e "\t\"thaScore\": ${THA_SCORE:-NA}" >>${prefix}_QC_values${rerun}.json
-echo -e "}" >>${prefix}_QC_values${rerun}.json
-echo "done"
+
+if ["$json_report" = true]; then
+	# determine fraction of SNVs called as "synonymous SNV" among all exonic SNVs (QC value)
+	EXONIC_CLASSIFICATION_COLUMN_INDEX=`cat ${filenameSomaticSnvs} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "EXONIC_CLASSIFICATION"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+	export EXONIC_CLASSIFICATION_COLUMN_INDEX=$((${EXONIC_CLASSIFICATION_COLUMN_INDEX}-1))
+	ANNOVAR_FUNCTION_COLUMN_INDEX=`cat ${filenameSomaticSnvs} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "ANNOVAR_FUNCTION"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
+	export ANNOVAR_FUNCTION_COLUMN_INDEX=$((${ANNOVAR_FUNCTION_COLUMN_INDEX}-1))
+	SYNONYMOUS_RATIO=`grep -v '^#' ${filenameSomaticSnvs} | perl -F'\t' -ae 'BEGIN { my $total=0; my $synonymous=0; } if ($F[$ENV{"ANNOVAR_FUNCTION_COLUMN_INDEX"}] eq "exonic" ) {$total++; if ($F[$ENV{"EXONIC_CLASSIFICATION_COLUMN_INDEX"}] eq "synonymous SNV") {$synonymous++;}} END { print $synonymous/$total; }'`
+	echo "JSON REPORT WILL BE WRITTEN"
+	echo -e "{" >${prefix}_QC_values${rerun}.json
+	echo -e "\t\"snvnum\": ${snvnum:-NA}," >>${prefix}_QC_values${rerun}.json
+	echo -e "\t\"snvindbSNP\": ${snvindbSNP:-NA}," >>${prefix}_QC_values${rerun}.json
+	echo -e "\t\"snvInDbsnpRatio\": ${SNV_IN_DBSNP_RATIO:-NA}," >>${prefix}_QC_values${rerun}.json
+	echo -e "\t\"synonymousRatio\": ${SYNONYMOUS_RATIO:-NA}," >>${prefix}_QC_values${rerun}.json
+	echo -e "\t\"thaScore\": ${THA_SCORE:-NA}" >>${prefix}_QC_values${rerun}.json
+	echo -e "}" >>${prefix}_QC_values${rerun}.json
+	echo "done"
+else
+	echo "JSON REPORT WONT BE WRITTEN"
+fi

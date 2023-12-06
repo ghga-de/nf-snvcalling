@@ -93,7 +93,7 @@ def check_samplesheet(file_in, file_out):
                 if sample and tumor and control:  ## iscontrol true
                     sample_info = [sample, tumor, tumor_index, control, control_index , "1"]
                 elif sample and tumor and not control:  ## iscontrol false
-                    sample_info = [sample, tumor,tumor_index,"dummy.bam","dummy.bai","0"]
+                    sample_info = [sample, tumor,tumor_index,"","","0"]
                 else:
                     print_error("Invalid combination of columns provided!", "Line", line)
 

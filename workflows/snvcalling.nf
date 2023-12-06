@@ -38,11 +38,21 @@ if ((params.runSNVDeepAnnotation) && (!params.enchancer_file && !params.cpgislan
 //
 
 if (params.input)         { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
-// Annovar only be checked if runGeneAnnovar is true
-if ((params.runCytoband ) &&(params.runGeneAnnovar) &&(params.annovar_path))  
-    { annodb = Channel.fromPath(params.annovar_path + '/humandb/', checkIfExists: true ) } 
-else 
-    { annodb = Channel.empty() }
+// Annovar only be checked if annovar is true
+if (params.annotation_tool.contains("annovar")){
+    file(params.annovar_path, checkIfExists: true)
+}
+
+if (params.annotation_tool.contains("vep")){
+    if(!params.vep_cache_version || !params.vep_genome ){
+        log.error "Please specify params.vep_cache_version and params.vep_genome to run VEP tool"
+        exit 1
+    }
+    if (params.download_cache){
+        file(params.vep_cache, checkIfExists: true)   
+    }
+}
+
 
 // Set up reference depending on the genome choice
 ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
@@ -50,6 +60,12 @@ chr_prefix     = params.chr_prefix  ? Channel.value(params.chr_prefix) : Channel
 chrlength      = params.chrom_sizes ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) : Channel.empty()   
 contigs        = params.contig_file ? Channel.fromPath(params.contig_file, checkIfExists: true) : Channel.empty()
 
+// Annovar table folder
+
+annodb              = params.annovar_path        ? Channel.fromPath(params.annovar_path + '/humandb/') 
+                                                : Channel.empty()
+// VEP cache
+vep_cache_db        = params.vep_cache          ? Channel.fromPath(params.vep_cache).collect()         : []
 
 // Annotation databases
 kgenome             =  params.k_genome          ? Channel.fromPath([params.k_genome,params.k_genome +'.tbi'], checkIfExists: true).collect() 
@@ -64,10 +80,6 @@ gnomadgenomes       = params.gnomad_genomes     ? Channel.fromPath([params.gnoma
                                                 : Channel.of([],[])
 gnomadexomes        = params.gnomad_exomes      ? Channel.fromPath([params.gnomad_exomes, params.gnomad_exomes + '.tbi'], checkIfExists: true).collect()     
                                                 : Channel.of([],[])
-
-// Annovar table folder
-annodb              = params.annovar_path       ? Channel.fromPath(params.annovar_path + '/humandb/', checkIfExists: true ) 
-                                                : Channel.empty()
 // Realiability files
 repeatmasker        = params.repeat_masker      ? Channel.fromPath([params.repeat_masker, params.repeat_masker + '.tbi'], checkIfExists: true).collect() 
                                                 : Channel.of([],[])
@@ -255,7 +267,8 @@ workflow SNVCALLING {
             phastconselem, 
             encode_tfbs, 
             mirnas_sncrnas, 
-            chr_prefix
+            chr_prefix,
+            vep_cache_db
         )
         ch_versions = ch_versions.mix(SNV_ANNOTATION.out.versions)
 
