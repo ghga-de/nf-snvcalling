@@ -58,18 +58,18 @@ annotate_variation.pl -downdb wgEncodeGencodeBasicV19 humandb/ -build hg19
 
 **3. VEP Options:**
 
-ENSEMBL VEP tools requires a cache directory to work offline. Cache file can be either downloaded manually or be downloaded through workflow using --download_cache true flag. 
+ENSEMBL VEP tools requires a cache directory to work offline. Cache file can be either downloaded manually or be downloaded through workflow using --download_cache true flag.
 
 Example:
 
 Download [cache](https://ftp.ensembl.org/pub/release-110/variation/indexed_vep_cache/)
 
-```console
+````console
 cd $HOME/.vep
 curl -O https://ftp.ensembl.org/pub/release-110/variation/indexed_vep_cache/homo_sapiens_vep_110_GRCh38.tar.gz
 tar xzf homo_sapiens_vep_110_GRCh38.tar.gz
 ``
-- outdir_cache: if --download_cache = true, downloaded cache file can be saved into this directory for further usage. 
+- outdir_cache: if --download_cache = true, downloaded cache file can be saved into this directory for further usage.
 - vep_cache: cache input directory, if the path is settled, use --download_cache = false
 - download_cache: If true, downloads cache as directory
 - vep_cache_version: VEP cache version to use (example: 110)
@@ -156,7 +156,7 @@ You will need to create a samplesheet with information about the samples you wou
 
 ```console
 --input '[path to samplesheet file]'
-```
+````
 
 ### Full samplesheet
 

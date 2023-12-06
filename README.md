@@ -16,7 +16,7 @@ It calls SNVs from both germline and somatic samples using bcftools mpileup, com
 
 This workflow is optimal to work in ODCF Cluster. The config file (conf/dkfz_cluster.config) can be used as an example. Running Annotation, DeepAnnotation, and Filter steps are optional and can be turned off using [runsnvAnnotation, runSNVDeepAnnotation, runSNVVCFFilter] parameters sequentially.
 
-Users outside of ODCF cluster, should prepare annotation files accordingly (check seq2_testdata_snv/annotations for example) to use whole functionality of this workflow. 
+Users outside of ODCF cluster, should prepare annotation files accordingly (check seq2_testdata_snv/annotations for example) to use whole functionality of this workflow.
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies.
 
@@ -37,10 +37,10 @@ The pipeline has main steps: SNV calling using mpileup, basic annotations, deep 
 
    --annotation_tool: annovar or vep
    ANNOVAR ([`Annovar`](https://annovar.openbioinformatics.org/en/latest/))
-   : annotate_variation.pl is used to annotate variants. The tool makes classifications for intergenic, intogenic, nonsynonymous SNP, frameshift deletion or large-scale duplication regions. 
+   : annotate_variation.pl is used to annotate variants. The tool makes classifications for intergenic, intogenic, nonsynonymous SNP, frameshift deletion or large-scale duplication regions.
 
-   ENSEMBL VEP(['ENSEBL VEP'](https://www.ensembl.org/info/docs/tools/vep/index.html)) 
-   :can also be used alternative to annovar. Gene annotations will be extracted. 
+   ENSEMBL VEP(['ENSEBL VEP'](https://www.ensembl.org/info/docs/tools/vep/index.html))
+   :can also be used alternative to annovar. Gene annotations will be extracted.
 
    Reliability and confidation annotations: It is an optional ste for mappability, hiseq, self chain and repeat regions checks for reliability and confidence of those scores.
 
@@ -198,7 +198,6 @@ DOI 10.1038/s41586-020-1969-6
 We tank the following people for their extensive assistance in the development of this pipeline:
 
 Nagarajan Paramasivam (@NagaComBio) [n.paramasivam@dkfz.de](mailto:n.paramasivam@dkfz.de)
-
 
 ## Contributions and Support
 
