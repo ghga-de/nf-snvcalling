@@ -4,7 +4,8 @@ on:
     branches:
       - master
       - dev
-      - 14-cicd-test-integration
+  release:
+    types: [published]
   pull_request:
     branches: [master]
   merge_group:
