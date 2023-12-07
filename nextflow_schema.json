@@ -102,6 +102,18 @@
           "fa_icon": "fas fa-post_processes",
           "description": "Specify extra contig processing"
         },
+        "annotation_tools": {
+          "type": "string",
+          "default": "NULL",
+          "fa_icon": "fas fa-post_processes",
+          "description": "Choose annovar or vep to perform annotation"
+        },
+        "report_json": {
+          "type": "boolean",
+          "default": "true",
+          "fa_icon": "fas fa-post_processes",
+          "description": "Reporting for VEP is not possible use only if using ANNOVAR"
+        },
         "skip_multiqc": {
           "type": "boolean",
           "default": "false",
@@ -214,6 +226,45 @@
           "mimetype": "text/plain",
           "fa_icon": "fas fa-annotation",
           "description": "File path to annovar execution file: annovar/annovar_Feb2016/"
+        }
+      }
+    },
+    "vep_params": {
+      "title": "Annovar options",
+      "type": "object",
+      "description": "Options for Annovar",
+      "default": "",
+      "properties": {
+        "vep_cache_version": {
+          "type": "string",
+          "default": "110",
+          "fa_icon": "fas fa-vep",
+          "description": "VEP Cache version"
+        },
+        "vep_genome": {
+          "type": "string",
+          "default": "GRCh38",
+          "fa_icon": "fas fa-vep",
+          "description": "VEP genome"
+        },
+        "vep_cache": {
+          "format": "file-path",
+          "mimetype": "text/plain",
+          "default": "null",
+          "fa_icon": "fas fa-vep",
+          "description": "File path to the VEP cache"
+        },
+        "download_cache": {
+          "type": "boolean",
+          "default": "false",
+          "fa_icon": "fas fa-vep",
+          "description": "Turn it on to download cache file"
+        },
+        "outdir_cache": {
+          "type": "string",
+          "default": "null",
+          "fa_icon": "fas fa-annovar",
+          "description": "Cache file directory to save, if download_cache is true"
         }
       }
     },

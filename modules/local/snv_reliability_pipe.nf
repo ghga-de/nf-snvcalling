@@ -1,15 +1,14 @@
-//snv_reliability_pipe
 
 process SNV_RELIABILITY_PIPE {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_single'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta),                 file(ch_vcf)
+    tuple val(meta),                 file(ch_vcf), file(ch_vcf_i)
     tuple file(repeatmasker),        file(repeatmasker_i)
     tuple file(dacblacklist),        file(dacblacklist_i)
     tuple file(dukeexcluded),        file(dukeexcluded_i)
@@ -38,7 +37,7 @@ process SNV_RELIABILITY_PIPE {
                     ].join(' ').trim()
 
     """
-    cat < $ch_vcf $pipe > ${prefix}.annotated.vcf
+    zcat < $ch_vcf $pipe > ${prefix}.annotated.vcf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -20,6 +20,8 @@ include { ERROR_PLOTS as ERROR_PLOTS_3            } from '../../modules/local/er
 include { ERROR_PLOTS as ERROR_PLOTS_4            } from '../../modules/local/error_plots.nf'              addParams( options: params.options )
 include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_1 } from '../../modules/local/plot_basescore_bias.nf' addParams( options: params.options )
 include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_2 } from '../../modules/local/plot_basescore_bias.nf' addParams( options: params.options )
+include { ENSEMBLVEP_VEP         } from '../../modules/nf-core/modules/ensemblvep/vep/main'       addParams( options: params.options )
+include { ENSEMBLVEP_DOWNLOAD    } from '../../modules/nf-core/modules/ensemblvep/download/main'  addParams( options: params.options )
 
 
 workflow SNV_ANNOTATION {
@@ -53,6 +55,7 @@ workflow SNV_ANNOTATION {
     encode_tfbs          // channel: [file.bed.gz, file.bed.gz.tbi]
     mirnas_sncrnas       // channel: [file.bed.gz, file.bed.gz.tbi] 
     chr_prefix           // val channel: [prefix]
+    vep_cache
 
     main:
 
@@ -75,27 +78,50 @@ workflow SNV_ANNOTATION {
         chr_prefix
     )
     versions  = versions.mix(ANNOTATE_VCF.out.versions)
-    ch_vcf    = ANNOTATE_VCF.out.unziped_vcf
 
-    //
-    // MODULE: ANNOVAR
-    // 
-    // RUN annovar, processAnnovarOutput.pl and newCols2vcf.pl: annovar annotates and classifies the variants, 
-    // perl scripts re-creates vcfs. 
-    ANNOVAR(
-        ch_vcf.join(ANNOTATE_VCF.out.forannovar), 
-        annodb, 
-        chr_prefix
-    )
-    logs     = logs.mix(ANNOVAR.out.log)
-    versions = versions.mix(ANNOVAR.out.versions)
+    ANNOTATE_VCF.out.unziped_vcf
+        .join(ANNOTATE_VCF.out.forannovar)
+        .set{anno_ch}
+
+    if (params.annotation_tool.contains("annovar")){
+        //
+        // MODULE: ANNOVAR
+        // 
+        // RUN annovar, processAnnovarOutput.pl and newCols2vcf.pl: annovar annotates and classifies the variants, 
+        // perl scripts re-creates vcfs. 
+        ANNOVAR(
+            anno_ch, 
+            annodb, 
+            chr_prefix
+        )
+        logs     = logs.mix(ANNOVAR.out.log)
+        versions = versions.mix(ANNOVAR.out.versions)
+        annotated_vcf = ANNOVAR.out.vcf
+    }
+    else{
+        if(params.download_cache){
+            ENSEMBLVEP_DOWNLOAD(
+                anno_ch.map{ it -> tuple( it[0], it[1])}
+                )
+            versions  = versions.mix(ENSEMBLVEP_DOWNLOAD.out.versions)
+            vep_cache = ENSEMBLVEP_DOWNLOAD.out.cache
+        }
+        
+        ENSEMBLVEP_VEP(
+            ANNOTATE_VCF.out.unziped_vcf,
+            vep_cache,
+            ref
+        )
+        versions      = versions.mix(ENSEMBLVEP_VEP.out.versions)
+        annotated_vcf = ENSEMBLVEP_VEP.out.vcf
+    }
 
     //
     // MODULE: SNV_RELIABILITY_PIPE
     //
     // RUN annotate_vcf.pl : BED files are used to annotate variants
     SNV_RELIABILITY_PIPE(
-        ANNOVAR.out.vcf, 
+        annotated_vcf, 
         repeatmasker, 
         dacblacklist, 
         dukeexcluded, 
