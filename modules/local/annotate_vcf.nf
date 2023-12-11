@@ -8,13 +8,8 @@ process ANNOTATE_VCF {
     'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
-    tuple val(meta)            , file(vcf), file(vcf_tbi)
-    tuple file(kgenome)        , file(kgenome_i)
-    tuple file(dbsnpsnv)       , file(dbsnpsnv_i)
-    tuple file(localcontrolwgs), file(localcontrolwgs_i)
-    tuple file(localcontrolwes), file(localcontrolwes_i)
-    tuple file(gnomadgenomes)  , file(gnomadgenomes_i)
-    tuple file(gnomadexomes)   , file(gnomadexomes_i)
+    tuple val(meta),file(vcf),file(vcf_tbi)
+    tuple val(meta2),file(kgenome),file(kgenome_i),file(dbsnpsnv),file(dbsnpsnv_i),file(localcontrolwgs),file(localcontrolwgs_i),file(localcontrolwes),file(localcontrolwes_i),file(gnomadgenomes),file(gnomadgenomes_i),file(gnomadexomes),file(gnomadexomes_i)
     val (chrprefix)
 
     output:
@@ -31,12 +26,12 @@ process ANNOTATE_VCF {
     def prefix      = task.ext.prefix ?: "${meta.id}"
     def cmdfilter   = meta.iscontrol == "1" ? "| median.pl - vcf_control_median.txt" : ""
     def pipe  = ["${cmdfilter}",
-                dbsnpsnv.baseName !='input' ? " | annotate_vcf.pl -a - -b ${dbsnpsnv} --columnName='DBSNP' --reportMatchType --bAdditionalColumn=2  --reportLevel 4" : '',
-                kgenome.baseName !='input' ? " | annotate_vcf.pl -a - -b ${kgenome} --columnName='1K_GENOMES' --reportMatchType --bAdditionalColumn=2 --reportLevel 4" : '',
-                localcontrolwgs.baseName !='input' ? " | annotate_vcf.pl -a - -b ${localcontrolwgs} --columnName='LocalControlAF_WGS' --bFileType vcf --reportLevel 4 --reportMatchType" : '',
-                localcontrolwes.baseName !='input' ? " | annotate_vcf.pl -a - -b ${localcontrolwes} --columnName='LocalControlAF_WES' --bFileType vcf --reportLevel 4 --reportMatchType" : '',
-                gnomadgenomes.baseName !='input' ? " | annotate_vcf.pl -a - -b ${gnomadgenomes} --columnName='GNOMAD_GENOMES' --bFileType vcf --reportLevel 4 --reportMatchType" : '',
-                gnomadexomes.baseName !='input' ? " | annotate_vcf.pl -a - -b ${gnomadexomes} --columnName='GNOMAD_EXOMES' --bFileType vcf --reportLevel 4 --reportMatchType" : ''
+                dbsnpsnv ? " | annotate_vcf.pl -a - -b ${dbsnpsnv} --columnName='DBSNP' --reportMatchType --bAdditionalColumn=2  --reportLevel 4" : '',
+                kgenome ? " | annotate_vcf.pl -a - -b ${kgenome} --columnName='1K_GENOMES' --reportMatchType --bAdditionalColumn=2 --reportLevel 4" : '',
+                localcontrolwgs ? " | annotate_vcf.pl -a - -b ${localcontrolwgs} --columnName='LocalControlAF_WGS' --bFileType vcf --reportLevel 4 --reportMatchType" : '',
+                localcontrolwes ? " | annotate_vcf.pl -a - -b ${localcontrolwes} --columnName='LocalControlAF_WES' --bFileType vcf --reportLevel 4 --reportMatchType" : '',
+                gnomadgenomes ? " | annotate_vcf.pl -a - -b ${gnomadgenomes} --columnName='GNOMAD_GENOMES' --bFileType vcf --reportLevel 4 --reportMatchType" : '',
+                gnomadexomes ? " | annotate_vcf.pl -a - -b ${gnomadexomes} --columnName='GNOMAD_EXOMES' --bFileType vcf --reportLevel 4 --reportMatchType" : ''
                 ].join(' ').trim()
 
     def maxcontrolcov = meta.iscontrol == "1" ? "[[ `cat vcf_control_median.txt` -lt 1 ]] && echo 'Median was not calculated correctly' && exit 3": "touch vcf_nocontrol_median.txt"

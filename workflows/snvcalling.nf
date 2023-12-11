@@ -68,58 +68,85 @@ annodb              = params.annovar_path        ? Channel.fromPath(params.annov
 vep_cache_db        = params.vep_cache          ? Channel.fromPath(params.vep_cache).collect()         : []
 
 // Annotation databases
-kgenome             =  params.k_genome          ? Channel.fromPath([params.k_genome,params.k_genome +'.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-dbsnpsnv            =  params.dbsnp_snv         ? Channel.fromPath([params.dbsnp_snv, params.dbsnp_snv + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])                                        
-localcontrolwgs     = params.local_control_wgs  ? Channel.fromPath([params.local_control_wgs,params.local_control_wgs + '.tbi' ], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-localcontrolwes     = params.local_control_wes  ? Channel.fromPath([params.local_control_wes,params.local_control_wes + '.tbi' ], checkIfExists: true).collect()     
-                                                : Channel.of([],[])
-gnomadgenomes       = params.gnomad_genomes     ? Channel.fromPath([params.gnomad_genomes, params.gnomad_genomes + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-gnomadexomes        = params.gnomad_exomes      ? Channel.fromPath([params.gnomad_exomes, params.gnomad_exomes + '.tbi'], checkIfExists: true).collect()     
-                                                : Channel.of([],[])
+kgenome             =  params.k_genome          ? Channel.fromPath([params.k_genome,params.k_genome +'.tbi'], checkIfExists: true).collect().map{[[id: "annotate_vcf_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "annotate_vcf_ref"],[],[]])
+dbsnpsnv            =  params.dbsnp_snv         ? Channel.fromPath([params.dbsnp_snv, params.dbsnp_snv + '.tbi'], checkIfExists: true).collect().map{[[id: "annotate_vcf_ref"], it[0],it[1]]}  
+                                                : Channel.of([[id: "annotate_vcf_ref"],[],[]])                                       
+localcontrolwgs     = params.local_control_wgs  ? Channel.fromPath([params.local_control_wgs,params.local_control_wgs + '.tbi' ], checkIfExists: true).collect().map{[[id: "annotate_vcf_ref"], it[0],it[1]]}  
+                                                : Channel.of([[id: "annotate_vcf_ref"],[],[]])
+localcontrolwes     = params.local_control_wes  ? Channel.fromPath([params.local_control_wes,params.local_control_wes + '.tbi' ], checkIfExists: true).collect().map{[[id: "annotate_vcf_ref"], it[0],it[1]]}      
+                                                : Channel.of([[id: "annotate_vcf_ref"],[],[]])
+gnomadgenomes       = params.gnomad_genomes     ? Channel.fromPath([params.gnomad_genomes, params.gnomad_genomes + '.tbi'], checkIfExists: true).collect().map{[[id: "annotate_vcf_ref"], it[0],it[1]]}  
+                                                : Channel.of([[id: "annotate_vcf_ref"],[],[]])
+gnomadexomes        = params.gnomad_exomes      ? Channel.fromPath([params.gnomad_exomes, params.gnomad_exomes + '.tbi'], checkIfExists: true).collect().map{[[id: "annotate_vcf_ref"], it[0],it[1]]}      
+                                                : Channel.of([[id: "annotate_vcf_ref"],[],[]])
+
+annotate_vcf_ref    = kgenome.join(dbsnpsnv)
+                            .join(localcontrolwgs)
+                            .join(localcontrolwes)
+                            .join(gnomadgenomes)
+                            .join(gnomadexomes)
+
 // Realiability files
-repeatmasker        = params.repeat_masker      ? Channel.fromPath([params.repeat_masker, params.repeat_masker + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-dacblacklist        = params.dac_blacklist      ? Channel.fromPath([params.dac_blacklist, params.dac_blacklist + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-dukeexcluded        = params.duke_excluded      ? Channel.fromPath([params.duke_excluded, params.duke_excluded + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-hiseqdepth          = params.hiseq_depth        ? Channel.fromPath([params.hiseq_depth, params.hiseq_depth + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-selfchain           = params.self_chain         ? Channel.fromPath([params.self_chain, params.self_chain + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-mapability          = params.mapability_file    ? Channel.fromPath([params.mapability_file, params.mapability_file + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-simpletandemrepeats = params.simple_tandemrepeats ? Channel.fromPath([params.simple_tandemrepeats, params.simple_tandemrepeats + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
+repeatmasker        = params.repeat_masker      ? Channel.fromPath([params.repeat_masker, params.repeat_masker + '.tbi'], checkIfExists: true).collect().map{[[id: "realibility_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "realibility_ref"],[],[]])
+dacblacklist        = params.dac_blacklist      ? Channel.fromPath([params.dac_blacklist, params.dac_blacklist + '.tbi'], checkIfExists: true).collect().map{[[id: "realibility_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "realibility_ref"],[],[]])
+dukeexcluded        = params.duke_excluded      ? Channel.fromPath([params.duke_excluded, params.duke_excluded + '.tbi'], checkIfExists: true).collect().map{[[id: "realibility_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "realibility_ref"],[],[]])
+hiseqdepth          = params.hiseq_depth        ? Channel.fromPath([params.hiseq_depth, params.hiseq_depth + '.tbi'], checkIfExists: true).collect().map{[[id: "realibility_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "realibility_ref"],[],[]])
+selfchain           = params.self_chain         ? Channel.fromPath([params.self_chain, params.self_chain + '.tbi'], checkIfExists: true).collect().map{[[id: "realibility_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "realibility_ref"],[],[]])
+mapability          = params.mapability_file    ? Channel.fromPath([params.mapability_file, params.mapability_file + '.tbi'], checkIfExists: true).collect().map{[[id: "realibility_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "realibility_ref"],[],[]])
+simpletandemrepeats = params.simple_tandemrepeats ? Channel.fromPath([params.simple_tandemrepeats, params.simple_tandemrepeats + '.tbi'], checkIfExists: true).collect().map{[[id: "realibility_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "realibility_ref"],[],[]])
+
+realibility_ref     = repeatmasker.join(dacblacklist) 
+                                .join(dukeexcluded) 
+                                .join(hiseqdepth)
+                                .join(selfchain)
+                                .join(mapability)
+                                .join(simpletandemrepeats)
+        
 // Indel Deep Annotation files
-enchangers          = params.enchancer_file     ? Channel.fromPath([params.enchancer_file, params.enchancer_file + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-cpgislands          = params.cpgislands_file    ? Channel.fromPath([params.cpgislands_file, params.cpgislands_file + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-tfbscons            = params.tfbscons_file      ? Channel.fromPath([params.tfbscons_file, params.tfbscons_file + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-encode_dnase        = params.encode_dnase_file  ? Channel.fromPath([params.encode_dnase_file, params.encode_dnase_file + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-mirnas_snornas      = params.mirnas_snornas_file  ? Channel.fromPath([params.mirnas_snornas_file, params.mirnas_snornas_file + '.tbi'], checkIfExists: true).collect()
-                                                : Channel.of([],[])
-mirnas_sncrnas      = params.mirna_sncrnas_file ? Channel.fromPath([params.mirna_sncrnas_file, params.mirna_sncrnas_file + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-cosmic              = params.cosmic_file        ? Channel.fromPath([params.cosmic_file, params.cosmic_file + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-mirbase             = params.mirbase_file       ? Channel.fromPath([params.mirbase_file, params.mirbase_file + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-mir_targets         = params.mir_targets_file   ? Channel.fromPath([params.mir_targets_file, params.mir_targets_file + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-cgi_mountains       = params.cgi_mountains_file ? Channel.fromPath([params.cgi_mountains_file, params.cgi_mountains_file + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-phastconselem       = params.phastconselem_file ? Channel.fromPath([params.phastconselem_file, params.phastconselem_file + '.tbi'], checkIfExists: true).collect() 
-                                                : Channel.of([],[])
-encode_tfbs         = params.encode_tfbs_file   ? Channel.fromPath([params.encode_tfbs_file, params.encode_tfbs_file + '.tbi'], checkIfExists: true).collect()
-                                                : Channel.of([],[])
+enchangers          = params.enchancer_file     ? Channel.fromPath([params.enchancer_file, params.enchancer_file + '.tbi'], checkIfExists: true).collect().map{[[id: "deepanno_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "deepanno_ref"],[],[]])
+cpgislands          = params.cpgislands_file    ? Channel.fromPath([params.cpgislands_file, params.cpgislands_file + '.tbi'], checkIfExists: true).collect().map{[[id: "deepanno_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "deepanno_ref"],[],[]])
+tfbscons            = params.tfbscons_file      ? Channel.fromPath([params.tfbscons_file, params.tfbscons_file + '.tbi'], checkIfExists: true).collect().map{[[id: "deepanno_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "deepanno_ref"],[],[]])
+encode_dnase        = params.encode_dnase_file  ? Channel.fromPath([params.encode_dnase_file, params.encode_dnase_file + '.tbi'], checkIfExists: true).collect().map{[[id: "deepanno_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "deepanno_ref"],[],[]])
+mirnas_snornas      = params.mirnas_snornas_file  ? Channel.fromPath([params.mirnas_snornas_file, params.mirnas_snornas_file + '.tbi'], checkIfExists: true).collect().map{[[id: "deepanno_ref"], it[0],it[1]]}
+                                                : Channel.of([[id: "deepanno_ref"],[],[]])
+mirnas_sncrnas      = params.mirna_sncrnas_file ? Channel.fromPath([params.mirna_sncrnas_file, params.mirna_sncrnas_file + '.tbi'], checkIfExists: true).collect().map{[[id: "deepanno_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "deepanno_ref"],[],[]])
+cosmic              = params.cosmic_file        ? Channel.fromPath([params.cosmic_file, params.cosmic_file + '.tbi'], checkIfExists: true).collect().map{[[id: "deepanno_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "deepanno_ref"],[],[]])
+mirbase             = params.mirbase_file       ? Channel.fromPath([params.mirbase_file, params.mirbase_file + '.tbi'], checkIfExists: true).collect().map{[[id: "deepanno_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "deepanno_ref"],[],[]])
+mir_targets         = params.mir_targets_file   ? Channel.fromPath([params.mir_targets_file, params.mir_targets_file + '.tbi'], checkIfExists: true).collect().map{[[id: "deepanno_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "deepanno_ref"],[],[]])
+cgi_mountains       = params.cgi_mountains_file ? Channel.fromPath([params.cgi_mountains_file, params.cgi_mountains_file + '.tbi'], checkIfExists: true).collect().map{[[id: "deepanno_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "deepanno_ref"],[],[]])
+phastconselem       = params.phastconselem_file ? Channel.fromPath([params.phastconselem_file, params.phastconselem_file + '.tbi'], checkIfExists: true).collect().map{[[id: "deepanno_ref"], it[0],it[1]]} 
+                                                : Channel.of([[id: "deepanno_ref"],[],[]])
+encode_tfbs         = params.encode_tfbs_file   ? Channel.fromPath([params.encode_tfbs_file, params.encode_tfbs_file + '.tbi'], checkIfExists: true).collect().map{[[id: "deepanno_ref"], it[0],it[1]]}
+                                                : Channel.of([[id: "deepanno_ref"],[],[]])
+deepanno_ref        = enchangers.join(cpgislands)
+                                .join(tfbscons)
+                                .join(encode_dnase)
+                                .join(mirnas_snornas)
+                                .join(cosmic)
+                                .join(mirbase)
+                                .join(mir_targets)
+                                .join(cgi_mountains)
+                                .join(phastconselem)
+                                .join(encode_tfbs)
+                                .join(mirnas_sncrnas)
+                                    
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     CONFIG FILES
@@ -176,7 +203,7 @@ workflow SNVCALLING {
 
     ch_versions = Channel.empty()
     ch_logs     = Channel.empty()
-
+    
     //
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
     //
@@ -236,38 +263,16 @@ workflow SNVCALLING {
     //
     // SUBWORKFLOW: SNV_ANNOTATION: Annotate SNVs
     //
-
+    
     if (params.runSNVAnnotation){ 
         SNV_ANNOTATION(
             MPILEUP_SNV_CALL.out.vcf_ch, 
             ref, 
-            kgenome, 
-            dbsnpsnv, 
-            localcontrolwgs,
-            localcontrolwes, 
-            gnomadgenomes, 
-            gnomadexomes, 
-            annodb, 
-            repeatmasker, 
-            dacblacklist, 
-            dukeexcluded, 
-            hiseqdepth, 
-            selfchain, 
-            mapability, 
-            simpletandemrepeats, 
-            enchangers, 
-            cpgislands, 
-            tfbscons, 
-            encode_dnase,
-            mirnas_snornas, 
-            cosmic, 
-            mirbase, 
-            mir_targets, 
-            cgi_mountains, 
-            phastconselem, 
-            encode_tfbs, 
-            mirnas_sncrnas, 
+            annotate_vcf_ref,
+            realibility_ref,
+            deepanno_ref, 
             chr_prefix,
+            annodb,
             vep_cache_db
         )
         ch_versions = ch_versions.mix(SNV_ANNOTATION.out.versions)
