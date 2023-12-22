@@ -28,9 +28,31 @@ workflow SNV_ANNOTATION {
     take:
     vcf_ch           // channel: [val(meta), vcf.gz, vcf.gz.tbi  ]
     ref              // channel: [path(fasta), path(fai)]
-    annotate_vcf_ref // channel: [val(meta2),file(kgenome),file(kgenome_i),file(dbsnpsnv),file(dbsnpsnv_i),file(localcontrolwgs),file(localcontrolwgs_i),file(localcontrolwes),file(localcontrolwes_i),file(gnomadgenomes),file(gnomadgenomes_i),file(gnomadexomes),file(gnomadexomes_i)]
-    realibility_ref  // channel: [val(meta2),file(repeatmasker),file(repeatmasker_i),file(dacblacklist),file(dacblacklist_i),file(dukeexcluded),file(dukeexcluded_i),file(hiseqdepth),file(hiseqdepth_i),file(selfchain),file(selfchain_i),file(mapability),file(mapability_i),file(simpletandemrepeats),file(simpletandemrepeats_i)]
-    deepanno_ref     // channel: [val(meta2),file(enchangers),file(enchangers_i),file(cpgislands),file(cpgislands_i),file(tfbscons),file(tfbscons_i),tuple file(encode_dnase),file(encode_dnase_i),file(mirnas_snornas),file(mirnas_snornas_i),file(cosmic),file(cosmic_i),file(mirbase),file(mirbase_i),file(mir_targets),file(mir_targets_i),file(cgi_mountains),file(cgi_mountains_i),file(phastconselem),file(phastconselem_i),file(encode_tfbs),file(encode_tfbs_i),file(mirnas_sncrnas),file(mirnas_sncrnas_i)]
+    kgenome
+    dbsnpsnv
+    localcontrolwgs
+    localcontrolwes
+    gnomadgenomes
+    gnomadexomes
+    repeatmasker
+    dacblacklist
+    dukeexcluded
+    hiseqdepth
+    selfchain
+    mapability
+    simpletandemrepeats
+    enchangers
+    cpgislands
+    tfbscons
+    encode_dnase
+    mirnas_snornas
+    cosmic
+    mirbase
+    mir_targets
+    cgi_mountains
+    phastconselem
+    encode_tfbs
+    mirnas_sncrnas
     chr_prefix       // val channel: [prefix]
     annodb           // path: annovar db
     vep_cache        // path: vep cache
@@ -45,9 +67,10 @@ workflow SNV_ANNOTATION {
     // MODULE: ANNOTATE_VCF
     //
     // RUN annotate_vcf.pl: Uses various databases (all mandatory exept recurrance) to annotate variants
+    
     ANNOTATE_VCF (
         vcf_ch, 
-        annotate_vcf_ref, 
+        kgenome,dbsnpsnv,localcontrolwgs,localcontrolwes,gnomadgenomes,gnomadexomes, 
         chr_prefix
     )
     versions  = versions.mix(ANNOTATE_VCF.out.versions)
@@ -95,7 +118,7 @@ workflow SNV_ANNOTATION {
     // RUN annotate_vcf.pl : BED files are used to annotate variants
     SNV_RELIABILITY_PIPE(
         annotated_vcf, 
-        realibility_ref
+        repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats
     )
     versions = versions.mix(SNV_RELIABILITY_PIPE.out.versions)
 
@@ -289,7 +312,7 @@ workflow SNV_ANNOTATION {
     {
         ANNOTATION_PIPES (
             TABIX_BGZIPTABIX.out.gz_tbi, 
-            deepanno_ref
+            enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets, cgi_mountains, phastconselem, encode_tfbs, mirnas_sncrnas
         )
         vcf_ch   = ANNOTATION_PIPES.out.vcf 
         versions = versions.mix(ANNOTATION_PIPES.out.versions)

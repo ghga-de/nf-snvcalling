@@ -1,2 +1,2 @@
 sample,tumor,tumor_index,control,control_index
-test_withcontrol,seq2_testdata_snv/WES_LL_T_1_test.bam,seq2_testdata_snv/WES_LL_T_1_test.bam.bai,seq2_testdata_snv/WES_LL_N_1_test.bam,seq2_testdata_snv/WES_LL_N_1_test.bam.bai
+test,seq2_testdata_snv/WES_LL_T_1_test.bam,seq2_testdata_snv/WES_LL_T_1_test.bam.bai,seq2_testdata_snv/WES_LL_N_1_test.bam,seq2_testdata_snv/WES_LL_N_1_test.bam.bai

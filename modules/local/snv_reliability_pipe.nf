@@ -8,8 +8,14 @@ process SNV_RELIABILITY_PIPE {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta),file(ch_vcf),file(ch_vcf_i)
-    tuple val(meta2),file(repeatmasker),file(repeatmasker_i),file(dacblacklist),file(dacblacklist_i),file(dukeexcluded),file(dukeexcluded_i),file(hiseqdepth),file(hiseqdepth_i),file(selfchain),file(selfchain_i),file(mapability),file(mapability_i),file(simpletandemrepeats),file(simpletandemrepeats_i)
+    tuple val(meta),path(ch_vcf),path(ch_vcf_i)
+    tuple path(repeatmasker),path(repeatmasker_i)
+    tuple path(dacblacklist),path(dacblacklist_i)
+    tuple path(dukeexcluded),path(dukeexcluded_i)
+    tuple path(hiseqdepth),path(hiseqdepth_i)
+    tuple path(selfchain),path(selfchain_i)
+    tuple path(mapability),path(mapability_i)
+    tuple path(simpletandemrepeats),path(simpletandemrepeats_i)
 
     output:
     tuple val(meta), path('*.annotated.vcf')   , emit: vcf

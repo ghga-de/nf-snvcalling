@@ -7,7 +7,7 @@ process MERGE_PLOTS {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
-    tuple val(meta), file(plot1), file(plot2)
+    tuple val(meta), path(plot1), path(plot2)
 
     output:
     tuple val(meta), path("*_allSNVdiagnosticsPlots*.pdf") , emit: plots

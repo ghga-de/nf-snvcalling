@@ -11,8 +11,8 @@ process ANNOVAR {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta)         , file(ch_vcf),  file(annovar_bed)
-    each file(annovar_table)
+    tuple val(meta)         , path(ch_vcf),  path(annovar_bed)
+    each path(annovar_table)
     val(chrprefix)
 
     output:

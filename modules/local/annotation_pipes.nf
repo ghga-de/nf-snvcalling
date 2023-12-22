@@ -9,7 +9,18 @@ process ANNOTATION_PIPES {
     
     input:
     tuple val(meta), path(vcf), path(vcf_tbi)
-    tuple val(meta2),path(enchangers),path(enchangers_i),path(cpgislands),path(cpgislands_i),path(tfbscons),path(tfbscons_i),path(encode_dnase),path(encode_dnase_i),path(mirnas_snornas),path(mirnas_snornas_i),path(cosmic),file(cosmic_i),path(mirbase),path(mirbase_i),path(mir_targets),path(mir_targets_i),path(cgi_mountains),path(cgi_mountains_i),path(phastconselem),path(phastconselem_i),path(encode_tfbs),path(encode_tfbs_i),path(mirnas_sncrnas),path(mirnas_sncrnas_i)
+    tuple path(enchangers),path(enchangers_i)
+    tuple path(cpgislands),path(cpgislands_i)
+    tuple path(tfbscons),path(tfbscons_i)
+    tuple path(encode_dnase),path(encode_dnase_i)
+    tuple path(mirnas_snornas),path(mirnas_snornas_i)
+    tuple path(cosmic),file(cosmic_i)
+    tuple path(mirbase),path(mirbase_i)
+    tuple path(mir_targets),path(mir_targets_i)
+    tuple path(cgi_mountains),path(cgi_mountains_i)
+    tuple path(phastconselem),path(phastconselem_i)
+    tuple path(encode_tfbs),path(encode_tfbs_i)
+    tuple path(mirnas_sncrnas),path(mirnas_sncrnas_i)
 
     output:
     tuple val(meta), path('*.deepanno.vcf.gz'), path('*.deepanno.vcf.gz.tbi') , emit: vcf

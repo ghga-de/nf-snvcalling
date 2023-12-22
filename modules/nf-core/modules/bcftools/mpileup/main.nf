@@ -1,11 +1,11 @@
 process BCFTOOLS_MPILEUP {
-    tag "$meta.id"
+    tag "$meta.id $intervals"
     label 'process_high'
 
     conda (params.enable_conda ? "bioconda::bcftools=1.9" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/bcftools:1.9--h68d8f2e_9':
-        'quay.io/biocontainers/bcftools:1.9--h68d8f2e_9' }"
+        'https://depot.galaxyproject.org/singularity/bcftools:1.9--h47928c2_2':
+        'quay.io/biocontainers/bcftools:1.9--h47928c2_2' }"
 
     input:
     tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai), val(tumorname), val(controlname), val(intervals), path(interval_file)
@@ -26,7 +26,7 @@ process BCFTOOLS_MPILEUP {
     def args3    = task.ext.args3 ?: ''
     def prefix   = task.ext.prefix ?: "${meta.id}"
     def args_c   = interval_file ? "$args2 -R ${interval_file}" : "$args -r ${intervals}"
-    def ref_spec = params.ref_type == "hg38" ? "$args3 --ploidy GRCh38": "$args3"
+    def ref_spec = params.fasta.contains("38") ? "$args3 --ploidy GRCh38": "$args3"
     interval_name = interval_file ? "contig" : "${intervals}"
 
     """

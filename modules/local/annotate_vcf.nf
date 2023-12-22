@@ -8,8 +8,13 @@ process ANNOTATE_VCF {
     'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
-    tuple val(meta),file(vcf),file(vcf_tbi)
-    tuple val(meta2),file(kgenome),file(kgenome_i),file(dbsnpsnv),file(dbsnpsnv_i),file(localcontrolwgs),file(localcontrolwgs_i),file(localcontrolwes),file(localcontrolwes_i),file(gnomadgenomes),file(gnomadgenomes_i),file(gnomadexomes),file(gnomadexomes_i)
+    tuple val(meta), path(vcf), path(vcf_tbi)
+    tuple path(kgenome), path(kgenome_i) 
+    tuple path(dbsnpsnv), path(dbsnpsnv_i) 
+    tuple path(localcontrolwgs), path(localcontrolwgs_i) 
+    tuple path(localcontrolwes), path(localcontrolwes_i) 
+    tuple path(gnomadgenomes), path(gnomadgenomes_i) 
+    tuple path(gnomadexomes), path(gnomadexomes_i)
     val (chrprefix)
 
     output:
