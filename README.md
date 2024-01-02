@@ -138,7 +138,7 @@ Note that some form of configuration will be needed so that Nextflow knows how t
 
 **control**: The path to the control file, if there is no control will be kept blank.
 
-**contro*index***: The path to the control index file, if there is no control will be kept blank.
+**control_index***: The path to the control index file, if there is no control will be kept blank.
 
 ## Data Requirements
 
@@ -178,6 +178,8 @@ All VCF and BED files need to be indexed with tabix and should be in the same fo
 - UCSC Phast Cons Elements (bed)
 - UCSC Encode TFBS (bed)
 
+NOTE: The reference set bundle which is used in PCAWG study can be found and downloaded [here](https://dcc.icgc.org/api/v1/download?fn=/PCAWG/reference_data/pcawg-dkfz/dkfz-workflow-dependencies_150318_0951.tar.gz). (NOTE: only in hg19)
+
 ## Documentation
 
 The nf-snvcalling pipeline comes with documentation about the pipeline [usage](https://github.com/ghga-de/nf-snvcalling/blob/main/docs/usage.md) and [output](https://github.com/ghga-de/nf-snvcalling/blob/main/docs/output.md).
@@ -195,7 +197,7 @@ The ICGC/TCGA Pan-Cancer Analysis of Whole Genomes Consortium.
 Nature volume 578, pages 82–93 (2020).
 DOI 10.1038/s41586-020-1969-6
 
-We tank the following people for their extensive assistance in the development of this pipeline:
+We thank the following people for their extensive assistance in the development of this pipeline:
 
 Nagarajan Paramasivam (@NagaComBio) [n.paramasivam@dkfz.de](mailto:n.paramasivam@dkfz.de)
 
