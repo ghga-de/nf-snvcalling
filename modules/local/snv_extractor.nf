@@ -7,7 +7,7 @@ process SNV_EXTRACTOR {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta), file(vcf), file(index)
+    tuple val(meta), path(vcf), path(index)
 
     output:
     tuple val(meta), path('*_somatic_functional_snvs_conf_*_to_10*')        , emit: somatic_functional

@@ -1,13 +1,13 @@
 process MERGE_PLOTS {
     tag "$meta.id"
-    label 'process_low'
+    label 'process_medium'
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
-    tuple val(meta), file(plot1), file(plot2)
+    tuple val(meta), path(plot1), path(plot2)
 
     output:
     tuple val(meta), path("*_allSNVdiagnosticsPlots*.pdf") , emit: plots

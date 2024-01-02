@@ -7,7 +7,7 @@ process CONTEXT_PLOT {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta), file(frequency)
+    tuple val(meta), path(frequency)
 
     output:
     tuple val(meta), path('*.pdf')        , emit: plot        

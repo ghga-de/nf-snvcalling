@@ -9,7 +9,7 @@ process JSON_REPORT {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta), file(somatic_vcf), file(insnp_file)
+    tuple val(meta), path(somatic_vcf), path(insnp_file)
 
     output:
     tuple val(meta), path('*.txt')                  , emit: txt

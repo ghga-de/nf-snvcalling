@@ -7,7 +7,7 @@ process CONTEXT_FREQUENCIES {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta), file(vcf)
+    tuple val(meta), path(vcf)
 
     output:
     tuple val(meta), path('*.txt')        , emit: seq_contex        
