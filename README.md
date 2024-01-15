@@ -138,7 +138,7 @@ Note that some form of configuration will be needed so that Nextflow knows how t
 
 **control**: The path to the control file, if there is no control will be kept blank.
 
-**control_index***: The path to the control index file, if there is no control will be kept blank.
+**control_index\***: The path to the control index file, if there is no control will be kept blank.
 
 ## Data Requirements
 
