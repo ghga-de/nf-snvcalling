@@ -7,8 +7,8 @@ process PER_CHROM_PLOT {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta), file(distance)
-    each file(chr_file)
+    tuple val(meta), path(distance)
+    each path(chr_file)
 
     output:
     tuple val(meta), path('*.pdf')   , emit: plot        

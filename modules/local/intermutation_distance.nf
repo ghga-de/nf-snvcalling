@@ -7,8 +7,8 @@ process INTERMUTATION_DISTANCE {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta), file(vcf)
-    each file(chr_file)
+    tuple val(meta), path(vcf)
+    each path(chr_file)
     val(chr_prefix)
 
     output:

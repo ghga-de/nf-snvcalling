@@ -2,18 +2,18 @@
 // THA calculation may end with NA
 process JSON_REPORT {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_single'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta), file(somatic_vcf), file(insnp_file)
+    tuple val(meta), path(somatic_vcf), path(insnp_file)
 
     output:
     tuple val(meta), path('*.txt')                  , emit: txt
-    tuple val(meta), path('*.json')                 , emit: json
+    tuple val(meta), path('*.json')                 , emit: json, optional: true
     tuple val(meta), path('*.pdf')                  , emit: plot        
     path  "versions.yml"                            , emit: versions
 
@@ -31,7 +31,8 @@ process JSON_REPORT {
         -t $params.min_cov \\
         -v $params.min_confidence_score \\
         -b $params.tha_score_threshold \\
-        -r ''
+        -r '' \\
+        -j $params.report_json
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

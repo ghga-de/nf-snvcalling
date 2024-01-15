@@ -20,39 +20,42 @@ include { ERROR_PLOTS as ERROR_PLOTS_3            } from '../../modules/local/er
 include { ERROR_PLOTS as ERROR_PLOTS_4            } from '../../modules/local/error_plots.nf'              addParams( options: params.options )
 include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_1 } from '../../modules/local/plot_basescore_bias.nf' addParams( options: params.options )
 include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_2 } from '../../modules/local/plot_basescore_bias.nf' addParams( options: params.options )
+include { ENSEMBLVEP_VEP         } from '../../modules/nf-core/modules/ensemblvep/vep/main'       addParams( options: params.options )
+include { ENSEMBLVEP_DOWNLOAD    } from '../../modules/nf-core/modules/ensemblvep/download/main'  addParams( options: params.options )
 
 
 workflow SNV_ANNOTATION {
     take:
-    vcf_ch               // channel: [val(meta), vcf.gz, vcf.gz.tbi  ]
-    ref                  // channel: [path(fasta), path(fai)]
-    kgenome              // channel: [file.vcf.gz, file.vcf.gz.tbi]
-    dbsnpsnv             // channel: [file.vcf.gz, file.vcf.gz.tbi]
-    localcontrolwgs      // channel: [file.vcf.gz, file.vcf.gz.tbi]
-    localcontrolwes      // channel: [file.vcf.gz, file.vcf.gz.tbi]
-    gnomadgenomes        // channel: [file.vcf.gz, file.vcf.gz.tbi]
-    gnomadexomes         // channel: [file.vcf.gz, file.vcf.gz.tbi]
-    annodb               // channel: [table_annovar_dir]
-    repeatmasker         // channel: [file.bed.gz, file.bed.gz.tbi]
-    dacblacklist         // channel: [file.bed.gz, file.bed.gz.tbi]
-    dukeexcluded         // channel: [file.bed.gz, file.bed.gz.tbi]
-    hiseqdepth           // channel: [file.bed.gz, file.bed.gz.tbi]
-    selfchain            // channel: [file.bed.gz, file.bed.gz.tbi]
-    mapability           // channel: [file.bed.gz, file.bed.gz.tbi]
-    simpletandemrepeats  // channel: [file.bed.gz, file.bed.gz.tbi]
-    enchangers           // channel: [file.bed.gz, file.bed.gz.tbi]
-    cpgislands           // channel: [file.bed.gz, file.bed.gz.tbi]
-    tfbscons             // channel: [file.bed.gz, file.bed.gz.tbi]
-    encode_dnase         // channel: [file.bed.gz, file.bed.gz.tbi]
-    mirnas_snornas       // channel: [file.bed.gz, file.bed.gz.tbi]
-    cosmic               // channel: [file.bed.gz, file.bed.gz.tbi]
-    mirbase              // channel: [file.bed.gz, file.bed.gz.tbi]
-    mir_targets          // channel: [file.bed.gz, file.bed.gz.tbi]
-    cgi_mountains        // channel: [file.bed.gz, file.bed.gz.tbi]
-    phastconselem        // channel: [file.bed.gz, file.bed.gz.tbi]
-    encode_tfbs          // channel: [file.bed.gz, file.bed.gz.tbi]
-    mirnas_sncrnas       // channel: [file.bed.gz, file.bed.gz.tbi] 
-    chr_prefix           // val channel: [prefix]
+    vcf_ch           // channel: [val(meta), vcf.gz, vcf.gz.tbi  ]
+    ref              // channel: [path(fasta), path(fai)]
+    kgenome
+    dbsnpsnv
+    localcontrolwgs
+    localcontrolwes
+    gnomadgenomes
+    gnomadexomes
+    repeatmasker
+    dacblacklist
+    dukeexcluded
+    hiseqdepth
+    selfchain
+    mapability
+    simpletandemrepeats
+    enchangers
+    cpgislands
+    tfbscons
+    encode_dnase
+    mirnas_snornas
+    cosmic
+    mirbase
+    mir_targets
+    cgi_mountains
+    phastconselem
+    encode_tfbs
+    mirnas_sncrnas
+    chr_prefix       // val channel: [prefix]
+    annodb           // path: annovar db
+    vep_cache        // path: vep cache
 
     main:
 
@@ -64,45 +67,58 @@ workflow SNV_ANNOTATION {
     // MODULE: ANNOTATE_VCF
     //
     // RUN annotate_vcf.pl: Uses various databases (all mandatory exept recurrance) to annotate variants
+    
     ANNOTATE_VCF (
         vcf_ch, 
-        kgenome, 
-        dbsnpsnv, 
-        localcontrolwgs,
-        localcontrolwes, 
-        gnomadgenomes, 
-        gnomadexomes, 
+        kgenome,dbsnpsnv,localcontrolwgs,localcontrolwes,gnomadgenomes,gnomadexomes, 
         chr_prefix
     )
     versions  = versions.mix(ANNOTATE_VCF.out.versions)
-    ch_vcf    = ANNOTATE_VCF.out.unziped_vcf
 
-    //
-    // MODULE: ANNOVAR
-    // 
-    // RUN annovar, processAnnovarOutput.pl and newCols2vcf.pl: annovar annotates and classifies the variants, 
-    // perl scripts re-creates vcfs. 
-    ANNOVAR(
-        ch_vcf.join(ANNOTATE_VCF.out.forannovar), 
-        annodb, 
-        chr_prefix
-    )
-    logs     = logs.mix(ANNOVAR.out.log)
-    versions = versions.mix(ANNOVAR.out.versions)
+    ANNOTATE_VCF.out.unziped_vcf
+        .join(ANNOTATE_VCF.out.forannovar)
+        .set{anno_ch}
+
+    if (params.annotation_tool.contains("annovar")){
+        //
+        // MODULE: ANNOVAR
+        // 
+        // RUN annovar, processAnnovarOutput.pl and newCols2vcf.pl: annovar annotates and classifies the variants, 
+        // perl scripts re-creates vcfs. 
+        ANNOVAR(
+            anno_ch, 
+            annodb, 
+            chr_prefix
+        )
+        logs     = logs.mix(ANNOVAR.out.log)
+        versions = versions.mix(ANNOVAR.out.versions)
+        annotated_vcf = ANNOVAR.out.vcf
+    }
+    else{
+        if(params.download_cache){
+            ENSEMBLVEP_DOWNLOAD(
+                anno_ch.map{ it -> tuple( it[0], it[1])}
+                )
+            versions  = versions.mix(ENSEMBLVEP_DOWNLOAD.out.versions)
+            vep_cache = ENSEMBLVEP_DOWNLOAD.out.cache
+        }
+        
+        ENSEMBLVEP_VEP(
+            ANNOTATE_VCF.out.unziped_vcf,
+            vep_cache,
+            ref
+        )
+        versions      = versions.mix(ENSEMBLVEP_VEP.out.versions)
+        annotated_vcf = ENSEMBLVEP_VEP.out.vcf
+    }
 
     //
     // MODULE: SNV_RELIABILITY_PIPE
     //
     // RUN annotate_vcf.pl : BED files are used to annotate variants
     SNV_RELIABILITY_PIPE(
-        ANNOVAR.out.vcf, 
-        repeatmasker, 
-        dacblacklist, 
-        dukeexcluded, 
-        hiseqdepth, 
-        selfchain, 
-        mapability, 
-        simpletandemrepeats
+        annotated_vcf, 
+        repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats
     )
     versions = versions.mix(SNV_RELIABILITY_PIPE.out.versions)
 
@@ -296,18 +312,7 @@ workflow SNV_ANNOTATION {
     {
         ANNOTATION_PIPES (
             TABIX_BGZIPTABIX.out.gz_tbi, 
-            enchangers, 
-            cpgislands, 
-            tfbscons, 
-            encode_dnase, 
-            mirnas_snornas, 
-            cosmic, 
-            mirbase, 
-            mir_targets,
-            cgi_mountains, 
-            phastconselem, 
-            encode_tfbs, 
-            mirnas_sncrnas
+            enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets, cgi_mountains, phastconselem, encode_tfbs, mirnas_sncrnas
         )
         vcf_ch   = ANNOTATION_PIPES.out.vcf 
         versions = versions.mix(ANNOTATION_PIPES.out.versions)

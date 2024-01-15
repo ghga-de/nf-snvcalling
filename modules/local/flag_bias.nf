@@ -7,7 +7,7 @@ process FLAG_BIAS {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta), file(vcf), file(sequence_error_matrix), file(sequencing_error_matrix)
+    tuple val(meta), path(vcf), path(sequence_error_matrix), path(sequencing_error_matrix)
     tuple path(fasta), path(fai)
     val(round)
 

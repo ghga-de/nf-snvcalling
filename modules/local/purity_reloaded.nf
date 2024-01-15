@@ -9,7 +9,7 @@ process PURITY_RELOADED {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta), file(vcf), file(index)
+    tuple val(meta), path(vcf), path(index)
 
     output:
     tuple val(meta), path('*.txt')        , emit: purity

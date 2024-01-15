@@ -1,36 +1,36 @@
 {
-    "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "https://raw.githubusercontent.com/ghga-de/nf-snvcalling/master/assets/schema_input.json",
-    "title": "nf-platypusindelcalling pipeline - params.input schema",
-    "description": "Schema for the file provided with params.input",
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "sample": {
-                "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces"
-            },
-            "tumor": {
-                "type": "string",
-                "pattern": "^\\S+\\.bam$",
-                "errorMessage": "BAM file for tumors must be provided'"
-            },
-            "control": {
-                "errorMessage": "BAM file for as control matching to tumor, if there is",
-                "anyOf": [
-                    {
-                        "type": "string",
-                        "pattern": "^\\S+\\.bam$"
-                    },
-                    {
-                        "type": "string",
-                        "maxLength": 0
-                    }
-                ]
-            }
-        },
-        "required": ["sample", "tumor"]
-    }
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://raw.githubusercontent.com/ghga-de/nf-snvcalling/master/assets/schema_input.json",
+  "title": "nf-platypusindelcalling pipeline - params.input schema",
+  "description": "Schema for the file provided with params.input",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "sample": {
+        "type": "string",
+        "pattern": "^\\S+$",
+        "errorMessage": "Sample name must be provided and cannot contain spaces"
+      },
+      "tumor": {
+        "type": "string",
+        "pattern": "^\\S+\\.bam$",
+        "errorMessage": "BAM file for tumors must be provided'"
+      },
+      "control": {
+        "errorMessage": "BAM file for as control matching to tumor, if there is",
+        "anyOf": [
+          {
+            "type": "string",
+            "pattern": "^\\S+\\.bam$"
+          },
+          {
+            "type": "string",
+            "maxLength": 0
+          }
+        ]
+      }
+    },
+    "required": ["sample", "tumor"]
+  }
 }

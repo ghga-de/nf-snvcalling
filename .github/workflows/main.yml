@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        nxf_ver: ['22.10.6']
+        nxf_ver: ["22.10.6"]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v3
@@ -37,7 +37,7 @@ jobs:
         run: |
           nextflow run ${GITHUB_WORKSPACE} --help
       - name: DELAY to try address some odd behaviour with what appears to be a conflict between parallel htslib jobs leading to CI hangs
-        run: | 
+        run: |
           if [[ $NXF_VER = '' ]]; then sleep 1200; fi
       - name: BASIC Run the basic pipeline only for SNV calling with docker
         run: |

@@ -11,18 +11,18 @@ process ANNOVAR {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
     
     input:
-    tuple val(meta)         , file(ch_vcf),  file(annovar_bed)
-    each file(annovar_table)
+    tuple val(meta)         , path(ch_vcf),  path(annovar_bed)
+    each path(annovar_table)
     val(chrprefix)
 
     output:
-    tuple val(meta),path('*.temp.vcf')                    , emit: vcf
-    tuple val(meta), path('*.log')                        , emit: log
+    tuple val(meta), path('*.temp.vcf.gz'),path('*.temp.vcf.gz.tbi') , emit: vcf
+    tuple val(meta), path('*.log')                                   , emit: log
     tuple val(meta), path('*_genomicSuperDups')                         
     tuple val(meta), path('*_cytoBand')                                 
     tuple val(meta), path('*variant_function')                          
     tuple val(meta), path('*exonic_variant_function')                  
-    path  "versions.yml"                                  , emit: versions
+    path  "versions.yml"                                              , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -64,12 +64,17 @@ process ANNOVAR {
         --chrSuffix="" \\
         --reportColumns="1" --bChrPosEnd="2,7,8" > ${prefix}.temp.vcf
 
+    bgzip -c ${prefix}.temp.vcf > ${prefix}.temp.vcf.gz
+    tabix ${prefix}.temp.vcf.gz
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         annovar_table: ${annovar_table}
         annovar_path: ${params.annovar_path}
         annovar_buildver: ${params.buildver}
-        perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/') 
+        perl: \$(echo \$(perl --version 2>&1) | sed 's/.*v\\(.*\\)) built.*/\\1/')
+        gzip: \$(echo \$(gzip --version 2>&1) | sed 's/^.*gzip //; s/ .*\$//')
+        tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
     END_VERSIONS
     """
 }
