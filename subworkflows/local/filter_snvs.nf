@@ -27,7 +27,7 @@ workflow FILTER_SNVS {
     input_ch        // channel: [val(meta), vcf, index,  altbasequal, refbasequal, altreadpos, refreadpos, plots ]
     ref             // reference channel [ref.fa, ref.fa.fai]
     chr_prefix      // val channel
-    chrlength       // chr file    
+    chrlength       // chr file
 
     main:
     versions = Channel.empty()
@@ -59,8 +59,11 @@ workflow FILTER_SNVS {
         .set{orjinal_somatic_ch}
 
     somatic_ch = orjinal_somatic_ch
+
     // if rerun is false
-    // Rest is the usual pipeline. if rerun is false
+    // Rest is the usual pipeline. if rerun is false ////
+
+
     if (params.runplots){
 
         // 1. Rainfall plots

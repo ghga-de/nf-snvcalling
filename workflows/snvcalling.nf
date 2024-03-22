@@ -59,6 +59,7 @@ ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists
 chr_prefix     = params.chr_prefix  ? Channel.value(params.chr_prefix) : Channel.value("")
 chrlength      = params.chrom_sizes ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) : Channel.empty()   
 contigs        = params.contig_file ? Channel.fromPath(params.contig_file, checkIfExists: true) : Channel.empty()
+config         = params.fasta.contains("38") ? Channel.fromPath("${projectDir}/assets/config/hg38.json", checkIfExists: true).collect() : Channel.fromPath("${projectDir}/assets/config/hg37.json", checkIfExists: true).collect()
 
 // Annovar table folder
 
@@ -250,7 +251,8 @@ workflow SNVCALLING {
             enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets, cgi_mountains, phastconselem, encode_tfbs, mirnas_sncrnas, 
             chr_prefix,
             annodb,
-            vep_cache_db
+            vep_cache_db,
+            config
         )
         ch_versions = ch_versions.mix(SNV_ANNOTATION.out.versions)
 
@@ -273,7 +275,7 @@ workflow SNVCALLING {
                 input_ch, 
                 ref, 
                 chr_prefix, 
-                chrlength    
+                chrlength
             )
             ch_versions = ch_versions.mix(FILTER_SNVS.out.versions)
         }

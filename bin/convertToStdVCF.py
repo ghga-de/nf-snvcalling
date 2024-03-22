@@ -254,11 +254,10 @@ def extract_freestanding_columns_into_dict(line_original, col_indices, meta_info
 
     cols_as_INFO_dict = {}
     for column_name in columns_to_extract:
-        try:
-            old_column_contents = line_original[col_indices[column_name]]
-        except KeyError as e:
-            raise RuntimeError("Is this a DKFZ VCF? Avoid the `_raw.vcf.gz`")
+        if column_name not in col_indices:
+            continue
 
+        old_column_contents = line_original[col_indices[column_name]]
         new_INFO_id = meta_information["INFO"][column_name]["new_info_id"]
         cols_as_INFO_dict[new_INFO_id] = old_column_contents
     return cols_as_INFO_dict
