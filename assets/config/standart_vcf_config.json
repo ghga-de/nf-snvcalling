@@ -335,6 +335,156 @@
       "type": "String",
       "description": "Reclassification of the germline/somatic state based on additional information",
       "new_info_id": "RECL"
+    },
+    "MAPABILITY": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Mappability regions",
+      "new_info_id": "MAP"
+    },
+    "CpGislands": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC CpG islands",
+      "new_info_id": "CPG"
+    },
+    "GNOMAD_EXOMES": {
+      "number": "1",
+      "type": "String",
+      "description": "Gnomed Exome sites",
+      "new_info_id": "MADG"
+    },
+    "GNOMAD_GENOMES": {
+      "number": "1",
+      "type": "String",
+      "description": "Gnomed Genome sites",
+      "new_info_id": "MADX"
+    },
+    "1K_GENOMES": {
+      "number": "1",
+      "type": "String",
+      "description": "1000k genome SNV calls",
+      "new_info_id": "1KG"
+    },
+    "LocalControlAF_WGS": {
+      "number": "1",
+      "type": "String",
+      "description": "Extra Local Control WGS",
+      "new_info_id": "LOCG"
+    },
+    "DAC_BLACKLIST": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC DAC Black List",
+      "new_info_id": "DAC"
+    },
+    "HISEQDEPTH": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Hiseq Deep sequencing regions",
+      "new_info_id": "HISEQ"
+    },
+    "SELFCHAIN": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC SeLf Chain regions",
+      "new_info_id": "SCH"
+    },
+    "SIMPLE_TANDEMREPEATS": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Simple tandem repeats",
+      "new_info_id": "REP"
+    },
+    "Enhancers": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Enhangers",
+      "new_info_id": "ENH"
+    },
+    "TFBScons": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC TFBS noncoding sites",
+      "new_info_id": "NCT"
+    },
+    "ENCODE_DNASE": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Encode DNAse cluster",
+      "new_info_id": "DNS"
+    },
+    "miRNAs_snoRNAs": {
+      "number": "1",
+      "type": "String",
+      "description": "snoRNAs miRBase",
+      "new_info_id": "SNO"
+    },
+    "miRNAs_sncRNAs": {
+      "number": "1",
+      "type": "String",
+      "description": "sncRNAs miRBase",
+      "new_info_id": "SNC"
+    },
+    "COSMIC": {
+      "number": "1",
+      "type": "String",
+      "description": "Cosmic coding SNVs",
+      "new_info_id": "COS"
+    },
+    "miRBase18": {
+      "number": "1",
+      "type": "String",
+      "description": "miRBase",
+      "new_info_id": "MIR"
+    },
+    "miRNAtargets": {
+      "number": "1",
+      "type": "String",
+      "description": "miRNA target sites",
+      "new_info_id": "MIRT"
+    },
+    "CgiMountains": {
+      "number": "1",
+      "type": "String",
+      "description": "Cgi Mountains",
+      "new_info_id": "CGM"
+    },
+    "phastConsElem20bp": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Phast Cons Elements",
+      "new_info_id": "PCE"
+    },
+    "ENCODE_TFBS": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Phast Cons Elements",
+      "new_info_id": "TFBS"
+    },
+    "seqBiasPresent_1": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Sequence Bias Check 1",
+      "new_info_id": "SE1"
+    },
+    "seqingBiasPresent_1": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Sequencing Bias Check 1",
+      "new_info_id": "SB1"
+    },
+    "seqBiasPresent_2": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Sequence Bias Check 2",
+      "new_info_id": "SE2"
+    },
+    "seqingBiasPresent_2": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Sequencing Bias Check 2",
+      "new_info_id": "SB2"
     }
   }
 }

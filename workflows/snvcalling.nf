@@ -59,7 +59,7 @@ ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists
 chr_prefix     = params.chr_prefix  ? Channel.value(params.chr_prefix) : Channel.value("")
 chrlength      = params.chrom_sizes ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) : Channel.empty()   
 contigs        = params.contig_file ? Channel.fromPath(params.contig_file, checkIfExists: true) : Channel.empty()
-config         = params.fasta.contains("38") ? Channel.fromPath("${projectDir}/assets/config/hg38.json", checkIfExists: true).collect() : Channel.fromPath("${projectDir}/assets/config/hg37.json", checkIfExists: true).collect()
+config         = Channel.fromPath("${projectDir}/assets/config/standart_vcf_config.json", checkIfExists: true).collect()
 
 // Annovar table folder
 
@@ -275,7 +275,8 @@ workflow SNVCALLING {
                 input_ch, 
                 ref, 
                 chr_prefix, 
-                chrlength
+                chrlength,
+                config
             )
             ch_versions = ch_versions.mix(FILTER_SNVS.out.versions)
         }

@@ -11,8 +11,8 @@ process CONVERT_TO_VCF {
     path(config)
 
     output:
-    tuple val(meta), path("*.standard.vcf") ,  emit: std_vcf
-    path  "versions.yml"                    ,  emit: versions
+    tuple val(meta), path("*std.vcf.gz") ,  emit: std_vcf
+    path  "versions.yml"                 ,  emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -20,12 +20,16 @@ process CONVERT_TO_VCF {
     script:
     def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def vcf_name = vcf.getExtension() == "gz" ? vcf.getBaseName().tokenize(".")[0] : vcf.getName().tokenize(".")[0]
 
     """
     convertToStdVCF.py -i $vcf \\
         -s ${prefix} \\
         -c $config \\
-        -o ${prefix}.annotated.standard.vcf
+        -o ${vcf_name}.std.vcf
+
+    bgzip --threads $task.cpus ${vcf_name}.std.vcf
+    tabix -p vcf ${vcf_name}.std.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -133,15 +133,6 @@ workflow SNV_ANNOTATION {
     )
     versions = versions.mix(CONFIDENCE_ANNOTATION.out.versions)
 
-    //
-    // MODULE: CONVERT_TO_VCF
-    //
-    CONVERT_TO_VCF(
-        SNV_RELIABILITY_PIPE.out.vcf,
-        config
-    )
-    versions = versions.mix(CONVERT_TO_VCF.out.versions)
-
     // If true runArtifactFilter creates a bias file will be used to plot errors
     if (params.runArtifactFilter){
         //
@@ -331,6 +322,15 @@ workflow SNV_ANNOTATION {
     else{
         println "SNVDeep annotation not applied because runSNVDeepAnnotation is set to ${params.runSNVDeepAnnotation}"
     }
+
+    //
+    // MODULE: CONVERT_TO_VCF
+    //
+    CONVERT_TO_VCF(
+        vcf_ch.map{ it -> tuple( it[0], it[1] )},
+        config
+    )
+    versions = versions.mix(CONVERT_TO_VCF.out.versions)
 
 emit:
 vcf_ch
