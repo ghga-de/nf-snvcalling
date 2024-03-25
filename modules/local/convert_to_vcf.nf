@@ -29,7 +29,6 @@ process CONVERT_TO_VCF {
         -o ${vcf_name}.std.vcf
 
     bgzip --threads $task.cpus ${vcf_name}.std.vcf
-    tabix -p vcf ${vcf_name}.std.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

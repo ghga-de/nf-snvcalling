@@ -462,6 +462,12 @@
       "description": "UCSC Phast Cons Elements",
       "new_info_id": "TFBS"
     },
+    "ANNOTATION_control": {
+      "number": "1",
+      "type": "String",
+      "description": "Annotation fieldn with VEP",
+      "new_info_id": "VEP"
+    },
     "seqBiasPresent_1": {
       "number": ".",
       "type": "Integer",

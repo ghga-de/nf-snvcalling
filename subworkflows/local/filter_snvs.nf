@@ -16,7 +16,7 @@ include { JSON_REPORT            } from '../../modules/local/json_report.nf'    
 include { MERGE_PLOTS            } from '../../modules/local/merge_plots.nf'             addParams( options: params.options )
 include { SNV_EXTRACTOR          } from '../../modules/local/snv_extractor.nf'           addParams( options: params.options )
 include { TRIPLET_PLOTTER        } from '../../modules/local/triplet_plotter.nf'         addParams( options: params.options )
-include { CONVERT_TO_VCF        } from '../../modules/local/convert_to_vcf.nf'           addParams( options: params.options )
+include { CONVERT_TO_VCF         } from '../../modules/local/convert_to_vcf.nf'          addParams( options: params.options )
 include { ERROR_PLOTS as ERROR_PLOTS_5     } from '../../modules/local/error_plots.nf'   addParams( options: params.options )
 include { ERROR_PLOTS as ERROR_PLOTS_6     } from '../../modules/local/error_plots.nf'   addParams( options: params.options )
 include { PLOT_BASESCORE_DISTRIBUTION      } from '../../modules/local/plot_basescore_distribution.nf'     addParams( options: params.options )
@@ -47,14 +47,6 @@ workflow FILTER_SNVS {
     versions = versions.mix(FILTER_BY_CRIT.out.versions)
 
     //
-    // MODULE: CONVERT_TO_VCF
-    //
-    CONVERT_TO_VCF(
-        FILTER_BY_CRIT.out.vcf.map{ it -> tuple( it[0], it[1] )},
-        config
-    )
-
-    //
     // MODULE: SNV_EXTRACTOR
     //
     // run snv_extractor_v1.pl
@@ -66,9 +58,35 @@ workflow FILTER_SNVS {
     // filter out the lists if no variant exists for visualization
     SNV_EXTRACTOR.out.somatic_snv
         .filter{meta, somatic_snv -> WorkflowCommons.getNumLinesInFile(somatic_snv) > 1}
-        .set{orjinal_somatic_ch}
+        .set{somatic_ch}
 
-    somatic_ch = orjinal_somatic_ch
+    SNV_EXTRACTOR.out.somatic_functional
+        .filter{meta, somatic_functional -> WorkflowCommons.getNumLinesInFile(somatic_functional) > 1}
+        .set{somatic_funct_ch}
+
+    SNV_EXTRACTOR.out.somatic_ncrna
+        .filter{meta, somatic_ncrna -> WorkflowCommons.getNumLinesInFile(somatic_ncrna) > 1}
+        .set{somatic_ncrna_ch}
+
+    SNV_EXTRACTOR.out.germline_functional
+        .filter{meta, germline_functional -> WorkflowCommons.getNumLinesInFile(germline_functional) > 1}
+        .set{germline_funct_ch}
+
+    FILTER_BY_CRIT.out.vcf.map{ it -> tuple( it[0], it[1] )}
+                .mix(somatic_ch)
+                .mix(somatic_funct_ch)
+                .mix(somatic_ncrna_ch)
+                .mix(germline_funct_ch)
+                .set{convert_snvs}
+
+    //
+    // MODULE: CONVERT_TO_VCF
+    //
+    // Convert nonconventional vcf files into standard vcf 4.2 format
+    CONVERT_TO_VCF(
+        convert_snvs,
+        config
+    )
 
     // if rerun is false
     // Rest is the usual pipeline. if rerun is false ////
