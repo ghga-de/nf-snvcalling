@@ -21,9 +21,12 @@ process TABIX_BGZIPTABIX {
     def args = task.ext.args ?: ''
     def args2 = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def vcf_name = input.getExtension() == "gz" ? input.getBaseName() : input.getName()
+    vcf_name = vcf_name.take(vcf_name.size() - 4)
+
     """
-    bgzip  --threads ${task.cpus} -c $args $input > ${prefix}.${input.getExtension()}.gz
-    tabix $args2 ${prefix}.${input.getExtension()}.gz
+    bgzip  --threads ${task.cpus} -c $args $input > ${vcf_name}.${input.getExtension()}.gz
+    tabix $args2 ${vcf_name}.${input.getExtension()}.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

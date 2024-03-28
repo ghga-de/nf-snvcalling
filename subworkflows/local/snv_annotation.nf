@@ -22,7 +22,6 @@ include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_1 } from '../../modules/loc
 include { PLOT_BASESCORE_BIAS as PLOT_BASESCORE_BIAS_2 } from '../../modules/local/plot_basescore_bias.nf' addParams( options: params.options )
 include { ENSEMBLVEP_VEP         } from '../../modules/nf-core/modules/ensemblvep/vep/main'       addParams( options: params.options )
 include { ENSEMBLVEP_DOWNLOAD    } from '../../modules/nf-core/modules/ensemblvep/download/main'  addParams( options: params.options )
-include { CONVERT_TO_VCF        } from '../../modules/local/convert_to_vcf.nf'                addParams( options: params.options )
 
 
 workflow SNV_ANNOTATION {
@@ -57,7 +56,6 @@ workflow SNV_ANNOTATION {
     chr_prefix       // val channel: [prefix]
     annodb           // path: annovar db
     vep_cache        // path: vep cache
-    config          // config channel 
 
     main:
 
@@ -323,14 +321,6 @@ workflow SNV_ANNOTATION {
         println "SNVDeep annotation not applied because runSNVDeepAnnotation is set to ${params.runSNVDeepAnnotation}"
     }
 
-    //
-    // MODULE: CONVERT_TO_VCF
-    //
-    CONVERT_TO_VCF(
-        vcf_ch.map{ it -> tuple( it[0], it[1] )},
-        config
-    )
-    versions = versions.mix(CONVERT_TO_VCF.out.versions)
 
 emit:
 vcf_ch

@@ -16,7 +16,6 @@ include { JSON_REPORT            } from '../../modules/local/json_report.nf'    
 include { MERGE_PLOTS            } from '../../modules/local/merge_plots.nf'             addParams( options: params.options )
 include { SNV_EXTRACTOR          } from '../../modules/local/snv_extractor.nf'           addParams( options: params.options )
 include { TRIPLET_PLOTTER        } from '../../modules/local/triplet_plotter.nf'         addParams( options: params.options )
-include { CONVERT_TO_VCF         } from '../../modules/local/convert_to_vcf.nf'          addParams( options: params.options )
 include { ERROR_PLOTS as ERROR_PLOTS_5     } from '../../modules/local/error_plots.nf'   addParams( options: params.options )
 include { ERROR_PLOTS as ERROR_PLOTS_6     } from '../../modules/local/error_plots.nf'   addParams( options: params.options )
 include { PLOT_BASESCORE_DISTRIBUTION      } from '../../modules/local/plot_basescore_distribution.nf'     addParams( options: params.options )
@@ -29,7 +28,6 @@ workflow FILTER_SNVS {
     ref             // reference channel [ref.fa, ref.fa.fai]
     chr_prefix      // val channel
     chrlength       // chr file
-    config          // config channel 
 
     main:
     versions = Channel.empty()
@@ -78,15 +76,6 @@ workflow FILTER_SNVS {
                 .mix(somatic_ncrna_ch)
                 .mix(germline_funct_ch)
                 .set{convert_snvs}
-
-    //
-    // MODULE: CONVERT_TO_VCF
-    //
-    // Convert nonconventional vcf files into standard vcf 4.2 format
-    CONVERT_TO_VCF(
-        convert_snvs,
-        config
-    )
 
     // if rerun is false
     // Rest is the usual pipeline. if rerun is false ////
@@ -280,5 +269,6 @@ workflow FILTER_SNVS {
     }
     
     emit:
+    convert_snvs
     versions
 }

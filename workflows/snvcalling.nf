@@ -147,6 +147,7 @@ include { INPUT_CHECK         } from '../subworkflows/local/input_check'
 include { MPILEUP_SNV_CALL    } from '../subworkflows/local/mpileup_snv_call'
 include { SNV_ANNOTATION      } from '../subworkflows/local/snv_annotation'
 include { FILTER_SNVS         } from '../subworkflows/local/filter_snvs'
+include { OUTPUT_STANDARD_VCF } from '../subworkflows/local/output_standard_vcf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -181,6 +182,7 @@ workflow SNVCALLING {
 
     ch_versions = Channel.empty()
     ch_logs     = Channel.empty()
+    ch_stdvcf   = Channel.empty()
     
     //
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
@@ -233,8 +235,8 @@ workflow SNVCALLING {
     MPILEUP_SNV_CALL(
         ch_sample, 
         ref, 
-        interval_ch, 
-        contigs
+        interval_ch,
+        contigs 
     )
     ch_versions = ch_versions.mix(MPILEUP_SNV_CALL.out.versions)
 
@@ -251,10 +253,13 @@ workflow SNVCALLING {
             enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets, cgi_mountains, phastconselem, encode_tfbs, mirnas_sncrnas, 
             chr_prefix,
             annodb,
-            vep_cache_db,
-            config
+            vep_cache_db
         )
         ch_versions = ch_versions.mix(SNV_ANNOTATION.out.versions)
+
+        vcf_ch     = SNV_ANNOTATION.out.vcf_ch
+        ch_stdvcf  = ch_stdvcf.mix(vcf_ch.map{ it -> tuple( it[0], it[1] )})
+        
 
         //
         // SUBWORKFLOW: FILTER_SNVS: Filters SNVs
@@ -262,7 +267,6 @@ workflow SNVCALLING {
         // input_ch= meta, annotated vcf, index, altbasequal, refbasequal, altreadpos, refreadpos, 
                     //sequence_spesific_error_plot_1, sequencing_spesific_error_plot_1, sequence_spesific_error_plot_2
                     //sequencing_spesific_error_plot_2, base_score_distribution_plot_1, base_score_distribution_plot_2
-        vcf_ch     = SNV_ANNOTATION.out.vcf_ch
         vcf_ch.join(SNV_ANNOTATION.out.altbasequal)
                 .join(SNV_ANNOTATION.out.refbasequal)
                 .join(SNV_ANNOTATION.out.altreadpos)
@@ -275,10 +279,10 @@ workflow SNVCALLING {
                 input_ch, 
                 ref, 
                 chr_prefix, 
-                chrlength,
-                config
+                chrlength
             )
             ch_versions = ch_versions.mix(FILTER_SNVS.out.versions)
+            ch_stdvcf  = ch_stdvcf.mix(FILTER_SNVS.out.convert_snvs)
         }
         else{
             println "Skipping SNV filtering"
@@ -287,6 +291,17 @@ workflow SNVCALLING {
     else{
         println "Skipping SNV annotation and filtering"
     }
+
+
+    if (params.standard_vcf){
+        println "VCF output is standardizing.."
+
+        OUTPUT_STANDARD_VCF(
+            ch_stdvcf.combine(MPILEUP_SNV_CALL.out.vcf_ch, by:0),
+            config
+        )
+        ch_versions = ch_versions.mix(OUTPUT_STANDARD_VCF.out.versions)
+    }   
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
