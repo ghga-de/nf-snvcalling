@@ -12,8 +12,8 @@ process SNV_EXTRACTOR {
     output:
     tuple val(meta), path('*_somatic_functional_snvs_conf_*_to_10*')        , emit: somatic_functional
     tuple val(meta), path('*_somatic_snvs_conf_*_to_10*')                   , emit: somatic_snv
-    tuple val(meta), path('*_somatic_functional_ncRNA_snvs_conf_*_to_10*')               
-    tuple val(meta), path('*_germline_functional_snvs_conf_*_to_10*')         
+    tuple val(meta), path('*_somatic_functional_ncRNA_snvs_conf_*_to_10*')  , emit: somatic_ncrna              
+    tuple val(meta), path('*_germline_functional_snvs_conf_*_to_10*')       , emit: germline_functional  
     path  "versions.yml"                                                    , emit: versions
 
     when:

@@ -1,0 +1,791 @@
+{
+  "__comment": "Fields starting with __ are commented out. Fields with __comment are pure comment lines. Comment out lines to exclude them from the result files. key/value pairs are according to see VCF 4.2.",
+
+  "__comment_FILTER": "See VCF 4.2, section 1.4.3. Descriptions taken from confidenceAnnotation_SNVs.py",
+  "FILTER": {
+    "PASS": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Position passed all filters, call is made"
+    },
+    "q10": { "number": "0", "type": "Flag", "description": "Quality below 10" },
+    "s50": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Less than 50% of samples have data"
+    },
+    "RE": {
+      "number": "0",
+      "type": "Flag",
+      "description": "variant in UCSC_27Sept2013_RepeatMasker.bed.gz region and/or SimpleTandemRepeats_chr.bed.gz region, downloaded from UCSC genome browser and/or variant in segmental duplication region, annotated by annovar"
+    },
+    "BL": {
+      "number": "0",
+      "type": "Flag",
+      "description": "variant in DAC-Blacklist from ENCODE or in DUKE_EXCLUDED list, both downloaded from UCSC genome browser"
+    },
+    "DP": {
+      "number": "0",
+      "type": "Flag",
+      "description": "<= 5 reads total at position in tumor"
+    },
+    "SB": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Strand bias of reads with mutant allele = zero reads on one strand"
+    },
+    "TAC": {
+      "number": "0",
+      "type": "Flag",
+      "description": "less than 6 reads in Tumor at position"
+    },
+    "dbSNP": {
+      "number": "0",
+      "type": "Flag",
+      "description": "variant in dbSNP147"
+    },
+    "DB": {
+      "number": "0",
+      "type": "Flag",
+      "description": "variant in 1000Genomes, ALL.wgs.phase1_integrated_calls.20101123.snps_chr.vcf.gz or dbSNP"
+    },
+    "HSDEPTH": {
+      "number": "0",
+      "type": "Flag",
+      "description": "variant in HiSeqDepthTop10Pct_chr.bed.gz region, downloaded from UCSC genome browser"
+    },
+    "MAP": {
+      "number": "0",
+      "type": "Flag",
+      "description": "variant overlaps a region from wgEncodeCrgMapabilityAlign100mer.bedGraph.gz:::--breakPointMode --aEndOffset=1 with a value below 0.5, punishment increases with a decreasing mapability"
+    },
+    "SBAF": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Strand bias of reads with mutant allele = zero reads on one strand and variant allele frequency below 0.1"
+    },
+    "FRQ": {
+      "number": "0",
+      "type": "Flag",
+      "description": "variant allele frequency below 0.05"
+    },
+    "TAR": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Only one alternative read in Tumor at position"
+    },
+    "UNCLEAR": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Classification is unclear"
+    },
+    "DPHIGH": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Too many reads mapped in control at this region"
+    },
+    "DPLOWC": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Only 5 or less reads in control"
+    },
+    "1PS": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Only two alternative reads, one on each strand"
+    },
+    "ALTC": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Alternative reads in control"
+    },
+    "ALTCFR": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Alternative reads in control and tumor allele frequency below 0.3"
+    },
+    "FRC": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Variant allele frequency below 0.3 in germline call"
+    },
+    "YALT": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Variant on Y chromosome with low allele frequency"
+    },
+    "VAF": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Variant allele frequency in tumor < ' + str(args.newpun) + ' times allele frequency in control"
+    },
+    "BI": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Bias towards a PCR strand or sequencing strand"
+    },
+    "VAFC": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Variant allele frequency in tumor < 5% or variant allele frequency in control > 5%"
+    },
+    "GTQ": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Quality for genotypes below thresholds"
+    },
+    "GTQFRT": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Quality for genotypes below thresholds and variant allele frequency in tumor < 10%"
+    },
+    "ALTT": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Less than three variant reads in tumor"
+    },
+    "QUAL": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Quality of entry too low and/or low coverage in region"
+    },
+    "QD": {
+      "number": "1",
+      "type": "Float",
+      "description": "Variant-quality/read-depth for this variant"
+    },
+    "Q20": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Variant quality is below 20."
+    },
+    "strandBias": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Variant fails strand-bias filter"
+    },
+    "alleleBias": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Variant frequency is lower than expected for het."
+    },
+    "badReads": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Variant supported only by reads with low quality bases close to variant position, and not present on both strands."
+    },
+    "GOF": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Variant fails goodness-of-fit test."
+    },
+    "HapScore": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Too many haplotypes are supported by the data in this region."
+    }
+  },
+
+  "__comment_FORMAT": "See VCF 4.2, section 1.4.4",
+  "FORMAT": {
+    "GT": {
+      "number": "1",
+      "type": "String",
+      "description": "Genotype, /:unphased, |:phased"
+    },
+    "DP": { "number": "1", "type": "Integer", "description": "Read Depth" },
+    "AD": { "number": "1", "type": "Integer", "description": "Allelic Depth" },
+    "FT": {
+      "number": ".",
+      "type": "String",
+      "description": "Sample genotype filter indicating if this genotype was called SUBFIELDS???"
+    },
+    "GL": {
+      "number": "G",
+      "type": "Float",
+      "description": "Genotype likelihoods, log10-scaled "
+    },
+    "GLE": {
+      "number": ".",
+      "type": "String",
+      "description": "Genotype likelihoods of heterogeneous ploidy"
+    },
+    "PL": {
+      "number": "G",
+      "type": "Integer",
+      "description": "Phred-scaled genotype likelihoods rounded to closest integer"
+    },
+    "GP": {
+      "number": ".",
+      "type": "Float",
+      "description": "Phred-scaled genotype posterior probabilities"
+    },
+    "GQ": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Genotype quality"
+    },
+    "HQ": {
+      "number": "2",
+      "type": "Integer",
+      "description": "Haplotype quality"
+    },
+    "PS": { "number": "1", "type": "Integer", "description": "Phase set" },
+    "PQ": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Phasing quality"
+    },
+    "EC": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Expected alternate allele counts"
+    },
+    "MQ": {
+      "number": "1",
+      "type": "Integer",
+      "description": "RMS mapping quality"
+    },
+    "GOF": {
+      "number": ".",
+      "type": "Float",
+      "description": "Goodness of fit value"
+    },
+    "NR": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Number of reads covering variant location in this sample"
+    },
+    "NV": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Number of reads containing variant in this sample"
+    },
+    "FREQ": {
+      "number": ".",
+      "type": "Integer",
+      "description": "High frequency in GnomAD(>0.1%) or in local control database (>0.05%)"
+    }
+  },
+  
+  "__comment_INFO": "See VCF 4.2, section 1.4.2. Keys starting with double underscore are commented out.",
+  "INFO": {
+    "__comment_vcf4.2": "Fields defined by the standard.",
+    "__AA": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Ancestral allele"
+    },
+    "__AC": { "number": ".", "type": "Integer", "description": "Allele count" },
+    "__AF": {
+      "number": "A",
+      "type": "Float",
+      "description": "Allele frequency"
+    },
+    "__AN": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Total number of alleles in called genotypes"
+    },
+    "__BQ": { "number": -1, "type": "?", "description": "RMS base quality" },
+    "__CIGAR": {
+      "number": -1,
+      "type": "String",
+      "description": "Cigar string describing how to align an alternate allele to the reference allele"
+    },
+    "__DB": {
+      "number": "9",
+      "type": "Flag",
+      "description": "dbSNP membership"
+    },
+    "DP": { "number": "1", "type": "Integer", "description": "Total depth" },
+    "AF_oth": {"number": "1","type": "Float","description": "AF oth"},
+    "AF_sas": {"number": "1","type": "Float","description": "AF sas"},
+    "AF_nfe": {"number": "1","type": "Float","description": "AF nfe"},
+    "AF_fin": {"number": "1","type": "Float","description": "AF fin"},
+    "AF_eas": {"number": "1","type": "Float","description": "AF EAS"},
+    "AF_amr": {"number": "1","type": "Float","description": "AF AMR"},
+    "fAF_99": {"number": "1","type": "Float","description": "af 99 Pers"},
+    "AF_afr": {"number": "1","type": "Float","description": "af AFR"},
+    "fAF_95": {"number": "1","type": "Float","description": "af 95 Pers"},
+    "__END": {
+      "number": "1",
+      "type": "Integer",
+      "description": "End position of the variant described in this record"
+    },
+    "__H2": {
+      "number": "0",
+      "type": "Flag",
+      "description": "HapMap2 membership"
+    },
+    "__H3": {
+      "number": "0",
+      "type": "Flag",
+      "description": "HapMap3 membership"
+    },
+    "MQ": {
+      "number": "1",
+      "type": "Float",
+      "description": "RMS mapping quality"
+    },
+    "__MQ0": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Number of MAPQ == 0 reads covering this record"
+    },
+    "__NS": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Number of samples with data"
+    },
+    "__SB": { "number": -1, "type": "?", "description": "Strand bias" },
+    "__SOMATIC": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Record is somatic mutation"
+    },
+    "__VALIDATED": {
+      "number": -1,
+      "type": "?",
+      "description": "Validated by follow-up experiment"
+    },
+    "__1000G": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Membership in 1000 Genomes"
+    },
+    "CSQ": {
+      "number": ".",
+      "type": "String",
+      "description": "Consequence annotations from Ensembl VEP. Format: Allele|Consequence|IMPACT|SYMBOL|Gene|Feature_type|Feature|BIOTYPE|EXON|INTRON|HGVSc|HGVSp|cDNA_position|CDS_position|Protein_position|Amino_acids|Codons|Existing_variation|DISTANCE|STRAND|FLAGS|SYMBOL_SOURCE|HGNC_ID"
+    },    
+    "START": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Start position of reference call block"
+    },
+    "SbPval": {
+      "number": ".",
+      "type": "Float",
+      "description": "Binomial P-value for strand bias test"
+    },
+    "MGOF": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Worst goodness-of-fit value reported across all samples"
+    },
+    "ReadPosRankSum": {
+      "number": ".",
+      "type": "Float",
+      "description": "Mann-Whitney Rank sum test for difference between in positions of variants in reads from ref and alt."
+    },
+    "SC": {
+      "number": "1",
+      "type": "String",
+      "description": "Genomic sequence 10 bases either side of variant positiony"
+    },
+    "BRF": {
+      "number": "1",
+      "type": "Float",
+      "description": "Fraction of reads around this variant that failed filters."
+    },    
+    "HapScore": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Too many haplotypes are supported by the data in this region."
+    },   
+    "Size": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Size of reference call block"
+    }, 
+    "TC": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Total coverage at this locus"
+    }, 
+    "NR": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Total number of reverse reads containing this variant"
+    }, 
+    "TCF": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Total forward strand coverage at this locus"
+    },
+    "NF": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Total number of forward reads containing this variant"
+    },
+    "TR": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Total number of reads containing this variant"
+    },
+    "PP": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Posterior probability (phred scaled) that this variant segregates"
+    },
+    "WS": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Starting position of calling window"
+    },
+    "Source": {
+      "number": ".",
+      "type": "String",
+      "description": "Was this variant suggested by Playtypus, Assembler, or from a VCF?"
+    },
+    "WE": {
+      "number": "1",
+      "type": "Integer",
+      "description": "End position of calling window"
+    },
+    "HP": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Homopolymer run length around variant locus"
+    },
+    "TCR": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Total reverse strand coverage at this locus"
+    },
+    "MMLQ": {
+      "number": "1",
+      "type": "Float",
+      "description": "Median minimum base quality for bases around variant"
+    },
+    "FR": {
+      "number": ".",
+      "type": "Float",
+      "description": "Estimated population frequency of variant"
+    },    
+    "Control_AF": {
+      "number": "1",
+      "type": "Float",
+      "description": "AF of Control",
+      "new_info_id": "CAF"
+    },
+    "Tumor_AF": {
+      "number": "1",
+      "type": "Float",
+      "description": "AF of Tumor",
+      "new_info_id": "TAF"
+    },
+    "Tumor_dpALT": {
+      "number": "1",
+      "type": "Integer",
+      "description": "DP of Tumor ALT",
+      "new_info_id": "TDA"
+    },
+    "Control_dpALT": {
+      "number": "1",
+      "type": "Integer",
+      "description": "DP of Control ALT",
+      "new_info_id": "CDA"
+    },
+    "Tumor_dp": {
+      "number": "1",
+      "type": "Integer",
+      "description": "DP of Tumor",
+      "new_info_id": "TDP"
+    },
+    "Control_dp": {
+      "number": "1",
+      "type": "Integer",
+      "description": "DP of Control",
+      "new_info_id": "CDP"
+    },
+    "GT_Classification": {
+      "number": "1",
+      "type": "String",
+      "description": "GT Classification",
+      "new_info_id": "GTC"
+    },
+    "rawCluster": {
+      "number": "1",
+      "type": "String",
+      "description": "Raw cluster",
+      "new_info_id": "RC"
+    },
+    "TiN_Class": {
+      "number": "1",
+      "type": "String",
+      "description": "TIN Class",
+      "new_info_id": "TIN"
+    },
+    "non_cancer_HOMO": {
+      "number": "1",
+      "type": "Integer",
+      "description": "noncancer HOMO"
+    },
+    "non_cancer_AF": {
+      "number": "1",
+      "type": "Float",
+      "description": "noncancer AF"
+    },
+    "non_cancer_AN": {
+      "number": "1",
+      "type": "Integer",
+      "description": "noncancer AN"
+    },
+    "non_cancer_AC": {
+      "number": "1",
+      "type": "Integer",
+      "description": "noncancer AC"
+    },
+    "HOMO_sas": {
+      "number": "1",
+      "type": "Integer",
+      "description": "HOMO SAS"
+    },
+    "HOMO_nfe": {
+      "number": "1",
+      "type": "Integer",
+      "description": "HOMO NFE"
+    },
+    "HOMO_nfe": {
+      "number": "1",
+      "type": "Integer",
+      "description": "HOMO NFE"
+    },
+    "HOMO": {
+      "number": "1",
+      "type": "Integer",
+      "description": "HOMO"
+    },
+    "AF": {
+      "number": "1",
+      "type": "Float",
+      "description": "AF"
+    },
+    "AC": {
+      "number": "1",
+      "type": "Integer",
+      "description": "AC"
+    },
+    "AN": {
+      "number": "1",
+      "type": "Integer",
+      "description": "AN"
+    },
+    "FILTER": {
+      "number": "1",
+      "type": "String",
+      "description": "Filter"
+    },
+    "__comment_DKFZ": "DKFZ in-house INFO fields. Freestanding columns must have a 'new_info_id' to be extracted into the new spec-conforming VCF's INFO field. Their key must be the column header name as it occurs in the in-house input file.",
+    "DP_ctrl": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Total depth of control"
+    },
+    "DP4": {
+      "number": "4",
+      "type": "Integer",
+      "description": "Counts of REF and ALT reads on forward and reverse strand"
+    },
+    "DP5_ctrl": {
+      "number": "5",
+      "type": "Integer",
+      "description": "Counts of ?"
+    },
+    "MQ_ctrl": {
+      "number": "1",
+      "type": "Float",
+      "description": "Mapping quality of Control"
+    },
+    "ACGTNacgtnPLUS": {
+      "number": "10",
+      "type": "Integer",
+      "description": "Nucleotide counts on Plus Strand"
+    },
+    "ACGTNacgtnMINUS": {
+      "number": "10",
+      "type": "Integer",
+      "description": "Nucleotide counts on Minus Strand"
+    },
+    "ACGTNacgtnHQ_ctrl": {
+      "number": "10",
+      "type": "Integer",
+      "description": "Nucleotide counts on ?"
+    },
+    "ACGTNacgtn_ctrl": {
+      "number": "10",
+      "type": "Integer",
+      "description": "Nucleotide counts on ?"
+    },
+    "GENE": {
+      "number": ".",
+      "type": "String",
+      "description": "GeneSymbol if variation overlaps gene",
+      "new_info_id": "GENE"
+    },
+    "EXONIC_CLASSIFICATION": {
+      "number": "1",
+      "type": "String",
+      "description": "Functional implication if variation is located with respect to exon",
+      "new_info_id": "EXONICCL"
+    },
+    "ANNOVAR_TRANSCRIPTS": {
+      "number": ".",
+      "type": "String",
+      "description": "Details of non-synonymous variation's impact on protein",
+      "new_info_id": "ANNOVARTR"
+    },
+    "CONFIDENCE": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Empirical confidence level of call, ten levels (1-10), >7=trustworthy",
+      "new_info_id": "CONF"
+    },
+    "RECLASSIFICATION": {
+      "number": "1",
+      "type": "String",
+      "description": "Reclassification of the germline/somatic state based on additional information",
+      "new_info_id": "RECL"
+    },
+    "MAPABILITY": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Mappability regions",
+      "new_info_id": "MAP"
+    },
+    "CpGislands": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC CpG islands",
+      "new_info_id": "CPG"
+    },
+    "GNOMAD_EXOMES": {
+      "number": "1",
+      "type": "String",
+      "description": "Gnomed Exome sites",
+      "new_info_id": "MADG"
+    },
+    "GNOMAD_GENOMES": {
+      "number": "1",
+      "type": "String",
+      "description": "Gnomed Genome sites",
+      "new_info_id": "MADX"
+    },
+    "LocalControlAF_WGS": {
+      "number": "1",
+      "type": "String",
+      "description": "Extra Local Control WGS",
+      "new_info_id": "LOCG"
+    },
+    "SELFCHAIN": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC SeLf Chain regions",
+      "new_info_id": "SCH"
+    },
+    "SIMPLE_TANDEMREPEATS": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Simple tandem repeats",
+      "new_info_id": "REP"
+    },
+    "Enhancers": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Enhangers",
+      "new_info_id": "ENH"
+    },
+    "TFBScons": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC TFBS noncoding sites",
+      "new_info_id": "NCT"
+    },
+    "ENCODE_DNASE": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Encode DNAse cluster",
+      "new_info_id": "DNS"
+    },
+    "miRNAs_snoRNAs": {
+      "number": "1",
+      "type": "String",
+      "description": "snoRNAs miRBase",
+      "new_info_id": "SNO"
+    },
+    "miRNAs_sncRNAs": {
+      "number": "1",
+      "type": "String",
+      "description": "sncRNAs miRBase",
+      "new_info_id": "SNC"
+    },
+    "COSMIC": {
+      "number": "1",
+      "type": "String",
+      "description": "Cosmic coding SNVs",
+      "new_info_id": "COS"
+    },
+    "miRBase18": {
+      "number": "1",
+      "type": "String",
+      "description": "miRBase",
+      "new_info_id": "MIR"
+    },
+    "miRNAtargets": {
+      "number": "1",
+      "type": "String",
+      "description": "miRNA target sites",
+      "new_info_id": "MIRT"
+    },
+    "CgiMountains": {
+      "number": "1",
+      "type": "String",
+      "description": "Cgi Mountains",
+      "new_info_id": "CGM"
+    },
+    "phastConsElem20bp": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Phast Cons Elements",
+      "new_info_id": "PCE"
+    },
+    "ENCODE_TFBS": {
+      "number": "1",
+      "type": "String",
+      "description": "UCSC Phast Cons Elements",
+      "new_info_id": "TFBS"
+    },
+    "ANNOTATION_control": {
+      "number": "1",
+      "type": "String",
+      "description": "Annotation fieldn with VEP",
+      "new_info_id": "VEP"
+    },
+    "seqBiasPresent_1": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Sequence Bias Check 1",
+      "new_info_id": "SE1"
+    },
+    "seqingBiasPresent_1": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Sequencing Bias Check 1",
+      "new_info_id": "SB1"
+    },
+    "seqBiasPresent_2": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Sequence Bias Check 2",
+      "new_info_id": "SE2"
+    },
+    "seqingBiasPresent_2": {
+      "number": ".",
+      "type": "Integer",
+      "description": "Sequencing Bias Check 2",
+      "new_info_id": "SB2"
+    }
+  }
+}
