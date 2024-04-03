@@ -119,6 +119,21 @@
       "type": "Flag",
       "description": "Variant allele frequency in tumor < ' + str(args.newpun) + ' times allele frequency in control"
     },
+    "TSR_ctrl": {
+      "number": "0",
+      "type": "Flag",
+      "description": "TSR ?"
+    },  
+    "PBINOM_ctrl": {
+      "number": "0",
+      "type": "Flag",
+      "description": "PBINOM ?"
+    },      
+    "VAF_ctrl": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Variant allele frequency in tumor < ' + str(args.newpun) + ' times allele frequency in control"
+    },     
     "BI": {
       "number": "0",
       "type": "Flag",
@@ -244,7 +259,22 @@
     "MQ": {
       "number": "1",
       "type": "Integer",
-      "description": "RMS mapping quality"
+      "description": "Root-mean-square mapping quality of covering reads"
+    },
+    "AC1": {
+      "number": "1",
+      "type": "Float",
+      "description": "Max-likelihood estimate of the first ALT allele count (no HWE assumption)"
+    },
+    "AF2": {
+      "number": "1",
+      "type": "Float",
+      "description": "Max-likelihood estimate of the first and second group ALT allele frequency (assuming HWE)"
+    },
+    "AF1": {
+      "number": "1",
+      "type": "Float",
+      "description": "Max-likelihood estimate of the first ALT allele frequency (assuming HWE)"
     },
     "GOF": {
       "number": ".",
@@ -298,16 +328,6 @@
       "type": "Flag",
       "description": "dbSNP membership"
     },
-    "DP": { "number": "1", "type": "Integer", "description": "Total depth" },
-    "AF_oth": {"number": "1","type": "Float","description": "AF oth"},
-    "AF_sas": {"number": "1","type": "Float","description": "AF sas"},
-    "AF_nfe": {"number": "1","type": "Float","description": "AF nfe"},
-    "AF_fin": {"number": "1","type": "Float","description": "AF fin"},
-    "AF_eas": {"number": "1","type": "Float","description": "AF EAS"},
-    "AF_amr": {"number": "1","type": "Float","description": "AF AMR"},
-    "fAF_99": {"number": "1","type": "Float","description": "af 99 Pers"},
-    "AF_afr": {"number": "1","type": "Float","description": "af AFR"},
-    "fAF_95": {"number": "1","type": "Float","description": "af 95 Pers"},
     "__END": {
       "number": "1",
       "type": "Integer",
@@ -373,6 +393,51 @@
       "number": ".",
       "type": "Integer",
       "description": "Worst goodness-of-fit value reported across all samples"
+    },
+    "MQ0F": {
+      "number": "1",
+      "type": "Float",
+      "description": "Fraction of MQ0 reads (smaller is better)"
+    },
+    "SGB": {
+      "number": "1",
+      "type": "Float",
+      "description": "Segregation based metric."
+    },  
+    "MQSB": {
+      "number": "1",
+      "type": "Float",
+      "description": "Mann-Whitney U test of Mapping Quality vs Strand Bias (bigger is better)"
+    }, 
+    "BQB": {
+      "number": "1",
+      "type": "Float",
+      "description": "Mann-Whitney U test of Base Quality Bias (bigger is better)"
+    },  
+    "RPB": {
+      "number": "1",
+      "type": "Float",
+      "description": "Mann-Whitney U test of Read Position Bias (bigger is better)"
+    }, 
+    "VDB": {
+      "number": "1",
+      "type": "Float",
+      "description": "Variant Distance Bias for filtering splice-site artefacts in RNA-seq data (bigger is better)"
+    }, 
+    "IMF": {
+      "number": "1",
+      "type": "Float",
+      "description": "Maximum fraction of reads supporting an indel"
+    },
+    "IDV": {
+      "number": "1",
+      "type": "Integer",
+      "description": "Maximum number of reads supporting an indel"
+    },  
+    "INDEL": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Indicates that the variant is an INDEL."
     },
     "ReadPosRankSum": {
       "number": ".",
@@ -458,12 +523,7 @@
       "number": "1",
       "type": "Float",
       "description": "Median minimum base quality for bases around variant"
-    },
-    "FR": {
-      "number": ".",
-      "type": "Float",
-      "description": "Estimated population frequency of variant"
-    },    
+    },   
     "Control_AF": {
       "number": "1",
       "type": "Float",
@@ -518,61 +578,6 @@
       "description": "TIN Class",
       "new_info_id": "TIN"
     },
-    "non_cancer_HOMO": {
-      "number": "1",
-      "type": "Integer",
-      "description": "noncancer HOMO"
-    },
-    "non_cancer_AF": {
-      "number": "1",
-      "type": "Float",
-      "description": "noncancer AF"
-    },
-    "non_cancer_AN": {
-      "number": "1",
-      "type": "Integer",
-      "description": "noncancer AN"
-    },
-    "non_cancer_AC": {
-      "number": "1",
-      "type": "Integer",
-      "description": "noncancer AC"
-    },
-    "HOMO_sas": {
-      "number": "1",
-      "type": "Integer",
-      "description": "HOMO SAS"
-    },
-    "HOMO_nfe": {
-      "number": "1",
-      "type": "Integer",
-      "description": "HOMO NFE"
-    },
-    "HOMO_nfe": {
-      "number": "1",
-      "type": "Integer",
-      "description": "HOMO NFE"
-    },
-    "HOMO": {
-      "number": "1",
-      "type": "Integer",
-      "description": "HOMO"
-    },
-    "AF": {
-      "number": "1",
-      "type": "Float",
-      "description": "AF"
-    },
-    "AC": {
-      "number": "1",
-      "type": "Integer",
-      "description": "AC"
-    },
-    "AN": {
-      "number": "1",
-      "type": "Integer",
-      "description": "AN"
-    },
     "FILTER": {
       "number": "1",
       "type": "String",
@@ -587,13 +592,38 @@
     "DP4": {
       "number": "4",
       "type": "Integer",
-      "description": "Counts of REF and ALT reads on forward and reverse strand"
+      "description": "Number of high-quality ref-forward , ref-reverse, alt-forward and alt-reverse bases"
     },
+    "HWE": {
+      "number": "1",
+      "type": "Float",
+      "description": "Chi^2 based HWE test P-value based on G3"
+    },   
+    "G3": {
+      "number": "3",
+      "type": "Float",
+      "description": "ML estimate of genotype frequencies"
+    }, 
+    "PV4": {
+      "number": "4",
+      "type": "Float",
+      "description": "P-values for strand bias, baseQ bias, mapQ bias and tail distance bias"
+    },  
+    "FQ": {
+      "number": "1",
+      "type": "Float",
+      "description": "Phred probability of all samples being the same"
+    },    
     "DP5_ctrl": {
       "number": "5",
       "type": "Integer",
       "description": "Counts of ?"
     },
+    "DP5all_ctrl": {
+      "number": "5",
+      "type": "Integer",
+      "description": "Counts of ?"
+    },    
     "MQ_ctrl": {
       "number": "1",
       "type": "Float",
@@ -649,35 +679,11 @@
       "description": "Reclassification of the germline/somatic state based on additional information",
       "new_info_id": "RECL"
     },
-    "MAPABILITY": {
-      "number": "1",
-      "type": "String",
-      "description": "UCSC Mappability regions",
-      "new_info_id": "MAP"
-    },
     "CpGislands": {
       "number": "1",
       "type": "String",
       "description": "UCSC CpG islands",
       "new_info_id": "CPG"
-    },
-    "GNOMAD_EXOMES": {
-      "number": "1",
-      "type": "String",
-      "description": "Gnomed Exome sites",
-      "new_info_id": "MADG"
-    },
-    "GNOMAD_GENOMES": {
-      "number": "1",
-      "type": "String",
-      "description": "Gnomed Genome sites",
-      "new_info_id": "MADX"
-    },
-    "LocalControlAF_WGS": {
-      "number": "1",
-      "type": "String",
-      "description": "Extra Local Control WGS",
-      "new_info_id": "LOCG"
     },
     "SELFCHAIN": {
       "number": "1",

@@ -59,7 +59,7 @@ ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists
 chr_prefix     = params.chr_prefix  ? Channel.value(params.chr_prefix) : Channel.value("")
 chrlength      = params.chrom_sizes ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) : Channel.empty()   
 contigs        = params.contig_file ? Channel.fromPath(params.contig_file, checkIfExists: true) : Channel.empty()
-config         = Channel.fromPath("${projectDir}/assets/config/standart_vcf_config.json", checkIfExists: true).collect()
+config         = Channel.fromPath("${projectDir}/assets/config/convertToStdVCF.json", checkIfExists: true).collect()
 
 // Annovar table folder
 
