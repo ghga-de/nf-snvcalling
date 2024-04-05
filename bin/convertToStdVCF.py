@@ -85,7 +85,7 @@ def convert_dict_to_str(dict_to_convert, pair_separator, key_val_separator):
     """
 
     return pair_separator.join(
-        key + key_val_separator + val
+        key + key_val_separator + val.replace(";", ",")
         for (key,val)
         in dict_to_convert.iteritems())
 
@@ -535,6 +535,6 @@ if __name__ == '__main__':
     meta_information = read_meta_information(args.config_file)
     if args.raw_vcf == "False":
         header =False
-    else: 
+    else:
         header = args.raw_vcf      
     convert(args.input_file, args.output_file, args.sample_id, meta_information,args.withcontrol,header)

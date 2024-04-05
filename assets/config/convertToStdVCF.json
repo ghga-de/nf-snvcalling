@@ -17,12 +17,12 @@
     "RE": {
       "number": "0",
       "type": "Flag",
-      "description": "variant in UCSC_27Sept2013_RepeatMasker.bed.gz region and/or SimpleTandemRepeats_chr.bed.gz region, downloaded from UCSC genome browser and/or variant in segmental duplication region, annotated by annovar"
+      "description": "variant in repeat_masker file region and/or simple_tandemrepeats file region, downloaded from UCSC genome browser and/or variant in segmental duplication region, annotated by annovar"
     },
     "BL": {
       "number": "0",
       "type": "Flag",
-      "description": "variant in DAC-Blacklist from ENCODE or in DUKE_EXCLUDED list, both downloaded from UCSC genome browser"
+      "description": "variant in dac_blacklist from ENCODE or in duke_excluded list, both downloaded from UCSC genome browser"
     },
     "DP": {
       "number": "0",
@@ -42,22 +42,22 @@
     "dbSNP": {
       "number": "0",
       "type": "Flag",
-      "description": "variant in dbSNP147"
+      "description": "variant in dbSNP database used: dbsnp_snv"
     },
     "DB": {
       "number": "0",
       "type": "Flag",
-      "description": "variant in 1000Genomes, ALL.wgs.phase1_integrated_calls.20101123.snps_chr.vcf.gz or dbSNP"
+      "description": "variant in 1000Genomes (k_genomes) or dbSNP (dbsnp_snv)"
     },
     "HSDEPTH": {
       "number": "0",
       "type": "Flag",
-      "description": "variant in HiSeqDepthTop10Pct_chr.bed.gz region, downloaded from UCSC genome browser"
+      "description": "variant in hiseq_depth region, downloaded from UCSC genome browser"
     },
     "MAP": {
       "number": "0",
       "type": "Flag",
-      "description": "variant overlaps a region from wgEncodeCrgMapabilityAlign100mer.bedGraph.gz:::--breakPointMode --aEndOffset=1 with a value below 0.5, punishment increases with a decreasing mapability"
+      "description": "variant overlaps a region from mapability_file"
     },
     "SBAF": {
       "number": "0",
@@ -68,6 +68,11 @@
       "number": "0",
       "type": "Flag",
       "description": "variant allele frequency below 0.05"
+    },
+    "FREQ": {
+      "number": "0",
+      "type": "Flag",
+      "description": "variant allele frequency below ?"
     },
     "TAR": {
       "number": "0",
@@ -257,9 +262,9 @@
       "description": "Expected alternate allele counts"
     },
     "MQ": {
-      "number": "1",
-      "type": "Integer",
-      "description": "Root-mean-square mapping quality of covering reads"
+      "number": ".",
+      "type": "Float",
+      "description": "Root-mean-square mapping quality of covering reads/reads at the position"
     },
     "AC1": {
       "number": "1",
@@ -343,11 +348,6 @@
       "type": "Flag",
       "description": "HapMap3 membership"
     },
-    "MQ": {
-      "number": "1",
-      "type": "Float",
-      "description": "RMS mapping quality"
-    },
     "__MQ0": {
       "number": "1",
       "type": "Integer",
@@ -379,7 +379,7 @@
       "type": "String",
       "description": "Consequence annotations from Ensembl VEP. Format: Allele|Consequence|IMPACT|SYMBOL|Gene|Feature_type|Feature|BIOTYPE|EXON|INTRON|HGVSc|HGVSp|cDNA_position|CDS_position|Protein_position|Amino_acids|Codons|Existing_variation|DISTANCE|STRAND|FLAGS|SYMBOL_SOURCE|HGNC_ID"
     },    
-    "START": {
+    "__START": {
       "number": ".",
       "type": "Integer",
       "description": "Start position of reference call block"
@@ -457,7 +457,7 @@
     "HapScore": {
       "number": ".",
       "type": "Integer",
-      "description": "Too many haplotypes are supported by the data in this region."
+      "description": "Haplotype score measuring the number of haplotypes the variant is segregating into in a window."
     },   
     "Size": {
       "number": ".",
@@ -523,6 +523,11 @@
       "number": "1",
       "type": "Float",
       "description": "Median minimum base quality for bases around variant"
+    }, 
+    "FR": {
+      "number": ".",
+      "type": "Float",
+      "description": "Estimated population frequency of variant"
     },   
     "Control_AF": {
       "number": "1",
@@ -539,25 +544,25 @@
     "Tumor_dpALT": {
       "number": "1",
       "type": "Integer",
-      "description": "DP of Tumor ALT",
+      "description": "Tumor_dpALT: DP of Tumor ALT",
       "new_info_id": "TDA"
     },
     "Control_dpALT": {
       "number": "1",
       "type": "Integer",
-      "description": "DP of Control ALT",
+      "description": "Control_dpALT: DP of Control ALT",
       "new_info_id": "CDA"
     },
     "Tumor_dp": {
       "number": "1",
       "type": "Integer",
-      "description": "DP of Tumor",
+      "description": "Tumor_dp: DP of Tumor",
       "new_info_id": "TDP"
     },
     "Control_dp": {
       "number": "1",
       "type": "Integer",
-      "description": "DP of Control",
+      "description": "Control_dp: DP of Control",
       "new_info_id": "CDP"
     },
     "GT_Classification": {
@@ -655,6 +660,12 @@
       "description": "GeneSymbol if variation overlaps gene",
       "new_info_id": "GENE"
     },
+    "ANNOVAR_FUNCTION": {
+      "number": "1",
+      "type": "String",
+      "description": "Functional classification of the variant by ANNOVAR",
+      "new_info_id": "ANNOVARFUN"
+    },
     "EXONIC_CLASSIFICATION": {
       "number": "1",
       "type": "String",
@@ -666,6 +677,18 @@
       "type": "String",
       "description": "Details of non-synonymous variation's impact on protein",
       "new_info_id": "ANNOVARTR"
+    },
+    "SEGDUP": {
+      "number": ".",
+      "type": "String",
+      "description": "SEGDUP column from Annovar tool",
+      "new_info_id": "SEGDUP"
+    },    
+    "CYTOBAND": {
+      "number": ".",
+      "type": "String",
+      "description": "CYTOBAND column from Annovar tool",
+      "new_info_id": "CYTOBAND"
     },
     "CONFIDENCE": {
       "number": "1",
