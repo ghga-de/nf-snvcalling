@@ -27,7 +27,7 @@ workflow FILTER_SNVS {
     input_ch        // channel: [val(meta), vcf, index,  altbasequal, refbasequal, altreadpos, refreadpos, plots ]
     ref             // reference channel [ref.fa, ref.fa.fai]
     chr_prefix      // val channel
-    chrlength       // chr file    
+    chrlength       // chr file
 
     main:
     versions = Channel.empty()
@@ -56,11 +56,31 @@ workflow FILTER_SNVS {
     // filter out the lists if no variant exists for visualization
     SNV_EXTRACTOR.out.somatic_snv
         .filter{meta, somatic_snv -> WorkflowCommons.getNumLinesInFile(somatic_snv) > 1}
-        .set{orjinal_somatic_ch}
+        .set{somatic_ch}
 
-    somatic_ch = orjinal_somatic_ch
+    SNV_EXTRACTOR.out.somatic_functional
+        .filter{meta, somatic_functional -> WorkflowCommons.getNumLinesInFile(somatic_functional) > 1}
+        .set{somatic_funct_ch}
+
+    SNV_EXTRACTOR.out.somatic_ncrna
+        .filter{meta, somatic_ncrna -> WorkflowCommons.getNumLinesInFile(somatic_ncrna) > 1}
+        .set{somatic_ncrna_ch}
+
+    SNV_EXTRACTOR.out.germline_functional
+        .filter{meta, germline_functional -> WorkflowCommons.getNumLinesInFile(germline_functional) > 1}
+        .set{germline_funct_ch}
+
+    FILTER_BY_CRIT.out.vcf.map{ it -> tuple( it[0], it[1] )}
+                .mix(somatic_ch)
+                .mix(somatic_funct_ch)
+                .mix(somatic_ncrna_ch)
+                .mix(germline_funct_ch)
+                .set{convert_snvs}
+
     // if rerun is false
-    // Rest is the usual pipeline. if rerun is false
+    // Rest is the usual pipeline. if rerun is false ////
+
+
     if (params.runplots){
 
         // 1. Rainfall plots
@@ -249,5 +269,6 @@ workflow FILTER_SNVS {
     }
     
     emit:
+    convert_snvs
     versions
 }

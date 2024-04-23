@@ -321,6 +321,7 @@ workflow SNV_ANNOTATION {
         println "SNVDeep annotation not applied because runSNVDeepAnnotation is set to ${params.runSNVDeepAnnotation}"
     }
 
+
 emit:
 vcf_ch
 altbasequal

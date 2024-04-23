@@ -5,7 +5,7 @@
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
 # Authors: Jules Kerssemakers, Sophia Stahl, Philip Kensche
-#
+# Updated version: Kubra Narci, 2024
 from __future__ import print_function
 
 import gzip
@@ -66,10 +66,9 @@ def convert_str_to_dict(str_to_convert, pair_separator, key_val_separator):
     :param key_val_separator: String or character that separates keys from values
     :return: dictionary that was created from the string
     """
-    return dict(
-        pair.split(key_val_separator)
-        for pair
-        in str_to_convert.split(pair_separator))
+    pairs = str_to_convert.split(pair_separator) 
+    valid_pairs = filter(lambda pair: len(pair.split(key_val_separator)) == 2, pairs)
+    return dict(pair.split(key_val_separator) for pair in valid_pairs)
 
 
 def convert_dict_to_str(dict_to_convert, pair_separator, key_val_separator):
@@ -86,7 +85,7 @@ def convert_dict_to_str(dict_to_convert, pair_separator, key_val_separator):
     """
 
     return pair_separator.join(
-        key + key_val_separator + val
+        key + key_val_separator + val.replace(";", ",")
         for (key,val)
         in dict_to_convert.iteritems())
 
@@ -173,6 +172,13 @@ def write_metadata_definitions(keys_to_write, category, output_vcf_object, meta_
     except KeyError:
         raise KeyError("Meta-information incomplete for '%s' in meta_information.py" % key)
 
+## required for info fields which does not have a key pointing somatic or germline. Which is already defined in other fields 
+def check_line(line):
+    # Split the line by semicolons and extract the first word
+    first_word, rest = line.split(';', 1)
+    if first_word.strip() in ['GERMLINE', 'SOMATIC', 'UNCLEAR']:
+        return rest.strip()  # Return the line without the first word
+    return line
 
 def update_keys_used(line, col_indices, keys_used):
     """
@@ -183,15 +189,21 @@ def update_keys_used(line, col_indices, keys_used):
     :param col_indices: Dictionary of column headers as keys and respective indices as values
     :param keys_used: Set of already observed keys, updated in place
     """
-    line_as_list      = line.rstrip().split("\t")
-    INFO_old_keys     = convert_str_to_dict(line_as_list[col_indices["INFO"]], ';', '=').keys()
+    line_as_list = line.rstrip().split("\t")
 
-    INFO_control_keys = convert_str_to_dict(line_as_list[col_indices["INFO_control"]], ';', '=').keys()
-    INFO_control_keys = [ key + "_ctrl" for key in INFO_control_keys ]
+    new_line = check_line(line_as_list[col_indices["INFO"]])
+    print(new_line)
+    INFO_old_keys = convert_str_to_dict(new_line, ';', '=').keys()
+    #INFO_old_keys = convert_str_to_dict(line_as_list[col_indices["INFO"]], ';', '=').keys()
+    keys_used["INFO"].update(INFO_old_keys)
 
-    freestanding_INFO_columns = (column_name for (column_name, index) in col_indices.iteritems() if index > 9)
+    if "INFO_control" in col_indices.keys():
+        INFO_control_keys = convert_str_to_dict(line_as_list[col_indices["INFO_control"]], ';', '=').keys()
+        INFO_control_keys = [key + "_ctrl" for key in INFO_control_keys]
+        keys_used["INFO"].update(INFO_control_keys)
 
-    keys_used["INFO"].update(INFO_old_keys, INFO_control_keys, freestanding_INFO_columns)
+    freestanding_INFO_columns = (column_name for (column_name, index) in col_indices.items() if index > 9)
+    keys_used["INFO"].update(freestanding_INFO_columns)
 
     FORMAT_keys = line_as_list[col_indices["FORMAT"]].split(":")
     keys_used["FORMAT"].update(FORMAT_keys)
@@ -254,11 +266,10 @@ def extract_freestanding_columns_into_dict(line_original, col_indices, meta_info
 
     cols_as_INFO_dict = {}
     for column_name in columns_to_extract:
-        try:
-            old_column_contents = line_original[col_indices[column_name]]
-        except KeyError as e:
-            raise RuntimeError("Is this a DKFZ VCF? Avoid the `_raw.vcf.gz`")
+        if column_name not in col_indices:
+            continue
 
+        old_column_contents = line_original[col_indices[column_name]]
         new_INFO_id = meta_information["INFO"][column_name]["new_info_id"]
         cols_as_INFO_dict[new_INFO_id] = old_column_contents
     return cols_as_INFO_dict
@@ -276,8 +287,8 @@ def extract_desired_INFO_fields_from_all(raw_INFO_field, used_and_desired_keys, 
            between control and tumor values
     :return: Dictionary with contents from the INFO or INFO_control field
     """
-
     old_INFO_dict = convert_str_to_dict(raw_INFO_field, ";", "=")
+    print(old_INFO_dict)
 
     if rename_control:
         for key in old_INFO_dict.keys():
@@ -305,27 +316,41 @@ def merge_and_format_INFO_sources(col_indices, line_original, used_and_desired_k
     :return: String that replaces the old INFO field with filtered and new information
     """
     new_info = {}
-    new_info.update(extract_desired_INFO_fields_from_all(line_original[col_indices["INFO"]],
+    ## added to check if the first definition in INFO is without key (GERMLINE/SOMATIC/UNCLEAR)
+    new_line = check_line(line_original[col_indices["INFO"]])
+    new_info.update(extract_desired_INFO_fields_from_all(new_line,
                                                          used_and_desired_keys["INFO"],
                                                          rename_control=False))
-    new_info.update(extract_desired_INFO_fields_from_all(line_original[col_indices["INFO_control"]],
-                                                         used_and_desired_keys["INFO"],
-                                                         rename_control=True))
+    if "INFO_control" in col_indices.keys():
+        new_info.update(extract_desired_INFO_fields_from_all(line_original[col_indices["INFO_control"]],
+                                                            used_and_desired_keys["INFO"],
+                                                            rename_control=True))
     new_info.update(extract_freestanding_columns_into_dict(line_original,
                                                            col_indices,
                                                            meta_information))
 
     return convert_dict_to_str(new_info, ";", "=")
 
-
-def convert(input_filename, output_filename, sample_id, meta_information):
+def vcf_has_config(vcf_file):
+    has_config_line = False
+    with open_maybe_compressed_file(vcf_file, 'r') as f:
+        for line in f:
+            if line.startswith("##contig"):
+                has_config_line = True
+                break
+    return  has_config_line
+            
+def convert(input_filename, output_filename, sample_id, meta_information, withcontrol, header_file_name):
     """
     Does the actual conversion of one VCF file format into another (here DKFZ -> standard).
 
     :param input_filename: VCF file that is to be converted
     :param output_filename: VCF file to which the converted content of the input is written
-    :param sample_id: label to use for the sample column (instead of the useless filename in the
+    :param normal_id: label to use for the sample column (instead of the useless filename in the
            input file)
+    :param tumor_id: label to use for the sample column (instead of the useless filename in the
+           input file)
+    :param withcontrol: as Flag 
     :return: None, the output file is the outcome of this function
     """
 
@@ -343,11 +368,26 @@ def convert(input_filename, output_filename, sample_id, meta_information):
     # In the DKFZ case, there is only one sample column and an unknown number of free-form
     # annotation columns. You shouldn't be using this script if there is more than one sample
     # column.
-    SAMPLE_col_index = FORMAT_col_index + 1
+    if withcontrol == "True":
+        SAMPLE_col_index1 = FORMAT_col_index +1
+        SAMPLE_col_index2 = SAMPLE_col_index1 +1
+    else:
+        SAMPLE_col_index = FORMAT_col_index +1
 
     with open_maybe_compressed_file(output_filename, 'w') as output_file:
         # Write Meta-information lines
         output_file.write('##fileformat=%s\n' % vcf_version)  # Required as first line in the file
+
+        if vcf_has_config(input_filename):
+            pass
+        else:
+            if header_file_name:
+                with open_maybe_compressed_file(header_file_name,'r') as f:
+                    for line in f:
+                        if line.startswith("##contig"):  
+                            output_file.write(line)
+                        else:
+                            continue
 
         # First pass through input file, check which tags/keys occur so that we may write our
         # meta-information block
@@ -381,13 +421,48 @@ def convert(input_filename, output_filename, sample_id, meta_information):
                 if line.startswith("##contig"):
                     output_file.write(line)
 
+                # copy workflowName info
+                if line.startswith("##workflowName"):
+                    output_file.write(line)
+
+                # copy workflowVersion info
+                if line.startswith("##workflowVersion"):
+                    output_file.write(line)
+
+                # copy pancancerversion info
+                if line.startswith("##pancancerversion"):
+                    output_file.write(line)
+
+                # copy fileDate info
+                if line.startswith("##fileDate"):
+                    output_file.write(line)
+
+                # copy center info
+                if line.startswith("##center"):
+                    output_file.write(line)
+
+                # copy platypusOptions info
+                if line.startswith("##platypusOptions"):
+                    output_file.write(line)
+
+                # copy VEP info
+                if line.startswith("##VEP"):
+                    output_file.write(line)
+
                 # CHROM marks the header-line, by definition the last metadata line
                 elif line.startswith("CHROM") or line.startswith("#CHROM"):
                     # close off the metadata section with our newer, sexier, shorter, header line
-                    output_file.write( "#" +
-                                       "\t".join(StdVCF_header_cols) +
-                                       "\t" + sample_id +
-                                       "\n")
+                    if withcontrol == "True": 
+                        output_file.write( "#" +
+                                           "\t".join(StdVCF_header_cols) +
+                                           "\t" + sample_id + "_N" +
+                                           "\t" + sample_id + "_T" +
+                                           "\n")
+                    else:
+                        output_file.write( "#" +
+                                           "\t".join(StdVCF_header_cols) +
+                                           "\t" + sample_id +
+                                           "\n")
 
                 # other, unhandled, header or meta-information line, ignore
                 elif line.startswith("#"):
@@ -395,10 +470,11 @@ def convert(input_filename, output_filename, sample_id, meta_information):
 
                 # Data line: convert
                 else:
+
                     line_original = line.rstrip().split("\t")
 
-                    # First 7 columns left as is
-                    new_line = (line_original[:8])
+                    # First 8 columns left as is
+                    new_line = line_original[:8]
 
                     # gather all the different tidbits that end up in the final INFO field
                     new_info_str = merge_and_format_INFO_sources(col_indices,
@@ -410,8 +486,13 @@ def convert(input_filename, output_filename, sample_id, meta_information):
                     # FORMAT Column copied as is
                     new_line.append(line_original[FORMAT_col_index])
 
-                    # sample information copied as is
-                    new_line.append(line_original[SAMPLE_col_index])
+                    if withcontrol == "True":
+                        # sample information copied as is
+                        new_line.append(line_original[SAMPLE_col_index1])
+                        new_line.append(line_original[SAMPLE_col_index2])                        
+                    else:
+                        # sample information copied as is
+                        new_line.append(line_original[SAMPLE_col_index])
 
                     # Write new data line to output file
                     output_file.write("\t".join(new_line)+"\n")
@@ -426,8 +507,12 @@ def parse_options(argv):
                             formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument("-i", "--input", dest="input_file", required=True, type=str,
                         help="Input DKFZ-formatted VCF file")
+    parser.add_argument("-r", "--raw-vcf", dest="raw_vcf", required=False, type=str,
+                        help="Input Raw VCF file")    
     parser.add_argument("-s", "--sample-id", dest="sample_id", required=True, type=str,
                         help="Name to use for the sample column in the output VCF")
+    parser.add_argument("-w", "--with-control", dest="withcontrol", required=True, type=str,
+                        help="Name to use for the normal sample column in the output VCF")
     parser.add_argument("-o", "--output", dest="output_file", default="/dev/stdout",
                         required=False, type=str,
                         help="Output standard 4.2 VCF file")
@@ -448,4 +533,8 @@ if __name__ == '__main__':
                     "for", args.sample_id, "using", args.config_file]),
           file=sys.stderr)
     meta_information = read_meta_information(args.config_file)
-    convert(args.input_file, args.output_file, args.sample_id, meta_information)
+    if args.raw_vcf == "False":
+        header =False
+    else:
+        header = args.raw_vcf      
+    convert(args.input_file, args.output_file, args.sample_id, meta_information,args.withcontrol,header)
