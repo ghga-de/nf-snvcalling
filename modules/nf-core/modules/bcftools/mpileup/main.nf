@@ -14,7 +14,7 @@ process BCFTOOLS_MPILEUP {
     output:
     tuple val(meta), path("*.vcf")               , emit: vcf
     tuple val(meta), path("*.bcftools_stats.txt"), emit: stats 
-    tuple val(meta), val(interval_name)          , emit: intervals 
+    tuple val(meta), val(intervals)          , emit: intervals 
     path  "versions.yml"                         , emit: versions
 
     when:
@@ -27,7 +27,6 @@ process BCFTOOLS_MPILEUP {
     def prefix   = task.ext.prefix ?: "${meta.id}"
     def args_c   = interval_file ? "$args2 -R ${interval_file}" : "$args -r ${intervals}"
     def ref_spec = params.fasta.contains("38") ? "$args3 --ploidy GRCh38": "$args3"
-    interval_name = interval_file ? "contig" : "${intervals}"
 
     """
     bcftools \\
@@ -35,9 +34,9 @@ process BCFTOOLS_MPILEUP {
         --fasta-ref $fasta \\
         $args_c \\
         $tumor \\
-        | bcftools call --output-type v $ref_spec > ${prefix}.${interval_name}.vcf
+        | bcftools call --output-type v $ref_spec > ${prefix}.${intervals}.vcf
 
-    bcftools stats ${prefix}.${interval_name}.vcf > ${prefix}.${interval_name}.bcftools_stats.txt
+    bcftools stats ${prefix}.${intervals}.vcf > ${prefix}.${intervals}.bcftools_stats.txt
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

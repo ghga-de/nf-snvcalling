@@ -20,12 +20,16 @@ process GET_CONTIGS {
     if (params.runcontigs == 'ALT_HLA')
     {
         """
-        touch ALT_contigs.bed
-        touch HLA_contigs.bed
-
-        samtools view -H $meta.tumor_bam | grep -P "_alt\\tLN" | sed -e 's/@SQ\\tSN://' -e 's/\\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 > ALT_contigs.bed
-        samtools view -H $meta.tumor_bam | grep -P "SN:HLA" | sed -e 's/@SQ\\tSN://' -e 's/\\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 > HLA_contigs.bed
-
+        if [ -n "\$(samtools view -H $tumor | grep -P "_alt\\tLN")" ]; then
+            samtools view -H $tumor | grep -P "_alt\\tLN" | sed -e 's/@SQ\\tSN://' -e 's/\\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 > ALT_contigs.bed
+        else
+            touch ALT_contigs.bed
+        fi
+        if [-n "\$(samtools view -H $tumor | grep -P "SN:HLA")" ]; then
+            samtools view -H $tumor | grep -P "SN:HLA" | sed -e 's/@SQ\\tSN://' -e 's/\\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 > HLA_contigs.bed
+        else
+            touch HLA_contigs.bed
+        fi
         cat ALT_contigs.bed HLA_contigs.bed > contigs.bed
 
         cat <<-END_VERSIONS > versions.yml
@@ -37,8 +41,12 @@ process GET_CONTIGS {
     }
     else {
         """
-        samtools view -H $meta.tumor_bam | grep -P "SN:"  | sed -e 's/@SQ\\tSN://' -e 's/\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 | tail -n +25 > contigs.bed
-        
+        touch contigs.bed
+        if [-n "\$(samtools view -H $tumor | grep -P "SN:") "]; then
+            samtools view -H $tumor | grep -P "SN:"  | sed -e 's/@SQ\\tSN://' -e 's/\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 | tail -n +25 > contigs.bed
+        else
+            touch contigs.bed
+        fi
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
             samtools: \$(echo \$(samtools 2>&1) | sed -e 's/.*Version: //; s/ Usage.*//')

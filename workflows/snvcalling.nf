@@ -213,7 +213,8 @@ workflow SNVCALLING {
             sample_ch
             )
         ch_versions = ch_versions.mix(GET_CONTIGS.out.versions)
-        contigs     = GET_CONTIGS.out.contigs
+        GET_CONTIGS.out.contigs.filter{contig -> WorkflowCommons.getNumLinesInFile(contig) > 0}
+                .set{contigs}
     }
 
     //
