@@ -2,7 +2,8 @@ process BCFTOOLS_REHEADER {
     tag "$meta.id"
     label 'process_low'
 
-    conda "${moduleDir}/environment.yml"
+    //conda "${moduleDir}/environment.yml"
+    conda (params.enable_conda ? "${moduleDir}/environment.yml" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/bcftools:1.18--h8b25389_0':
         'quay.io/biocontainers/bcftools:1.18--h8b25389_0' }"
