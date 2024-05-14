@@ -14,7 +14,7 @@ process BCFTOOLS_MPILEUP {
     output:
     tuple val(meta), path("*.vcf")               , emit: vcf
     tuple val(meta), path("*.bcftools_stats.txt"), emit: stats 
-    tuple val(meta), val(intervals)          , emit: intervals 
+    tuple val(meta), val(intervals)              , emit: intervals 
     path  "versions.yml"                         , emit: versions
 
     when:

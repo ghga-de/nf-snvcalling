@@ -28,12 +28,15 @@ workflow MPILEUP_SNV_CALL {
     intervals.take(24)
             .map{it -> [it[0],[]]}
             .set{ch_intervals}
+
     ch_intervals.mix(contig_ch)
             .set{intervals_ch}
 
     sample_ch
             .combine(intervals_ch)
             .set { combined_inputs }
+
+    combined_inputs.view()        
     //
     // MODULE:BCFTOOLS_MPILEUP 
     //
@@ -102,7 +105,6 @@ workflow MPILEUP_SNV_CALL {
         .vcf
         .groupTuple()
         .set { combined_vcf }
-
     //
     // MODULE: FILE_CONCATENATOR 
     //

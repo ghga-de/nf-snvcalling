@@ -9,7 +9,8 @@
 .screenrc
 __pycache__
 output/
-results/
+results/*
+results37/*
 test.xml
 test_output/
 tests/data/

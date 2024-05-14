@@ -11,7 +11,7 @@ process MPILEUP_COMPARE {
     tuple path(fasta), path(fai)
 
     output:
-    tuple val(meta), path("*.nppileup.vcf")     , emit: vcf
+    tuple val(meta), path("*.npileup.vcf")     , emit: vcf
     path  "versions.yml"                        , emit: versions
 
     when:
@@ -20,7 +20,7 @@ process MPILEUP_COMPARE {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def args_c = intervals == "contig" ? "$args" : "$args -r ${intervals}"
+    def args_c = intervals == "contigs" ? "$args" : "$args -r ${intervals}"
 
     if (meta.iscontrol == '1' && params.runCompareGermline)
     {
@@ -32,7 +32,7 @@ process MPILEUP_COMPARE {
             $meta.control_bam > ${prefix}.${intervals}.control.temp
         
         vcf_pileup_compare_allin1_basecount.pl $vcf \\
-            ${prefix}.${intervals}.control.temp "Header" > ${prefix}.${intervals}.nppileup.vcf        
+            ${prefix}.${intervals}.control.temp "Header" > ${prefix}.${intervals}.npileup.vcf        
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -44,7 +44,7 @@ process MPILEUP_COMPARE {
     }
     else {
         """
-        mv $vcf ${prefix}.${intervals}.nocontrol.nppileup.vcf 
+        mv $vcf ${prefix}.${intervals}.nocontrol.npileup.vcf 
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
