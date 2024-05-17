@@ -205,18 +205,18 @@ workflow SNVCALLING {
     }
     interval_ch  = chrlength.splitCsv(sep: '\t', by:1)
 
-    if ((params.runcontigs != "NONE") && (!params.contig_file)) {
+    if (params.runcontigs != "NONE") {
         //
         // MODULE: Prepare contigs file if not provided
         //
         GET_CONTIGS(
-            sample_ch
+            sample_ch,
+            contigs
             )
         ch_versions = ch_versions.mix(GET_CONTIGS.out.versions)
-        GET_CONTIGS.out.contigs.filter{contig -> WorkflowCommons.getNumLinesInFile(contig) > 0}
+        GET_CONTIGS.out.contigs.filter{meta, contig -> WorkflowCommons.getNumLinesInFile(contig) > 0}
                 .set{contigs}
     }
-
     //
     // MODULE: Extract sample name from BAM
     //
