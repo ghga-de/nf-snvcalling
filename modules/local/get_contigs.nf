@@ -38,7 +38,7 @@ process GET_CONTIGS {
             else
                 touch ALT_contigs.bed
             fi
-            if [-n "\$(samtools view -H $tumor | grep -P "SN:HLA")" ]; then
+            if [ -n "\$(samtools view -H $tumor | grep -P "SN:HLA")" ]; then
                 samtools view -H $tumor | grep -P "SN:HLA" | sed -e 's/@SQ\\tSN://' -e 's/\\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 > HLA_contigs.bed
             else
                 touch HLA_contigs.bed

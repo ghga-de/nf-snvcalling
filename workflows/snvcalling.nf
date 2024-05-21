@@ -58,7 +58,7 @@ if (params.annotation_tool.contains("vep")){
 ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
 chr_prefix     = params.chr_prefix  ? Channel.value(params.chr_prefix) : Channel.value("")
 chrlength      = params.chrom_sizes ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) : Channel.empty()   
-contigs        = params.contig_file ? Channel.fromPath(params.contig_file, checkIfExists: true) : Channel.empty()
+contigs        = params.contig_file ? Channel.fromPath(params.contig_file, checkIfExists: true) : Channel.value([[],[]])
 config         = Channel.fromPath("${projectDir}/assets/config/convertToStdVCF.json", checkIfExists: true).collect()
 
 // Annovar table folder
