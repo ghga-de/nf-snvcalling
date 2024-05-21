@@ -22,21 +22,26 @@ workflow MPILEUP_SNV_CALL {
 
     // Combine intervals with samples to create 'interval x sample' number of parallel run and with contigs if exist
 
-    contigs.map { it -> [it[0], "contigs", it[1],] }
+    contigs.filter{ it[1].fileName.toString().contains("contigs.bed") }
+        .map { it -> [it[0], "contigs", it[1]] }
         .set{contig_ch}
 
     intervals.take(24)
-            .map{it -> [[],it[0],[]]}
+            .map{it -> [it[0],[]]}
             .set{ch_intervals}
 
-    ch_intervals.mix(contig_ch)
-            .set{intervals_ch}
+    sample_ch
+            .combine(ch_intervals)
+            .set { main_inputs }
 
     sample_ch
-            .combine(intervals_ch)
-            .filter{ it[0] != it[7] }
+            .combine(contig_ch)
+            .filter{ it[0] == it[7] }
             .map{ it -> [it[0], it[1], it[2], it[3], it[4], it[5], it[6], it[8], it[9] ] }
-            .set { combined_inputs }
+            .set { extra_inputs }
+
+    main_inputs.mix(extra_inputs)
+            .set{combined_inputs}
 
     //
     // MODULE:BCFTOOLS_MPILEUP 

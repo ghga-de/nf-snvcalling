@@ -9,11 +9,13 @@
 .screenrc
 __pycache__
 output/
-results/*
-results37/*
+results/
+result/
+results37/
 test.xml
 test_output/
 tests/data/
 work/
+testdata_hg37/
 .github/CODEOWNERS-tmp
 bin/vcfparser.pyc

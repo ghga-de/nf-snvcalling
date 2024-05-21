@@ -8,7 +8,7 @@ process GET_CONTIGS {
 
     input:
     tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai)
-    each path(contig_file)
+    tuple val(meta2), path(contig_file)
 
     output:
     tuple val(meta), path("contigs.bed") , emit: contigs
@@ -18,7 +18,7 @@ process GET_CONTIGS {
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
     
-    if (contig_file)
+    if (params.contig_file)
     {
         """
         cp $contig_file contigs.bed
