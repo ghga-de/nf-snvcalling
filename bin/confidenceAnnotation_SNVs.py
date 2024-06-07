@@ -245,10 +245,6 @@ def main(args):
             inLocalControl_WES = False
             inLocalControl_WGS = False
 
-        if is_hg38(args) or args.skipREMAP:
-            if inGnomAD_WES or inGnomAD_WGS or inLocalControl_WGS:
-                common_tag = "MAFCommon;"
-
         ### For pancancer
         # genotype tumor as originally from mpileup
         gttum = entries[9].split(":")[0]
@@ -285,26 +281,10 @@ def main(args):
                 is_commonSNP = True
 
         if args.no_control or is_hg38(args) or args.skipREMAP:
-            if indbSNP and is_commonSNP and not is_clinic:
-                #reasons += "dbSNP(NoControl)"
-                pass
-            if help["GNOMAD_EXOMES_COL_VALID"] and any(af > args.gnomAD_WES_maxMAF for af in map(float, extract_info(help["GNOMAD_EXOMES_COL"], "AF").split(','))):
-                inGnomAD_WES = True
-                infofield["gnomAD_Exomes"] = "gnomAD_Exomes"
-                #reasons += "gnomAD_Exomes(NoControl)"
-            if help["GNOMAD_GENOMES_COL_VALID"] and any(af > args.gnomAD_WGS_maxMAF for af in map(float, extract_info(help["GNOMAD_GENOMES_COL"], "AF").split(','))):
-                inGnomAD_WGS = True
-                infofield["gnomAD_Genomes"] = "gnomAD_Genomes"
-                #reasons += "gnomAD_Genomes(NoControl)"
-
-            if help["LOCALCONTROL_WGS_COL_VALID"] and any(af > args.localControl_WGS_maxMAF for af in map(float, extract_info(help["LOCALCONTROL_WGS_COL"], "AF").split(','))):
-                inLocalControl_WGS = True
-                infofield["LocalControl_WGS"] = "LocalControl_WGS"
-                #reasons += "LocalControl_WGS(NoControl)"
-            if help["LOCALCONTROL_WES_COL_VALID"] and any(af > args.localControl_WES_maxMAF for af in map(float, extract_info(help["LOCALCONTROL_WES_COL"], "AF").split(','))):
-                inLocalControl_WES = True
-                infofield["LocalControl_WES"] = "LocalControl_WES"
-                #reasons += "LocalControl_WES(NoControl)"
+            inGnomAD_WES = check_max_maf(headers, help, args, "GNOMAD_EXOMES_COL", args.gnomAD_WES_maxMAF)
+            inGnomAD_WGS = check_max_maf(headers, help, args, "GNOMAD_GENOMES_COL", args.gnomAD_WGS_maxMAF)
+            inLocalControl_WGS = check_max_maf(headers, help, args, "LOCALCONTROL_WGS_COL", args.localControl_WGS_maxMAF)
+            inLocalControl_WES = check_max_maf(headers, help, args, "LOCALCONTROL_WES_COL", args.localControl_WES_maxMAF)
 
 
         # Punish for biases round 1
@@ -442,13 +422,13 @@ def main(args):
         # the confidence are reduced and thrown out. This is implemented for hg38 and could be
         # used with skipREMAP option for hg19.
         # inLocalControl_WES: Needs to be generated from a new hg38 dataset
-        filterfield["FREQ"] = 0
+        common_tag = ""
         if(is_hg38(args) or args.skipREMAP):
             if(inGnomAD_WES or inGnomAD_WGS or inLocalControl_WGS):
-                #reasons += 'commonSNP_or_technicalArtifact(-3)'
-                #classification = "SNP_support_germline"
-                #confidence -= 3
-                filterfield["FREQ"] = 1
+                common_tag = ";MAFCommon"
+        # Add the common tag to the INFO field
+        if common_tag not in entries[7]:
+            entries[7] += common_tag
 
         # if others have found the SNP already, it may be interesting despite low score
         # - but only if it's not a weird region.
@@ -642,8 +622,7 @@ def main(args):
                         reasons += "Germline_ALT<0.3(-2)"
                         filterfield["FRC"] = 1
                 if in1KG or (indbSNP and not (is_precious or is_clinic)): # but this supports again - number of reads may be low!
-                    if filterfield['FREQ'] == 0:
-                        classification += "_SNP_support"
+                    classification += "_SNP_support"
 
                 if depthC <= 10: # very probably germline due to skewed distribution at low coverage
                     classification += "_lowCov"	# => can end up as "germline_SNP_support_lowCov"
@@ -738,7 +717,7 @@ def main(args):
             filters_line = [] if entries[6] == "" else entries[6].split(';')
             if args.pancanout is not None:
                 filters_pancan = []
-            for filter in ("RE","BL","DP","SB","TAC","dbSNP","DB","HSDEPTH","MAP","SBAF","FRQ","TAR","UNCLEAR","DPHIGH","DPLOWC","1PS","ALTC","ALTCFR","FRC","YALT","VAF","BI", "FREQ"):
+            for filter in ("RE","BL","DP","SB","TAC","dbSNP","DB","HSDEPTH","MAP","SBAF","FRQ","TAR","UNCLEAR","DPHIGH","DPLOWC","1PS","ALTC","ALTCFR","FRC","YALT","VAF","BI"):
                 if filterfield.get(filter, 0) == 1:
                     if args.pancanout is not None:
                         filters_pancan.append(filter)
