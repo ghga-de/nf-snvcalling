@@ -25,6 +25,7 @@ if (@ARGV < 2)
 my $tumor = shift;
 my $control = shift;
 my $makeheader = shift;
+my $ctrl_cutoff = shift;
 
 open (T, $tumor) or die "Could not open $tumor: $!\n";
 open (C, $control) or die "Could not open $control: $!\n";
@@ -33,7 +34,7 @@ open (C, $control) or die "Could not open $control: $!\n";
 # at least 1/30th of reads must support the variant in control to call it germline
 my $fraction = 30;
 # mpileup counts only the bases with score >= 13, so we want to use that cutoff, too
-my $cutoff = 13;
+my $cutoff = $ctrl_cutoff;
 # for RNA, cutoff for calling monoallelic (% of high quality reads). Not 100% bc. of sqcing errors and normal contamination; at least 10 reads
 my $limit = 0.85;
 my $rcutoff = 10;

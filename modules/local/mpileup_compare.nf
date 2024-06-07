@@ -21,6 +21,7 @@ process MPILEUP_COMPARE {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def args_c = intervals == "contigs" ? "$args" : "$args -r ${intervals}"
+    def ctrl_qual_cutoff = intervals == "contigs" ? "$ctrl_min_base_qual_contigs" : "$ctrl_min_base_qual"
 
     if (meta.iscontrol == '1' && params.runCompareGermline)
     {
