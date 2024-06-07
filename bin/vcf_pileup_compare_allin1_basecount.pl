@@ -141,69 +141,36 @@ my $current_t_chr = "";
 
 # one file is longer than the other, nevermind which
 #(if we did pileup for only the tumor SNV positions, control will be shorter; otherwise longer)
-TUMORFILE_LOOP: while ($lineT=<T>)
-{
-	# after reading over the comments, see above, we start with a line containing chromosome and coordinate etc.
-	# in tumor:
-	#chr1	16566	.	A	C	10.7	.	DP=11;AF1=0.6642;CI95=0.5,0.75;DP4=0,4,0,3;MQ=30;PV4=1,0.14,0.096,0.012	PL:GT:GQ	29,3,0:1/1:5	16,0,82:0/1:22	
-	# in control:
-	#chr1	16566	A	42	,.,,.,..,,,,,.,,,,,,,,,,,c,,,,.,c,,cc,^1,^!,^!,^!,	IIII6I-)CFIII+9I,IIIFII)IHB/IGIII9IIIBI52;
-	# remove newline
+my %control_positions;
+
+# Read control file and store positions in a hash
+while ($lineC = <C>) {
+	chomp $lineC;
+	$ctrC++;
+	@ctrl = split(/\s+/, $lineC);
+	my $c_chr = $ctrl[0];
+	my $c_coord = $ctrl[1];
+	$control_positions{"$c_chr:$c_coord"} = $lineC;
+}
+
+# Process tumor file
+while ($lineT = <T>) {
 	$ctrT++;
 	chomp $lineT;
-	@tum = split (/\s+/, $lineT);
-	$tcoord = $tum[1];	# start coordinate
-	$current_t_chr = $tum[0];
+	@tum = split(/\t/, $lineT);
+	my $t_chr = $tum[0];
+	my $t_coord = $tum[1];
 
-	if ($tcoord < $ccoord && $current_t_chr eq $current_c_chr)	# no matching control line => tumor position not covered in control (never true in 1st iteration)
-	{
-		$missingC++;
-		# print the tumor line with according "flag"
-		# to have same number of columns, put "." in place of chr, pos, ref, number of reads, variants, qual
-		print $lineT, "\tDP=0;DP5=0,0,0,0,0;DP5all=0,0,0,0,0;ACGTNacgtnHQ=0,0,0,0,0,0,0,0,0,0;ACGTNacgtn=0,0,0,0,0,0,0,0,0,0;VAF=0;TSR=0\t$notcovered\n";
-		next;	# read next line from tumor
-	}
-	if ($tcoord == $ccoord && $current_t_chr eq $current_c_chr)	# matching pair found!
-	{
+	# Check if tumor position is covered in control
+	if (exists $control_positions{"$t_chr:$t_coord"}) {
 		$match++;
-		chomp $lineC;
-		# split lines
-		@ctrl = split (/\s+/, $lineC);
-		$ccoord = $ctrl[1];
-		# do the evaluation in a subroutine
+		$lineC = $control_positions{"$t_chr:$t_coord"};
+		@ctrl = split(/\t/, $lineC);
 		evaluate_pos();
-		next;	# read next line from tumor
+	} else {
+		$missingC++;
+		print $lineT, "\tDP=0;DP5=0,0,0,0,0;DP5all=0,0,0,0,0;ACGTNacgtnHQ=0,0,0,0,0,0,0,0,0,0;ACGTNacgtn=0,0,0,0,0,0,0,0,0,0;VAF=0;TSR=0\t$notcovered\n";
 	}
-	# else missing in tumor - can never be the case!
-	while ($lineC = <C>)	# when we are here tcoord is higher than ccoord; read new control line
-	{
-		chomp $lineC;
-		$ctrC++;
-		# split lines
-		@ctrl = split (/\s+/, $lineC);
-		$current_c_chr = $ctrl[0];
-		$ccoord = $ctrl[1];
-		if ($tcoord == $ccoord && $current_t_chr eq $current_c_chr)	# matching pair found!
-		{
-			$match++;
-			# do the evaluation in a subroutine
-			evaluate_pos();
-			next TUMORFILE_LOOP; # and read next line from tumor
-		}
-		if ($tcoord < $ccoord && $current_t_chr eq $current_c_chr)	# new ccoord is higher than tcoord =>  tumor position not covered in control (should never be the case!)
-		{
-			$missingC++;
-			print $lineT, "\tDP=0;DP5=0,0,0,0,0;DP5all=0,0,0,0,0;ACGTNacgtnHQ=0,0,0,0,0,0,0,0,0,0;ACGTNacgtn=0,0,0,0,0,0,0,0,0,0;VAF=0;TSR=0\t$notcovered\n";
-			next TUMORFILE_LOOP; # read next line from tumor
-		}
-		# else missing in tumor - can never be the case!
-	}
-	# when both if conditions in the inner loop fail: next iteration (read control line)
-	# when this is reached the control file has ended
-	# everything remaining in the tumor file is not covered in control
-	# print the tumor line with according "flag"
-	print $lineT, "\tDP=0;DP5=0,0,0,0,0;DP5all=0,0,0,0,0;ACGTNacgtnHQ=0,0,0,0,0,0,0,0,0,0;ACGTNacgtn=0,0,0,0,0,0,0,0,0,0;VAF=0;TSR=0\t$notcovered\n";
-	$missingC++;
 }
 close C;
 close T;
