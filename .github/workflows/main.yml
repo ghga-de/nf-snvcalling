@@ -39,6 +39,9 @@ jobs:
       - name: DELAY to try address some odd behaviour with what appears to be a conflict between parallel htslib jobs leading to CI hangs
         run: |
           if [[ $NXF_VER = '' ]]; then sleep 1200; fi
-      - name: BASIC Run the basic pipeline only for SNV calling with docker
+      - name: BASIC Run the basic pipeline  with docker
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test,docker
+      - name: BASIC Run the basic pipeline when --runcontig set to "ALT_HLA" (contigs does not exist in bam)
+        run: |
+          nextflow run ${GITHUB_WORKSPACE} -profile test,docker --runcontigs "ALT_HLA"

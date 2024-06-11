@@ -37,6 +37,56 @@ def validate_refgenome(refname):
     if refname not in valid_refgenome:
         raise ValueError('Reference name (--refgenome) is not valid: %s. Valid reference genome names are %s' % (refname, ', '.join(valid_refgenome)))
 
+## Helper functions
+def is_hg37(args):
+    return args.refgenome[0] == "hs37d5"
+
+def is_hg38(args):
+    return args.refgenome[0] == "GRCh38"
+
+def get_fixed_headers(args):
+    fixed_headers = ["^INFO$", "MAPABILITY", "SIMPLE_TANDEMREPEATS", "REPEAT_MASKER", 
+                             "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
+                             "^seqBiasPresent$", "^seqingBiasPresent$", "^seqBiasPresent_1$", "^seqingBiasPresent_1$",
+                             "^seqBiasPresent_2$", "^seqingBiasPresent_2$"]
+
+    hs37d5_headers = ["DAC_BLACKLIST", "DUKE_EXCLUDED", "HISEQDEPTH", "SELFCHAIN"]
+    if is_hg37(args):
+        fixed_headers += hs37d5_headers
+
+    if not args.no_control:
+        fixed_headers += ["^INFO_control", "^ANNOTATION_control$"]
+
+    return fixed_headers
+
+def get_variable_headers(args):
+    variable_headers = {
+        "ANNOVAR_SEGDUP_COL": "^SEGDUP$",
+        "KGENOMES_COL": "^1K_GENOMES$",
+        "DBSNP_COL": "^DBSNP$"
+    }
+
+    if args.no_control or is_hg38(args) or args.skipREMAP:
+        variable_headers.update({
+            "GNOMAD_EXOMES_COL": "^GNOMAD_EXOMES$",
+            "GNOMAD_GENOMES_COL": "^GNOMAD_GENOMES$",
+            "LOCALCONTROL_WGS_COL": "^LocalControlAF_WGS$",
+            "LOCALCONTROL_WES_COL": "^LocalControlAF_WES$"
+        })
+
+    return variable_headers
+
+def check_max_maf(headers, help, args, column_name, max_maf_attribute):
+    column_valid_key = "{0}_VALID".format(column_name)
+    in_column = False
+
+    if help[column_valid_key]:
+        maf_values = map(float, extract_info(help[column_name], "AF").split(','))
+        if any(af > max_maf_attribute for af in maf_values):
+            in_column = True
+
+    return in_column
+
 def main(args):
 
     validate_refgenome(args.refgenome[0])
@@ -53,6 +103,7 @@ def main(args):
         header += '##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description="Indicates if record is a somatic mutation">\n' \
                   '##INFO=<ID=GERMLINE,Number=0,Type=Flag,Description="Indicates if record is a germline mutation">\n' \
                   '##INFO=<ID=UNCLEAR,Number=0,Type=Flag,Description="Indicates if the somatic status of a mutation is unclear">\n' \
+                  '##INFO=<ID=MAFCommon,Number=0,Type=Flag,Description="Indicates if the variant is present in the gnomAD or local control database">\n' \
                   '##INFO=<ID=VT,Number=1,Type=String,Description="Variant type, can be SNP, INS or DEL">\n' \
                   '##INFO=<ID=AF,Number=.,Type=Float,Description="Allele Frequency in primary data, for each ALT allele, in the same order as listed">\n' \
                   '##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership">\n' \
@@ -83,7 +134,6 @@ def main(args):
                   '##FILTER=<ID=YALT,Description="Variant on Y chromosome with low allele frequency">\n' \
                   '##FILTER=<ID=VAF,Description="Variant allele frequency in tumor < ' + str(args.newpun) + ' times allele frequency in control">\n' \
                   '##FILTER=<ID=BI,Description="Bias towards a PCR strand or sequencing strand">\n' \
-                  '##FILTER=<ID=FREQ,Description="High frequency in GnomAD(>0.1%) or in local control database (>0.05%)">\n' \
                   '##SAMPLE=<ID=CONTROL,SampleName=control_' + args.pid + ',Individual=' + args.pid + ',Description="Control">\n' \
                   '##SAMPLE=<ID=TUMOR,SampleName=tumor_'+args.pid+',Individual='+args.pid+',Description="Tumor">\n'\
                   '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t'
@@ -107,26 +157,9 @@ def main(args):
 
         if line[0] == "#":
             headers = list(line[1:].rstrip().split('\t'))
-            fixed_headers = ["^INFO$", "MAPABILITY", "SIMPLE_TANDEMREPEATS", "REPEAT_MASKER", 
-                             "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
-                             "^seqBiasPresent$", "^seqingBiasPresent$", "^seqBiasPresent_1$", "^seqingBiasPresent_1$",
-                             "^seqBiasPresent_2$", "^seqingBiasPresent_2$"]
 
-            if args.refgenome[0] == "hs37d5":
-                fixed_headers = ["^INFO$", "MAPABILITY", "HISEQDEPTH", "SIMPLE_TANDEMREPEATS", "REPEAT_MASKER", "DUKE_EXCLUDED",
-                                 "DAC_BLACKLIST", "SELFCHAIN", "^CONFIDENCE$", "^RECLASSIFICATION$", "^PENALTIES$",
-                                 "^seqBiasPresent$", "^seqingBiasPresent$", "^seqBiasPresent_1$", "^seqingBiasPresent_1$",
-                                 "^seqBiasPresent_2$", "^seqingBiasPresent_2$"]
-
-            variable_headers = { "ANNOVAR_SEGDUP_COL": "^SEGDUP$", "KGENOMES_COL": "^1K_GENOMES$", "DBSNP_COL": "^DBSNP$", }
-
-            if args.no_control or args.refgenome[0] == 'GRCh38' or args.skipREMAP:
-                variable_headers["GNOMAD_EXOMES_COL"] = "^GNOMAD_EXOMES$"
-                variable_headers["GNOMAD_GENOMES_COL"] = "^GNOMAD_GENOMES$"
-                variable_headers["LOCALCONTROL_WGS_COL"] = "^LocalControlAF_WGS$"
-                variable_headers["LOCALCONTROL_WES_COL"] = "^LocalControlAF_WES$"
-            if not args.no_control:
-                fixed_headers += [ "^INFO_control", "^ANNOTATION_control$", ]
+            fixed_headers = get_fixed_headers(args)
+            variable_headers = get_variable_headers(args)
 
             header_indices = get_header_indices(headers, args.configfile, fixed_headers, variable_headers)
 
@@ -206,7 +239,7 @@ def main(args):
             # for potential re-classification (e.g. low coverage in control and in dbSNP => probably germline)
             classification = help["ANNOTATION_control"] # start with original classification
 
-        if args.no_control or args.refgenome[0] == 'GRCh38' or args.skipREMAP:
+        if args.no_control or is_hg38(args) or args.skipREMAP:
             inGnomAD_WES = False
             inGnomAD_WGS = False
             inLocalControl_WES = False
@@ -228,7 +261,7 @@ def main(args):
             in1KG = True
             if args.no_control:
                 af = extract_info(help["KGENOMES_COL"].split("&")[0], "EUR_AF")
-                if af is not None and any(af > args.kgenome_maxMAF for af in map(float, af.split(','))):
+                if af is not None and any(float(af) > args.kgenome_maxMAF for af in af.split(',')):
                     in1KG_AF = True
             infofield["1000G"] = "1000G"
         # dbSNP
@@ -247,27 +280,11 @@ def main(args):
             if "COMMON=1" in help["DBSNP_COL"]:
                 is_commonSNP = True
 
-        if args.no_control or args.refgenome[0] == 'GRCh38' or args.skipREMAP:
-            if indbSNP and is_commonSNP and not is_clinic:
-                #reasons += "dbSNP(NoControl)"
-                pass
-            if help["GNOMAD_EXOMES_COL_VALID"] and any(af > args.gnomAD_WES_maxMAF for af in map(float, extract_info(help["GNOMAD_EXOMES_COL"], "AF").split(','))):
-                inGnomAD_WES = True
-                infofield["gnomAD_Exomes"] = "gnomAD_Exomes"
-                #reasons += "gnomAD_Exomes(NoControl)"
-            if help["GNOMAD_GENOMES_COL_VALID"] and any(af > args.gnomAD_WGS_maxMAF for af in map(float, extract_info(help["GNOMAD_GENOMES_COL"], "AF").split(','))):
-                inGnomAD_WGS = True
-                infofield["gnomAD_Genomes"] = "gnomAD_Genomes"
-                #reasons += "gnomAD_Genomes(NoControl)"
-
-            if help["LOCALCONTROL_WGS_COL_VALID"] and any(af > args.localControl_WGS_maxMAF for af in map(float, extract_info(help["LOCALCONTROL_WGS_COL"], "AF").split(','))):
-                inLocalControl_WGS = True
-                infofield["LocalControl_WGS"] = "LocalControl_WGS"
-                #reasons += "LocalControl_WGS(NoControl)"
-            if help["LOCALCONTROL_WES_COL_VALID"] and any(af > args.localControl_WES_maxMAF for af in map(float, extract_info(help["LOCALCONTROL_WES_COL"], "AF").split(','))):
-                inLocalControl_WES = True
-                infofield["LocalControl_WES"] = "LocalControl_WES"
-                #reasons += "LocalControl_WES(NoControl)"
+        if args.no_control or is_hg38(args) or args.skipREMAP:
+            inGnomAD_WES = check_max_maf(headers, help, args, "GNOMAD_EXOMES_COL", args.gnomAD_WES_maxMAF)
+            inGnomAD_WGS = check_max_maf(headers, help, args, "GNOMAD_GENOMES_COL", args.gnomAD_WGS_maxMAF)
+            inLocalControl_WGS = check_max_maf(headers, help, args, "LOCALCONTROL_WGS_COL", args.localControl_WGS_maxMAF)
+            inLocalControl_WES = check_max_maf(headers, help, args, "LOCALCONTROL_WES_COL", args.localControl_WES_maxMAF)
 
 
         # Punish for biases round 1
@@ -316,7 +333,7 @@ def main(args):
                 filterfield["BI"] = 1
 
         # Only for hg19 reference genome
-        if args.refgenome[0] == "hs37d5" and not args.skipREMAP:
+        if is_hg37(args) and not args.skipREMAP:
             # 2) annotations of regions that cause problems: some classes of repeats from RepeatMasker track,
             # segmental duplications, (cf. Reumers et al. 2012, Nature Biotech 30:61), external blacklists, mapability
             # simple repeats and low complexity (not the same as homopolymer, but similar enough);
@@ -405,13 +422,13 @@ def main(args):
         # the confidence are reduced and thrown out. This is implemented for hg38 and could be
         # used with skipREMAP option for hg19.
         # inLocalControl_WES: Needs to be generated from a new hg38 dataset
-        filterfield["FREQ"] = 0
-        if(args.refgenome[0] == 'GRCh38' or args.skipREMAP):
+        common_tag = ""
+        if(is_hg38(args) or args.skipREMAP):
             if(inGnomAD_WES or inGnomAD_WGS or inLocalControl_WGS):
-                #reasons += 'commonSNP_or_technicalArtifact(-3)'
-                #classification = "SNP_support_germline"
-                #confidence -= 3
-                filterfield["FREQ"] = 1
+                common_tag = ";MAFCommon"
+        # Add the common tag to the INFO field
+        if common_tag not in entries[7]:
+            entries[7] += common_tag
 
         # if others have found the SNP already, it may be interesting despite low score
         # - but only if it's not a weird region.
@@ -605,8 +622,7 @@ def main(args):
                         reasons += "Germline_ALT<0.3(-2)"
                         filterfield["FRC"] = 1
                 if in1KG or (indbSNP and not (is_precious or is_clinic)): # but this supports again - number of reads may be low!
-                    if filterfield['FREQ'] == 0:
-                        classification += "_SNP_support"
+                    classification += "_SNP_support"
 
                 if depthC <= 10: # very probably germline due to skewed distribution at low coverage
                     classification += "_lowCov"	# => can end up as "germline_SNP_support_lowCov"
@@ -701,7 +717,7 @@ def main(args):
             filters_line = [] if entries[6] == "" else entries[6].split(';')
             if args.pancanout is not None:
                 filters_pancan = []
-            for filter in ("RE","BL","DP","SB","TAC","dbSNP","DB","HSDEPTH","MAP","SBAF","FRQ","TAR","UNCLEAR","DPHIGH","DPLOWC","1PS","ALTC","ALTCFR","FRC","YALT","VAF","BI", "FREQ"):
+            for filter in ("RE","BL","DP","SB","TAC","dbSNP","DB","HSDEPTH","MAP","SBAF","FRQ","TAR","UNCLEAR","DPHIGH","DPLOWC","1PS","ALTC","ALTCFR","FRC","YALT","VAF","BI"):
                 if filterfield.get(filter, 0) == 1:
                     if args.pancanout is not None:
                         filters_pancan.append(filter)

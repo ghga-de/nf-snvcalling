@@ -66,10 +66,21 @@ def convert_str_to_dict(str_to_convert, pair_separator, key_val_separator):
     :param key_val_separator: String or character that separates keys from values
     :return: dictionary that was created from the string
     """
-    pairs = str_to_convert.split(pair_separator) 
-    valid_pairs = filter(lambda pair: len(pair.split(key_val_separator)) == 2, pairs)
-    return dict(pair.split(key_val_separator) for pair in valid_pairs)
-
+    valid_pairs = {}
+    
+    pairs = str_to_convert.split(pair_separator)
+    for pair in pairs:
+        key_val = pair.split(key_val_separator)
+        # convert the key-value pairs
+        if len(key_val) == 2:
+            key, value = key_val
+            valid_pairs[key] = value
+        # convert the flags to pairs with value "true"
+        elif len(key_val) == 1:
+            key = key_val[0]
+            valid_pairs[key] = "true"
+    
+    return valid_pairs
 
 def convert_dict_to_str(dict_to_convert, pair_separator, key_val_separator):
     """
@@ -192,7 +203,7 @@ def update_keys_used(line, col_indices, keys_used):
     line_as_list = line.rstrip().split("\t")
 
     new_line = check_line(line_as_list[col_indices["INFO"]])
-    print(new_line)
+    #print(new_line)
     INFO_old_keys = convert_str_to_dict(new_line, ';', '=').keys()
     #INFO_old_keys = convert_str_to_dict(line_as_list[col_indices["INFO"]], ';', '=').keys()
     keys_used["INFO"].update(INFO_old_keys)
@@ -288,7 +299,7 @@ def extract_desired_INFO_fields_from_all(raw_INFO_field, used_and_desired_keys, 
     :return: Dictionary with contents from the INFO or INFO_control field
     """
     old_INFO_dict = convert_str_to_dict(raw_INFO_field, ";", "=")
-    print(old_INFO_dict)
+    #print(old_INFO_dict)
 
     if rename_control:
         for key in old_INFO_dict.keys():

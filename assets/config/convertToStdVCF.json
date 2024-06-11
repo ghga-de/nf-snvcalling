@@ -42,12 +42,12 @@
     "dbSNP": {
       "number": "0",
       "type": "Flag",
-      "description": "variant in dbSNP database used: dbsnp_snv"
+      "description": "variant in dbSNP database used: dbsnp_indel"
     },
     "DB": {
       "number": "0",
       "type": "Flag",
-      "description": "variant in 1000Genomes (k_genomes) or dbSNP (dbsnp_snv)"
+      "description": "variant in 1000Genomes (k_genomes) or dbSNP (dbsnp_indel)"
     },
     "HSDEPTH": {
       "number": "0",
@@ -72,7 +72,7 @@
     "FREQ": {
       "number": "0",
       "type": "Flag",
-      "description": "variant allele frequency below ?"
+      "description": "Variant allele frequency above 0.001 in GnomAD or above 0.001 in local control database"
     },
     "TAR": {
       "number": "0",
@@ -102,7 +102,7 @@
     "ALTC": {
       "number": "0",
       "type": "Flag",
-      "description": "Alternative reads in control"
+      "description": "Alternative reads in control and other filter not PASS"
     },
     "ALTCFR": {
       "number": "0",
@@ -122,7 +122,7 @@
     "VAF": {
       "number": "0",
       "type": "Flag",
-      "description": "Variant allele frequency in tumor < ' + str(args.newpun) + ' times allele frequency in control"
+      "description": "Variant allele frequency in tumor < 10% and other filter not PASS"
     },
     "TSR_ctrl": {
       "number": "0",
@@ -172,7 +172,7 @@
     "QD": {
       "number": "1",
       "type": "Float",
-      "description": "Variant-quality/read-depth for this variant"
+      "description": "Variants fail quality/depth filter."
     },
     "Q20": {
       "number": "0",
@@ -203,6 +203,16 @@
       "number": "0",
       "type": "Flag",
       "description": "Too many haplotypes are supported by the data in this region."
+    },
+    "MQ": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Root-mean-square mapping quality across calling region is low"
+    },
+    "SC": {
+      "number": "0",
+      "type": "Flag",
+      "description": "Variants fail sequence-context filter. Surrounding sequence is low-complexity"
     }
   },
 
@@ -815,6 +825,11 @@
       "type": "Integer",
       "description": "Sequencing Bias Check 2",
       "new_info_id": "SB2"
+    },
+    "MAFCommon": {
+      "number": "1",
+      "type": "String",
+      "description": "Indicates that the variant is common in the gnomAD or local controls."
     }
   }
 }

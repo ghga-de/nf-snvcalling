@@ -58,7 +58,7 @@ if (params.annotation_tool.contains("vep")){
 ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
 chr_prefix     = params.chr_prefix  ? Channel.value(params.chr_prefix) : Channel.value("")
 chrlength      = params.chrom_sizes ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) : Channel.empty()   
-contigs        = params.contig_file ? Channel.fromPath(params.contig_file, checkIfExists: true) : Channel.empty()
+contigs        = params.contig_file ? Channel.fromPath(params.contig_file, checkIfExists: true).map{it -> ["contigs", it]} : Channel.value([[],[]])
 config         = Channel.fromPath("${projectDir}/assets/config/convertToStdVCF.json", checkIfExists: true).collect()
 
 // Annovar table folder
@@ -205,17 +205,18 @@ workflow SNVCALLING {
     }
     interval_ch  = chrlength.splitCsv(sep: '\t', by:1)
 
-    if ((params.runcontigs != "NONE") && (!params.contig_file)) {
+    if (params.runcontigs != "NONE") {
         //
         // MODULE: Prepare contigs file if not provided
         //
         GET_CONTIGS(
-            sample_ch
+            sample_ch,
+            contigs
             )
         ch_versions = ch_versions.mix(GET_CONTIGS.out.versions)
-        contigs     = GET_CONTIGS.out.contigs
+        GET_CONTIGS.out.contigs.filter{meta, contig -> WorkflowCommons.getNumLinesInFile(contig) > 0}
+                .set{contigs}
     }
-
     //
     // MODULE: Extract sample name from BAM
     //
