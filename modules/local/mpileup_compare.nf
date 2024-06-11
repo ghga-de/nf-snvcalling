@@ -21,7 +21,7 @@ process MPILEUP_COMPARE {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def args_c = intervals == "contigs" ? "$args" : "$args -r ${intervals}"
-    def ctrl_qual_cutoff = intervals == "contigs" ? "$ctrl_min_base_qual_contigs" : "$ctrl_min_base_qual"
+    def ctrl_qual_cutoff = intervals == "contigs" ? "${params.ctrl_min_base_qual_contigs}" : "${params.ctrl_min_base_qual}"
 
     if (meta.iscontrol == '1' && params.runCompareGermline)
     {
@@ -34,7 +34,7 @@ process MPILEUP_COMPARE {
             sort -T . -k1,1V -k2,2n > ${prefix}.${intervals}.control.temp
         
         vcf_pileup_compare_allin1_basecount.pl $vcf \\
-            ${prefix}.${intervals}.control.temp "Header" ${ctrl_qual_cutoff} > ${prefix}.${intervals}.npileup.vcf     
+            ${prefix}.${intervals}.control.temp "Header" $ctrl_qual_cutoff > ${prefix}.${intervals}.npileup.vcf     
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
