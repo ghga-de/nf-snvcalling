@@ -4,7 +4,7 @@ process SORT_NONSTANDARD_VCF {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
+        'docker://kubran/samtools:v1.9':'kubran/samtools:v1.9' }"
 
     input:
     tuple val(meta), path(vcf_gz), path(index)
@@ -17,17 +17,13 @@ process SORT_NONSTANDARD_VCF {
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
     
-
     """
-    bgzip -d $vcf_gz >  temp.vcf
-
-    (head -n 5000 temp.vcf | \\
-        grep "#" ; cat temp.vcf | \\
+    (zcat $vcf_gz | head -n 5000 | \\
+        grep "#" ; zcat $vcf_gz | \\
         grep -v "#" | \\
-        sort -T . -k1,1V -n -k2,2n ) > temp_sorted.vcf
+        sort -T . -k1,1V -k2,2n ) | bgzip > snvs_${prefix}_raw.vcf.gz
 
-    bgzip temp_sorted.vcf > snvs_${prefix}_sorted.vcf.gz
-    tabix -p vcf snvs_${prefix}_sorted.vcf.gz
+    tabix -p vcf snvs_${prefix}_raw.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
