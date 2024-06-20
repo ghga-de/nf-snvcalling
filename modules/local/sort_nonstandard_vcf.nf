@@ -18,16 +18,15 @@ process SORT_NONSTANDARD_VCF {
     def prefix     = task.ext.prefix ?: "${meta.id}"
     
     """
-    (zcat $vcf_gz | head -n 5000 | \\
-        grep "#" ; zcat $vcf_gz | \\
-        grep -v "#" | \\
-        sort -T . -k1,1V -k2,2n ) | bgzip > snvs_${prefix}_raw.vcf.gz
+    zcat $vcf_gz | \
+    awk 'BEGIN {header=1} /^#/ {print; next} {header=0; print | "sort -T . -k1,1V -k2,2n"}' | \
+    bgzip > snvs_${prefix}_raw.vcf.gz
 
     tabix -p vcf snvs_${prefix}_raw.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        samtools: \$(echo \$(samtools 2>&1) | sed -e 's/.*Version: //; s/ Usage.*//')
+        tabix: \$(echo \$(tabix -h 2>&1) | sed 's/^.*Version: //; s/ .*\$//')
     END_VERSIONS
     """
     
