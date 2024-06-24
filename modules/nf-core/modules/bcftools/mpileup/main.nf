@@ -4,8 +4,7 @@ process BCFTOOLS_MPILEUP {
 
     conda (params.enable_conda ? "bioconda::bcftools=1.9" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/bcftools:1.9--h47928c2_2':
-        'quay.io/biocontainers/bcftools:1.9--h47928c2_2' }"
+        'docker://kubran/bcftools:1.9':'kubran/bcftools:1.9' }"
 
     input:
     tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai), val(tumorname), val(controlname), val(intervals), path(interval_file)

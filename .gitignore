@@ -11,6 +11,7 @@ __pycache__
 output/
 results/
 result/
+results2/
 results37/
 test.xml
 test_output/
@@ -19,3 +20,4 @@ work/
 testdata_hg37/
 .github/CODEOWNERS-tmp
 bin/vcfparser.pyc
+singularity/

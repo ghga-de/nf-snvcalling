@@ -8,6 +8,7 @@ include { BCFTOOLS_MPILEUP      } from '../../modules/nf-core/modules/bcftools/m
 include { MPILEUP_COMPARE       } from '../../modules/local/mpileup_compare.nf'               addParams( options: params.options )
 include { SEQ_CONTEXT_ANNOTATOR } from '../../modules/local/seq_context_annotator.nf'         addParams( options: params.options )
 include { FILE_CONCATENATOR     } from '../../modules/local/file_concatenator.nf'             addParams( options: params.options )
+include { SORT_NONSTANDARD_VCF  } from '../../modules/local/sort_nonstandard_vcf.nf'          addParams( options: params.options )
 
 
 workflow MPILEUP_SNV_CALL {
@@ -120,7 +121,17 @@ workflow MPILEUP_SNV_CALL {
         combined_vcf
     )
     versions = versions.mix(FILE_CONCATENATOR.out.versions) 
-    vcf_ch=FILE_CONCATENATOR.out.vcf
+
+    // 
+    // MODULE: SORT_NONSTANDARD_VCF
+    //
+    // Sort raw file
+    SORT_NONSTANDARD_VCF(
+        FILE_CONCATENATOR.out.vcf
+    )
+    versions = versions.mix(SORT_NONSTANDARD_VCF.out.versions) 
+    vcf_ch=SORT_NONSTANDARD_VCF.out.output
+
 
     emit:
     vcf_ch

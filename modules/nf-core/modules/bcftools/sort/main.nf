@@ -5,8 +5,7 @@ process BCFTOOLS_SORT {
     //conda "${moduleDir}/environment.yml"
     conda (params.enable_conda ? "${moduleDir}/environment.yml" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/bcftools:1.18--h8b25389_0':
-        'quay.io/biocontainers/bcftools:1.18--h8b25389_0' }"
+        'docker://kubran/bcftools:1.9':'kubran/bcftools:1.9' }"
 
     input:
     tuple val(meta), path(vcf), path(index)
@@ -32,7 +31,7 @@ process BCFTOOLS_SORT {
     """
     bcftools \\
         sort \\
-        --output ${vcf_name}.sorted.${extension} \\
+        --output-file ${vcf_name}.sorted.${extension} \\
         --temp-dir . \\
         $args \\
         $vcf

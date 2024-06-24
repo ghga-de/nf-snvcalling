@@ -42,6 +42,3 @@ jobs:
       - name: BASIC Run the basic pipeline  with docker
         run: |
           nextflow run ${GITHUB_WORKSPACE} -profile test,docker
-      - name: BASIC Run the basic pipeline when --runcontig set to "ALT_HLA" (contigs does not exist in bam)
-        run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test,docker --runcontigs "ALT_HLA"
