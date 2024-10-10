@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - dev
-      - 14-cicd-test-integration
+      - master
   pull_request:
   release:
     types: [published]
@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         # Nextflow versions: check pipeline minimum and current latest
-        nxf_ver: ["22.10.6"]
+        nxf_ver: ["23.10.3"]
     steps:
       - name: Check out pipeline code
         uses: actions/checkout@v3
