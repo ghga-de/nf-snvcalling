@@ -4,23 +4,32 @@
 #
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
+# editted by kuebra.narci@dkfz.de to correct error handling - 23.10.2024 
 
 use strict;
 use warnings;
 
-my $infile = $ARGV[0];
+my $infile = shift @ARGV or die "Usage: $0 <input_file>\n";
+die "File does not exist: $infile\n" unless -e $infile;
+die "File is not readable: $infile\n" unless -r $infile;
 
-if($infile =~ /\.gz/){open(IN, "zcat $infile |") or die "Could not open the $infile to detect the confidence column\n";}
-else{open(IN, "<$infile") or die "Could not open the $infile to detect the confidence column\n";}
+# Open the input file safely
+my $in_fh;  # Declare a lexical filehandle
+if ($infile =~ /\.gz$/) {
+    open($in_fh, "zcat $infile |") or die "Could not open gzipped file $infile: $!\n";
+} else {
+    open($in_fh, '<', $infile) or die "Could not open file $infile: $!\n";
+}
 
 my $line;
-while(<IN>)
-{
-	chomp;
-	$line=$_;
-	last if($_ =~ /^#CHROM\s/);
+while (<$in_fh>) {
+    chomp;
+    $line = $_;
+    last if $line =~ /^#CHROM\s/;
 }
-close IN;
+
+close $in_fh;  # Close the filehandle when done
+
 my $i = 0;
 my @line = split("\t", $line);
 while($i <= @line)

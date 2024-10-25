@@ -4,6 +4,7 @@
 #
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
+# editted by kuebra.narci@dkfz.de to correct error handling - 23.10.2024 
 
 use strict;
 use warnings;
@@ -17,11 +18,12 @@ if (@ARGV < 2)
 my $file = shift;
 my $minconfidence = shift;
 
-open (FH, $file) or die "Could not open $file: $!\n";
+open(my $fh, '<', $file) or die "Could not open '$file': $!\n";
+
 my $header;
-while ($header = <FH>)
-{
-	last if ($header =~ /^\#CHR/); # that is the line with the column names
+while ($header = <$fh>) {
+    chomp $header;  # Remove newline character
+    last if $header =~ /^\#CHR/;  # Stop at the header line
 }
 
 chomp($header);
@@ -40,7 +42,7 @@ my %counts;
 say join "\t", (qw(REF ALT preceeding following type exonic value));
 my ($ref, $alt, $pre, $fo, $ty, $ex);
 
-while (<FH>)
+while ($header = <$fh>)
 {
   chomp;
   # make hash of array with header lines => header names are keys
@@ -71,7 +73,7 @@ while (<FH>)
   }
   $counts{join ':', @fields{(qw(REF ALT preceeding following type exonic))}}++;
 }
-close FH;
+close($fh) or die "Could not close '$file': $!\n";
 for $ref ('T','C') {
   for $alt ('A','C','G','T') {
     next if ($alt eq $ref);

@@ -1,55 +1,67 @@
 #!/usr/bin/env perl
+# editted by kuebra.narci@dkfz.de to correct error handling - 23.10.2024 
 
 
 use strict;
 use warnings;
 use Pod::Usage;
 
+# Check for input files
 my @files = @ARGV;
-my $line;
-my $colnames;
-my $current_colnames;
 
-if (! @ARGV) {
-  pod2usage({-verbose => 1,  -message => "Error: No input files specified", -exitval => 2, -output => \*STDERR});
+if (!@files) {
+    pod2usage({ -verbose => 1, -message => "Error: No input files specified", -exitval => 2, -output => \*STDERR });
 }
 
-if ($ARGV[0] eq '--help') {
-  pod2usage({-verbose => 2, -exitval => 1});
+if ($files[0] eq '--help') {
+    pod2usage({ -verbose => 2, -exitval => 1 });
 }
 
-### First file: print header lines and set colnames
-open(IN, $files[0]) || die "Could not open file $files[0] ($!)";
+# Function to process a file and return the header
+sub process_file {
+    my ($filename, $print_header) = @_;
+    my $current_colnames;
+    
+    open(my $fh, '<', $filename) or die "Could not open file $filename: $!\n";
 
-while ($line = <IN>) {
-  print $line;
-  last if ($line !~ /^\#/);
-  $colnames = $line;
+    # Read lines and capture header
+    while (my $line = <$fh>) {
+        chomp($line);
+        if ($line =~ /^\#/) {
+            print "$line\n" if $print_header;  # Print header if requested
+            $current_colnames = $line;          # Store header
+            next;
+        }
+        last;  # Exit loop when a non-header line is encountered
+    }
+    
+    die "No header found in file $filename\n" if !defined($current_colnames);
+    
+    return ($current_colnames, $fh);  # Return the header and the filehandle
 }
-die "No header found in 1st file ($files[0])" if (! defined($colnames));
 
+# Process the first file
+my ($colnames, $fh_first) = process_file($files[0], 1);  # Print header
 
-while (<IN>) {
-  print;
-}
-close IN;
-
-### Additional Files: do not print header; check if colnames match
+# Read the rest of the files and check headers
 foreach my $file (@files[1..$#files]) {
-  open(IN, $file) || die "Could not open file $file ($!)";
-  while ($line = <IN>) {
-    last if ($line !~ /^\#/);
-    $current_colnames = $line;
-  }
-  die "No header found in file $file" if (! defined($current_colnames));
-  die "Columns in file $file do not match\n 1st file: $colnames\n Current file: $current_colnames\n" if ($colnames ne $current_colnames);
-  print $line;
+    my ($current_colnames, $fh_current) = process_file($file, 0);  # Do not print header
+    
+    # Compare headers
+    die "Columns in file $file do not match\nFirst file: $colnames\nCurrent file: $current_colnames\n"
+        if $colnames ne $current_colnames;
 
-  while (<IN>) {
-    print;
-  }
-  close IN;
+    # Print the rest of the current file
+    while (my $line = <$fh_current>) {
+        print $line;
+    }
+    
+    close $fh_current;  # Close the current filehandle
 }
+
+close $fh_first;  # Close the first filehandle
+
+
 
 
 

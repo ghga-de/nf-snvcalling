@@ -4,6 +4,7 @@
 #
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
+# editted by kuebra.narci@dkfz.de to correct error handling - 23.10.2024 
 
 use strict;
 use warnings;
@@ -13,7 +14,12 @@ my $max = 50000;
 my $median;
 my $outfile = $ARGV[1];
 
-open(IN, "<$ARGV[0]");
+# Check for input filename
+if (@ARGV < 1) {
+    die "Usage: $0 filename\n";
+}
+
+open(IN, "<$ARGV[0]") or die "Could not open file '$ARGV[0]': $!\n";
 
 my $count=0;
 my @head;
@@ -62,6 +68,6 @@ while($i < @bins){
 
 $median = 5*$i;
 close IN;
-open(OUT, ">$outfile");
+open(OUT, ">$outfile") or die "Could not open file '$outfile': $!\n";
 print OUT $median, "\n";
 close OUT;

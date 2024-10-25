@@ -6,6 +6,7 @@
 #
 
 # count how many / what percentage of somatic SNVs of certain confidence score (default >= 8) are in dbSNP and 1KG
+# editted by kuebra.narci@dkfz.de to correct error handling - 23.10.2024 
 
 use strict;
 use warnings;
@@ -16,14 +17,20 @@ if (@ARGV < 1)
 	die $usage;
 }
 
-my $file = shift;
-my $minscore = shift;
+my $file = shift @ARGV;  # First argument is the file
+my $minscore = shift @ARGV // 8;  # Second argument (optional), default to 8 if not provided
 
-unless (defined $minscore)
-{
-	$minscore = 8;
+# Ensure the minimum score is a valid number
+unless ($minscore =~ /^\d+$/ && $minscore >= 0) {
+    die "Invalid minimum score: $minscore. It must be a non-negative integer.\n";
 }
-open (my $FH, $file) or die "Could not open $file: $!\n";
+
+# Check if the file exists and open it
+unless (-e $file) {
+    die "File $file does not exist.\n";
+}
+
+open(my $FH, '<', $file) or die "Could not open file '$file': $!\n";
 
 # count all, somatic, s. with minconfidence, in dbSNP, in 1KG
 my $all = 0;
@@ -39,11 +46,17 @@ my @help = ();
 my $header = "";
 my ($DBSBP, $KG, $CONFIDENCE, $CLASSIFICATION);
 
-while(!eof($FH)){
-	my $line = readline($FH) || die "Could not read line: $?";
-	chomp $line;
-	if ($line =~ /^#/)
-	{
+while (!eof($FH)) {
+    my $line = readline($FH);
+    
+    if (!defined $line) {
+        die "Could not read line: $!\n";
+    }
+
+    chomp $line;
+
+    # Check if the line starts with '#'
+    if ($line =~ /^#/) {
 		#print STDOUT "HELLO\n";
 		if ($line =~/^#CHROM/){
 			chomp $line;
@@ -104,7 +117,9 @@ while(!eof($FH)){
 		}
 	}
 }
-close $FH;
+if (!close $FH) {
+    warn "Could not close file '$file': $!\n";
+}
 
 if ($scored > 0)
 {

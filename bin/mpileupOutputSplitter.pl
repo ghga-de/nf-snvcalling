@@ -4,27 +4,36 @@
 #
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
+# editted by kuebra.narci@dkfz.de to correct error handling - 23.10.2024 
+
 use strict;
 use warnings;
 use v5.10;
 
-my $snv_of = shift @ARGV;
-my $indel_of = shift @ARGV;
+# Retrieve output filenames from command-line arguments
+my $snv_of = shift @ARGV or die "SNV output file not provided\n";
+my $indel_of = shift @ARGV or die "Indel output file not provided\n";
 
-open(SNV, ">$snv_of") || die "Could not open $snv_of for writing ($!)";
-open(INDEL, ">$indel_of")  || die "Could not open $indel_of for writing ($!)";
+# Open output files safely
+open(my $snv_fh, '>', $snv_of) or die "Could not open $snv_of for writing: $!\n";
+open(my $indel_fh, '>', $indel_of) or die "Could not open $indel_of for writing: $!\n";
 
-while(<>) {
-  if (/^\#/) {
-    print SNV;
-    print INDEL;
-    next;
-  }
-  if ((split(/\t/))[7] =~ /^INDEL/) {
-    print INDEL;
-  } else {
-    print SNV;
-  }
+# Process input from standard input
+while (<>) {
+    chomp;  # Remove newline at the end of the line
+    if (/^\#/) {
+        print $snv_fh "$_\n";  # Print headers to SNV file only
+        next;
+    }
+    # Check if the 8th column indicates an indel
+    if ((split(/\t/))[7] =~ /^INDEL/) {
+        print $indel_fh "$_\n";
+    } else {
+        print $snv_fh "$_\n";
+    }
 }
-close SNV;
-close INDEL;
+
+# Close output files
+close($snv_fh);
+close($indel_fh);
+

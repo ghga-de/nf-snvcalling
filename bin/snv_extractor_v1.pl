@@ -10,6 +10,7 @@
 # Extracts: somatic snvs -> snvs_PID_somtatic_snvs_conf_?_to_10.vcf
 #           somatic coding snvs -> snvs_PID_somtatic_coding_snvs_conf_?_to_10.vcf
 #           germline coding snvs -> snvs_PID_germline_coding_snvs_conf_?_to_10.vcf
+# editted by kuebra.narci@dkfz.de to correct error handling - 23.10.2024 
 
 use strict;
 use warnings;
@@ -55,7 +56,7 @@ if($extractsyn == 1){open(SYN, ">$outsyn") or die "Could not open the file $outs
 if($extractNcRNA == 1){open(NCRNA, ">$outNcRNA") or die "Could not open the file $outNcRNA\n";}
 
 my $head;
-while(<IN>)
+while(! eof(IN))
 {
 	chomp;
 	$head=$_;
@@ -90,11 +91,12 @@ if($region ne "0"){open(IN, "$tabix $infile -B $region |") or die "Could not ope
 elsif($infile =~ /\.gz$/){open(IN, "zcat $infile |") or die "Could not open the infile: $infile\n";}
 else{open(IN, "<$infile") or die "Could not open the infile: $infile\n";}
 
-while(<IN>)
+while(! eof(IN))
 {
 	chomp;
 	next if($_ =~ /^#/);
 	my @line = split("\t", $_);
+
 	next if($line[$col{"CONFIDENCE"}] < $minconf);
 	if((($control_exist && $line[$col{"ANNOTATION_control"}] eq "somatic") || (!$control_exist && $line[$col{"RECLASSIFICATION"}] =~ "somatic")) && $line[$col{"RECLASSIFICATION"}] !~ /lowCov_SNP_support_germline/){
 	    print SOM $_, "\n";
@@ -114,7 +116,7 @@ while(<IN>)
 	}
 }
 
-close IN;
-close SOM;
-close COD;
-close GER;
+close IN or die "Could not close '$infile': $!\n";
+close SOM or die "Could not close '$outsom': $!\n";
+close COD or die "Could not close '$outsomcod': $!\n";
+close GER or die "Could not close '$outgermcod': $!\n";

@@ -4,6 +4,7 @@
 #
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
+# editted by kuebra.narci@dkfz.de to correct error handling - 23.10.2024 
 
 use strict;
 use warnings;
@@ -80,17 +81,21 @@ if (defined $help || ! defined $file)
 	-x/--runExome		Run on exome, will turn off the high control coverage punishment and the PCR bias filter
 	-h/--help			help\n";
 }
-if($file =~ /vcf\.gz$/){
-	open(FH, "zcat $file |") or die "Could not open $file: $!\n";
-}else{
-	open (FH, $file) or die "Could not open $file: $!\n";
+my $fh;  # Declare a lexical filehandle
+if ($file =~ /\.vcf\.gz$/) {
+    open($fh, "-|", "zcat $file") or die "Could not open $file: $!\n";
+} else {
+    open($fh, '<', $file) or die "Could not open $file: $!\n";
 }
-if(defined $panCanOut){
-	if($panCanOut =~ /\.gz$/){
-		open(PANOUT, "| bgzip > $panCanOut") or die "The outfile for panCan was set: $panCanOut but could not be opened\n";
-	}else{
-		open(PANOUT, ">$panCanOut") or die "The outfile for panCan was set: $panCanOut but could not be opened\n";
-	}
+
+# Open the output file if defined
+if (defined $panCanOut) {
+    my $panout_fh;  # Declare a lexical filehandle for output
+    if ($panCanOut =~ /\.gz$/) {
+        open($panout_fh, "|-", "bgzip > $panCanOut") or die "The outfile for panCan was set: $panCanOut but could not be opened\n";
+    } else {
+        open($panout_fh, '>', $panCanOut) or die "The outfile for panCan was set: $panCanOut but could not be opened\n";
+    }
 }
 
 my $additionalHeader;
@@ -149,18 +154,24 @@ $pancanhead .= "##INFO=<ID=SOMATIC,Number=0,Type=Flag,Description=\"Indicates if
 ##SAMPLE=<ID=TUMOR,SampleName=tumor_$pid,Individual=$pid,Description=\"Tumor\">
 #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tCONTROL\tTUMOR\n";
 
-if ($makehead == 1 && defined $panCanOut)
-{
-print PANOUT $pancanhead;
+if ($makehead == 1 && defined $panCanOut) {
+    # Print header to output file
+    if (defined $pancanhead) {
+        print $panout_fh $pancanhead or warn "Could not write to output file: $!\n";
+    } else {
+        warn "Header variable \$pancanhead is undefined.\n";
+    }
 }
 
-my $header = "";
-while ($header = <FH>)
-{
-	last if ($header =~ /^\#CHROM/); # that is the line with the column names
-	print "$header";
+my $header;
+
+while ($header = <$fh>) {
+    last if $header =~ /^\#CHROM/;  # Exit if this is the line with column names
+    print $header;                   # Print out every preceding line
 }
-chomp $header;
+
+# Only chomp if $header is defined
+chomp($header) if defined $header;
 
 # get the columns where to look for features:
 # INFO => DP4 of tumor => variant frequency and strand bias, CONTROL_INFO => DP5 of control => variant frequency , SOMATIC_GERMLINE_CLASSIFICATION => classification
@@ -350,10 +361,12 @@ print join("\t", @help);
 
 print "\n";
 
-if(defined $somout)
-{
-	open(SOM, ">$somout") or die "Could not open the outfile for somatic SNVs $somout\n";
-	print SOM join("\t", @help), "\n";
+if (defined $somout) {
+    # Open the output file safely using a lexical filehandle
+    open(my $som_fh, '>', $somout) or die "Could not open the outfile for somatic SNVs $somout: $!\n";
+    
+    # Print the header to the output file
+    print $som_fh $header;
 }
 
 ####################-END-HEADER-######################
@@ -388,7 +401,7 @@ my $indbSNP = 0;
 my $precious = 0;
 my $class = ""; # for potential re-classification (e.g. low coverage in control and in dbSNP => probably germline)
 
-while (<FH>)
+while ($header = <$fh>)
 {
 	$confidence=10; # start with maximum value
 	my $reasons = "";	# collect info on which penalties came into effect
@@ -663,9 +676,9 @@ while (<FH>)
     {
 	if (($alfrtum/$altfctrl) < $newpun)
 	{
-	    $confidence-=3;
-	    $reasons.="Alternative_allel_freq_not_".$newpun."_times_bigger_in_tum_than_in_control(-3)";
-	    $filterfield{"VAF"} = 1;
+		$confidence-=3;
+		$reasons.="Alternative_allel_freq_not_".$newpun."_times_bigger_in_tum_than_in_control(-3)";
+		$filterfield{"VAF"} = 1;
 	}
     }
 
@@ -978,9 +991,14 @@ while (<FH>)
 
 
 ### Print
-	if(defined $panCanOut){
-		print PANOUT join("\t", @panout), "\n";
-	}
+if (defined $panCanOut) {
+    # Check if $panout is defined and has elements before attempting to print
+    if (@panout) {
+        print $panout_fh join("\t", @panout), "\n" or warn "Could not write to output file: $!\n";
+    } else {
+        warn "Array \@panout is empty; nothing to write.\n";
+    }
+}
 	if ($print_info)
 	{
 		if(!defined $reasons || $reasons eq "")
@@ -992,7 +1010,11 @@ while (<FH>)
 	print join ("\t", @help);
 	print "\n";
 
-	if(defined $somout && $confidence > 7 && $help[$CLASS] eq "somatic" && $help[$RECLASSIFICATION] !~ /lowCov_SNP_support_germline/){print SOM join("\t", @help), "\n";}
+	if(defined $somout && $confidence > 7 && $help[$CLASS] eq "somatic" && $help[$RECLASSIFICATION] !~ /lowCov_SNP_support_germline/){print $som_fh join("\t", @help), "\n";}
 }
-close FH;
+# Close the filehandle and handle potential errors
+close($som_fh) or warn "Could not close the outfile for somatic SNVs $somout: $!\n";
+close($fh) or warn "Could not close input file: $!\n" if defined $fh;
+close($panout_fh) or warn "Could not close output file: $!\n" if defined $panout_fh;
+
 exit;

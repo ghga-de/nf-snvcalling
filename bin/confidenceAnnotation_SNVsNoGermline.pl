@@ -4,6 +4,7 @@
 #
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
+# editted by kuebra.narci@dkfz.de to correct error handling - 23.10.2024 
 
 use strict;
 use warnings;
@@ -19,7 +20,7 @@ if (@ARGV < 2)
 my $file = shift;
 my $configfile = shift;
 
-open (CF, $configfile) or die "Could not open $configfile: $!\n";
+open(my $fh, '<', $configfile) or die "Could not open configuration file '$configfile': $!\n";
 
 # get colunm labels from config file:
 ### Annotation (SNV and Indel)
@@ -30,16 +31,22 @@ open (CF, $configfile) or die "Could not open $configfile: $!\n";
 
 my %labels = ();
 my @help = ();
-while (<CF>)
-{
-	if ($_ =~ /_COL=/)
-	{
-		chomp;
-		@help = split ("=", $_);
-		$labels{$help[0]} = $help[1];
-	}
+while (my $line = <$fh>) {
+    if ($line =~ /_COL=/) {
+        chomp($line);  # Remove the newline character from the end of the line
+        my @help = split("=", $line);
+
+        # Ensure we have exactly two elements to avoid warnings
+        if (@help == 2) {
+            $labels{$help[0]} = $help[1];
+        } else {
+            warn "Ignoring malformed line in config file: $line\n";
+        }
+    }
 }
-close CF;
+
+close($fh) or warn "Could not close configuration file '$configfile': $!\n";
+
 
 foreach my $key (keys %labels)
 {
@@ -47,13 +54,12 @@ foreach my $key (keys %labels)
 }
 
 #exit;
-open (FH, $file) or die "Could not open $file: $!\n";
+open(my $fh, '<', $file) or die "Could not open file '$file': $!\n";
 
 my $header = "";
-while ($header = <FH>)
-{
-	last if ($header =~ /^\#CHROM/); # that is the line with the column names
-	print "$header";
+while (my $header = <$fh>) {
+    last if $header =~ /^\#CHROM/;  # This is the line with the column names
+    print $header;                   # Print out every preceding line
 }
 chomp $header;
 print $header, "\tCONFIDENCE\tCLASSIFICATION\n";
@@ -135,19 +141,19 @@ for (my $c = 0; $c < @help; $c++)
 		print STDERR "DBSNP_COL in column $c\n";
 	}
 	if ($help[$c] eq "ExAC")
-   	{
-   		$ExAC = $c;
-   		print STDERR "ExAC in column $c\n";
-   	}
- 	if ($help[$c] eq "EVS")
-   	{
-       	$EVS = $c;
-       	print STDERR "EVS in column $c\n";
+	{
+		$ExAC = $c;
+		print STDERR "ExAC in column $c\n";
+	}
+	if ($help[$c] eq "EVS")
+	{
+		$EVS = $c;
+		print STDERR "EVS in column $c\n";
     }
     if ($help[$c] eq "CountInLocalControl")
     {
-    	$CILC = $c;
-    	print STDERR "CountInLocalControl in column $c\n";
+		$CILC = $c;
+		print STDERR "CountInLocalControl in column $c\n";
     }
 }
 
@@ -172,7 +178,7 @@ my $indbSNP = 0;
 my $precious = 0;
 my $class = "";	# for germline/somatic classification (e.g. in dbSNP => probably germline)
 
-while (<FH>)
+while (my $line = <$fh>)
 {
 	$confidence=10;	# start with maximum value
 	# reset global variables
@@ -353,5 +359,5 @@ while (<FH>)
 	}
 	print $line, "\t$confidence\t$class\n";
 }
-close FH;
+close($fh) or warn "Could not close configuration file '$configfile': $!\n";
 exit;
