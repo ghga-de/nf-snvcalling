@@ -4,7 +4,7 @@ process GREP_SAMPLENAME {
 
     conda (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
+        'docker://kubran/samtools:v1.9':'kubran/samtools:v1.9' }"
 
     input:
     tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai)
@@ -20,8 +20,8 @@ process GREP_SAMPLENAME {
     if (meta.iscontrol == '1')
     {
         """
-        controlname=`samtools view -H $meta.control_bam | grep '^@RG' | sed "s/.*SM:\\([^\\t]*\\).*/\\1/g" | uniq`
-        tumorname=`samtools view -H $meta.tumor_bam | grep '^@RG' | sed "s/.*SM:\\([^\\t]*\\).*/\\1/g" | uniq`
+        controlname=`samtools view -H $control | grep '^@RG' | sed "s/.*SM:\\([^\\t]*\\).*/\\1/g" | uniq`
+        tumorname=`samtools view -H $tumor | grep '^@RG' | sed "s/.*SM:\\([^\\t]*\\).*/\\1/g" | uniq`
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -33,7 +33,7 @@ process GREP_SAMPLENAME {
     else {
         """
         controlname='dummy'
-        tumorname=`samtools view -H $meta.tumor_bam | grep '^@RG' | sed "s/.*SM:\\([^\\t]*\\).*/\\1/g" | uniq`
+        tumorname=`samtools view -H $tumor | grep '^@RG' | sed "s/.*SM:\\([^\\t]*\\).*/\\1/g" | uniq`
         
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":

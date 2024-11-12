@@ -14,15 +14,33 @@
       },
       "tumor": {
         "type": "string",
-        "pattern": "^\\S+\\.bam$",
-        "errorMessage": "BAM file for tumors must be provided'"
+        "pattern": "^\\S+\\.(bam|cram)$",
+        "errorMessage": "BAM or CRAM file for tumors must be provided'"
+      },
+      "tumor_index": {
+        "type": "string",
+        "pattern": "^\\S+\\.(bai|crai)$",
+        "errorMessage": "BAI OR crai file matching to BAM for tumors must be provided'"
       },
       "control": {
-        "errorMessage": "BAM file for as control matching to tumor, if there is",
+        "errorMessage": "BAM or CRAM file for as control matching to tumor, if there is",
         "anyOf": [
           {
             "type": "string",
-            "pattern": "^\\S+\\.bam$"
+            "pattern": "^\\S+\\.(bam|cram)$"
+          },
+          {
+            "type": "string",
+            "maxLength": 0
+          }
+        ]
+      },
+      "control_index": {
+        "errorMessage": "BAI or CRAI file matching to BAM for as control matching to tumor, if there is",
+        "anyOf": [
+          {
+            "type": "string",
+            "pattern": "^\\S+\\.(bai|crai)$"
           },
           {
             "type": "string",
@@ -31,6 +49,6 @@
         ]
       }
     },
-    "required": ["sample", "tumor"]
+    "required": ["sample", "tumor", "tumor_index"]
   }
 }
