@@ -70,3 +70,12 @@ Initial release of ghga-de/nf-snvcalling, created with the [nf-core](https://nf-
 
 ### `Added`
  - nf-prov plugin is added.
+
+## v2.0.2 - 12.11.2024
+
+### `Fixed`
+- add cram/crai files to input list (assets/schema_input.json)
+- add only a warn about the indices does not exists in converttovcf.json (bin/convertToStdVCF.py)
+- change default arg for ENSEMBL VEP (conf/modules.config)
+- upgrade samtools version for cram handling (modules/local/grep_samplename.nf)
+- edit nextflow version to latest (nextflow.config)
