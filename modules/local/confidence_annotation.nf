@@ -17,9 +17,8 @@ process CONFIDENCE_ANNOTATION {
     task.ext.when == null || task.ext.when
 
     script:
-    def args        = task.ext.args ?: ''
     def prefix      = task.ext.prefix ?: "${meta.id}"
-    def confoptions = params.fasta.contains("38") ? "${params.confidenceoptions} --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz": "${params.confidenceoptions}" 
+    def confoptions = ( params.genome ? (params.genome == 'hg38' || params.genome == 'GRCh38') : params.fasta.contains('38')) ? "${params.confidenceoptions} --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz" : "${params.confidenceoptions}"
 
     if (meta.iscontrol == "1"){
         """

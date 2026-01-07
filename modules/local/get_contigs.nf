@@ -7,7 +7,7 @@ process GET_CONTIGS {
         'docker://kubran/odcf_mpileupsnvcalling:v0':'kubran/odcf_mpileupsnvcalling:v0' }"
 
     input:
-    tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai)
+    tuple val(meta), path(tumor), path(tumor_bai), path(control), path(control_bai)
     tuple val(meta2), path(contig_file)
 
     output:
@@ -15,7 +15,6 @@ process GET_CONTIGS {
     path "versions.yml"                  , emit: versions
 
     script: 
-    def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
     
     if (params.contig_file)

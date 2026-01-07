@@ -143,7 +143,8 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK         } from '../subworkflows/local/input_check'
+include { paramsSummaryMap    } from 'plugin/nf-schema'
+include { samplesheetToList   } from 'plugin/nf-schema'
 include { MPILEUP_SNV_CALL    } from '../subworkflows/local/mpileup_snv_call'
 include { SNV_ANNOTATION      } from '../subworkflows/local/snv_annotation'
 include { FILTER_SNVS         } from '../subworkflows/local/filter_snvs'
@@ -184,14 +185,18 @@ workflow SNVCALLING {
     ch_logs     = Channel.empty()
     ch_stdvcf   = Channel.empty()
     
-    //
-    // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-    //
-    INPUT_CHECK (
-        ch_input
-    )
-    ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    sample_ch   = INPUT_CHECK.out.ch_sample
+    // Check mandatory parameters
+    if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+
+    // Validate and convert to channel
+    Channel
+        .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
+        .map { meta, tumor, tumor_index, control, control_index ->    
+            def is_control_present = control ? 1 : 0
+            def new_meta = meta + [ iscontrol: is_control_present ]
+            return [ new_meta, tumor, tumor_index, control, control_index]
+        }
+        .set { sample_ch }
 
     if ( !params.chrom_sizes) {
         //
@@ -247,7 +252,8 @@ workflow SNVCALLING {
     
     if (params.runSNVAnnotation){ 
         SNV_ANNOTATION(
-            MPILEUP_SNV_CALL.out.vcf_ch, 
+            MPILEUP_SNV_CALL.out.vcf_ch,
+            sample_ch, 
             ref, 
             kgenome,dbsnpsnv,localcontrolwgs,localcontrolwes,gnomadgenomes,gnomadexomes,
             repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats,

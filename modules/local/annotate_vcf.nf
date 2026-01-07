@@ -29,7 +29,7 @@ process ANNOTATE_VCF {
     script:
     def args        = task.ext.args ?: ''
     def prefix      = task.ext.prefix ?: "${meta.id}"
-    def cmdfilter   = meta.iscontrol == "1" ? "| median.pl - vcf_control_median.txt" : ""
+    def cmdfilter   = meta.iscontrol == 1 ? "| median.pl - vcf_control_median.txt" : ""
     def pipe  = ["${cmdfilter}",
                 dbsnpsnv ? " | annotate_vcf.pl -a - -b ${dbsnpsnv} --columnName='DBSNP' --reportMatchType --bAdditionalColumn=2  --reportLevel 4" : '',
                 kgenome ? " | annotate_vcf.pl -a - -b ${kgenome} --columnName='1K_GENOMES' --reportMatchType --bAdditionalColumn=2 --reportLevel 4" : '',
@@ -39,7 +39,8 @@ process ANNOTATE_VCF {
                 gnomadexomes ? " | annotate_vcf.pl -a - -b ${gnomadexomes} --columnName='GNOMAD_EXOMES' --bFileType vcf --reportLevel 4 --reportMatchType" : ''
                 ].join(' ').trim()
 
-    def maxcontrolcov = meta.iscontrol == "1" ? "[[ `cat vcf_control_median.txt` -lt 1 ]] && echo 'Median was not calculated correctly' && exit 3": "touch vcf_nocontrol_median.txt"
+    def maxcontrolcov = meta.iscontrol == 1 ? "[[ `cat vcf_control_median.txt` -lt 1 ]] && echo 'Median was not calculated correctly' && exit 3": "touch vcf_nocontrol_median.txt"
+
     """
     zcat < $vcf $pipe | \\
         tee ${prefix}.vcf | vcf_to_annovar.pl $chrprefix "" > ${prefix}.ForAnnovar.bed

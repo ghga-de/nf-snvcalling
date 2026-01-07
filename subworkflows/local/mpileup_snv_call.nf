@@ -95,13 +95,22 @@ workflow MPILEUP_SNV_CALL {
     ch_vcf_stats
         .map { meta, vcf, intervals, stats -> [meta, intervals]} 
         .set {ch_intervals} 
+
     //
     // MODULE:MPILEUP_COMPARE 
     //
     // RUN bcftools mpileup and vcf_pileup_compare_allin1_basecount.pl to compare germline variants.
     // This process only applies of there is control and runCompareGermline is true
+
+    sample_ch.map{ meta, tumor, tumor_bai, control, control_bai, tumorname, controlname-> [meta, control, control_bai]} 
+        .set{control_ch}
+
+    ch_input = ch_vcf
+        .join(ch_intervals, by: 0)
+        .combine(control_ch, by: 0)
+
     MPILEUP_COMPARE(
-        ch_vcf.join(ch_intervals, by: [0]), 
+        ch_input,
         ref
     )
     versions = versions.mix(MPILEUP_COMPARE.out.versions) 
@@ -112,6 +121,7 @@ workflow MPILEUP_SNV_CALL {
         .vcf
         .groupTuple()
         .set { combined_vcf }
+
     //
     // MODULE: FILE_CONCATENATOR 
     //

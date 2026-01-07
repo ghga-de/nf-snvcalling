@@ -7,17 +7,17 @@ process GREP_SAMPLENAME {
         'docker://kubran/samtools:v1.9':'kubran/samtools:v1.9' }"
 
     input:
-    tuple val(meta), path(tumor), path(tumor_bai), path(control),  path(control_bai)
+    tuple val(meta), path(tumor), path(tumor_bai), path(control), path(control_bai)
 
     output:
-    tuple val(meta), env(tumorname)    , env(controlname)          , emit: samplenames
-    path "versions.yml"     , emit: versions
+    tuple val(meta), env(tumorname), env(controlname)     , emit: samplenames
+    path "versions.yml"                                   , emit: versions
 
     script: 
     def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
     
-    if (meta.iscontrol == '1')
+    if (meta.iscontrol == 1)
     {
         """
         controlname=`samtools view -H $control | grep '^@RG' | sed "s/.*SM:\\([^\\t]*\\).*/\\1/g" | uniq`
