@@ -9,6 +9,7 @@ process GET_CONTIGS {
     input:
     tuple val(meta), path(tumor), path(tumor_bai), path(control), path(control_bai)
     tuple val(meta2), path(contig_file)
+    tuple path(fasta), path(fasta_fai)
 
     output:
     tuple val(meta), path("contigs.bed") , emit: contigs
@@ -16,6 +17,7 @@ process GET_CONTIGS {
 
     script: 
     def prefix     = task.ext.prefix ?: "${meta.id}"
+    def reference_flag = tumor.extension == "cram" ? "-T ${fasta}" : ""
     
     if (params.contig_file)
     {
@@ -32,13 +34,13 @@ process GET_CONTIGS {
         if (params.runcontigs == 'ALT_HLA')
         {
             """
-            if [ -n "\$(samtools view -H $tumor | grep -P "_alt\\tLN")" ]; then
-                samtools view -H $tumor | grep -P "_alt\\tLN" | sed -e 's/@SQ\\tSN://' -e 's/\\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 > ALT_contigs.bed
+            if [ -n "\$(samtools view ${reference_flag} -H $tumor | grep -P "_alt\\tLN")" ]; then
+                samtools view ${reference_flag} -H $tumor | grep -P "_alt\\tLN" | sed -e 's/@SQ\\tSN://' -e 's/\\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 > ALT_contigs.bed
             else
                 touch ALT_contigs.bed
             fi
-            if [ -n "\$(samtools view -H $tumor | grep -P "SN:HLA")" ]; then
-                samtools view -H $tumor | grep -P "SN:HLA" | sed -e 's/@SQ\\tSN://' -e 's/\\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 > HLA_contigs.bed
+            if [ -n "\$(samtools view ${reference_flag} -H $tumor | grep -P "SN:HLA")" ]; then
+                samtools view ${reference_flag} -H $tumor | grep -P "SN:HLA" | sed -e 's/@SQ\\tSN://' -e 's/\\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 > HLA_contigs.bed
             else
                 touch HLA_contigs.bed
             fi
@@ -54,8 +56,8 @@ process GET_CONTIGS {
         else {
             """
             touch contigs.bed
-            if [ -n "\$(samtools view -H $tumor | grep -P "SN:") "]; then
-                samtools view -H $tumor | grep -P "SN:"  | sed -e 's/@SQ\\tSN://' -e 's/\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 | tail -n +25 > contigs.bed
+            if [ -n "\$(samtools view ${reference_flag} -H $tumor | grep -P "SN:") "]; then
+                samtools view ${reference_flag} -H $tumor | grep -P "SN:"  | sed -e 's/@SQ\\tSN://' -e 's/\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 | tail -n +25 > contigs.bed
             else
                 touch contigs.bed
             fi
