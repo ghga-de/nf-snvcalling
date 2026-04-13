@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 - add cram/crai files to input list (assets/schema_input.json)
-- add only a warn about the indices does not exists in converttovcf.json (bin/convertToStdVCF.py)
+- add only a warning about that indices do not exists in converttovcf.json (bin/convertToStdVCF.py)
 - change default arg for ENSEMBL VEP (conf/modules.config)
 - upgrade samtools version for cram handling (modules/local/grep_samplename.nf)
 - edit nextflow version to latest (nextflow.config)
