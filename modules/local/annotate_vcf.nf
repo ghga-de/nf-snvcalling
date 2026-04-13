@@ -39,7 +39,7 @@ process ANNOTATE_VCF {
                 gnomadexomes ? " | annotate_vcf.pl -a - -b ${gnomadexomes} --columnName='GNOMAD_EXOMES' --bFileType vcf --reportLevel 4 --reportMatchType" : ''
                 ].join(' ').trim()
 
-    def maxcontrolcov = meta.iscontrol == 1 ? "[[ `cat vcf_control_median.txt` -lt 1 ]] && echo 'Median was not calculated correctly' && exit 3": "touch vcf_nocontrol_median.txt"
+    def maxcontrolcov = meta.iscontrol == 1 ? "[[ "$(cat vcf_control_median.txt)" -lt 1 ]] && echo 'Median was not calculated correctly' && exit 3": "touch vcf_nocontrol_median.txt"
 
     """
     zcat < $vcf $pipe | \\
