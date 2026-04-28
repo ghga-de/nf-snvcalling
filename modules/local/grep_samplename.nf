@@ -18,7 +18,7 @@ process GREP_SAMPLENAME {
     if (meta.iscontrol == 1)
     {
         """
-        controlname=`samtools view -H $control | grep '^@RG' | sed sed "s/.*SM:\\([^[:space:]]*\\).*/\\1/" | uniq`
+        controlname=`samtools view -H $control | grep '^@RG' | sed "s/.*SM:\\([^[:space:]]*\\).*/\\1/" | uniq`
         tumorname=`samtools view -H $tumor | grep '^@RG' | sed "s/.*SM:\\([^[:space:]]*\\).*/\\1/" | uniq`
 
         cat <<-END_VERSIONS > versions.yml
