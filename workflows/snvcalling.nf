@@ -28,7 +28,21 @@ if (params.runSNVAnnotation){
 }
 
 // If runIndelDeepAnnotation is true; at least one of the annotation files must be provided
-if ((params.runSNVDeepAnnotation) && (!params.enchancer_file && !params.cpgislands_file && !params.tfbscons_file && !params.encode_dnase_file && !params.mirnas_snornas_file && !params.mirna_sncrnas_file && !params.mirbase_file && !params.cosmic_file && !params.mir_targets_file && !params.cgi_mountains_file && !params.phastconselem_file && !params.encode_tfbs_file)) { 
+if ((params.runSNVDeepAnnotation) && 
+        (!params.enchancer_file && 
+        !params.cpgislands_file && 
+        !params.tfbscons_file && 
+        !params.encode_dnase_file && 
+        !params.mirnas_snornas_file && 
+        !params.mirna_sncrnas_file && 
+        !params.mirbase_file && 
+        !params.cosmic_file && 
+        !params.mir_targets_file && 
+        !params.cgi_mountains_file && 
+        !params.phastconselem_file && 
+        !params.encode_tfbs_file)
+        ) 
+    { 
     log.error "Please specify at least one annotation file to perform SNV Deep Annotation"
     exit 1
 }
@@ -37,7 +51,7 @@ if ((params.runSNVDeepAnnotation) && (!params.enchancer_file && !params.cpgislan
 // Check mandatory parameters
 //
 
-if (params.input)         { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 // Annovar only be checked if annovar is true
 if (params.annotation_tool.contains("annovar")){
     file(params.annovar_path, checkIfExists: true)

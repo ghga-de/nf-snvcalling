@@ -14,14 +14,12 @@ process GREP_SAMPLENAME {
     path "versions.yml"                                   , emit: versions
 
     script: 
-    def args       = task.ext.args ?: ''
-    def prefix     = task.ext.prefix ?: "${meta.id}"
     
     if (meta.iscontrol == 1)
     {
         """
-        controlname=`samtools view -H $control | grep '^@RG' | sed "s/.*SM:\\([^\\t]*\\).*/\\1/g" | uniq`
-        tumorname=`samtools view -H $tumor | grep '^@RG' | sed "s/.*SM:\\([^\\t]*\\).*/\\1/g" | uniq`
+        controlname=`samtools view -H $control | grep '^@RG' | sed sed "s/.*SM:\\([^[:space:]]*\\).*/\\1/" | uniq`
+        tumorname=`samtools view -H $tumor | grep '^@RG' | sed "s/.*SM:\\([^[:space:]]*\\).*/\\1/" | uniq`
 
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
@@ -33,7 +31,7 @@ process GREP_SAMPLENAME {
     else {
         """
         controlname='dummy'
-        tumorname=`samtools view -H $tumor | grep '^@RG' | sed "s/.*SM:\\([^\\t]*\\).*/\\1/g" | uniq`
+        tumorname=`samtools view -H $tumor | grep '^@RG' | sed "s/.*SM:\\([^[:space:]]*\\).*/\\1/" | uniq`
         
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":

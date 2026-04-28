@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  ## v2.0.3 - dev
 
 - add nf-schema and fix fasta.contain logic [#48](https://github.com/ghga-de/nf-snvcalling/pull/49)
+    - fix SM tag extraction [#48](https://github.com/ghga-de/nf-snvcalling/pull/49)
 - fix AD field error [#47](https://github.com/ghga-de/nf-snvcalling/pull/49)
 
 ## v2.0.2 - 12.11.2024

@@ -16,7 +16,6 @@ process GET_CONTIGS {
     path "versions.yml"                  , emit: versions
 
     script: 
-    def prefix     = task.ext.prefix ?: "${meta.id}"
     def reference_flag = tumor.extension == "cram" ? "-T ${fasta}" : ""
     
     if (params.contig_file)

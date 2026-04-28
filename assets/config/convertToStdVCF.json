@@ -224,7 +224,7 @@
       "description": "Genotype, /:unphased, |:phased"
     },
     "DP": { "number": "1", "type": "Integer", "description": "Read Depth" },
-    "AD": { "number": "R", "type": "Integer", "description": "Allelic depths" },
+    "AD": { "number": "R", "type": "Integer", "description": "Allelic Depth" },
     "FT": {
       "number": ".",
       "type": "String",
