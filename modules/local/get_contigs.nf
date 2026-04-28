@@ -55,7 +55,7 @@ process GET_CONTIGS {
         else {
             """
             touch contigs.bed
-            if [ -n "\$(samtools view ${reference_flag} -H $tumor | grep -P "SN:") "]; then
+            if [ -n "\$(samtools view ${reference_flag} -H $tumor | grep -P "SN:")"]; then
                 samtools view ${reference_flag} -H $tumor | grep -P "SN:"  | sed -e 's/@SQ\\tSN://' -e 's/\tLN:/\\t0\\t/' -e 's/\\tAH.*//' | sort -V -k1,1 | cut -f 1 | tail -n +25 > contigs.bed
             else
                 touch contigs.bed
