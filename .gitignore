@@ -1,6 +1,6 @@
 *.code-workspace
-bin/*.pyc
-bin/*.pyo
+*.pyc
+*.pyo
 .*.sw?
 .DS_Store
 .nextflow*
