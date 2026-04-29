@@ -224,7 +224,7 @@
       "description": "Genotype, /:unphased, |:phased"
     },
     "DP": { "number": "1", "type": "Integer", "description": "Read Depth" },
-    "AD": { "number": "1", "type": "Integer", "description": "Allelic Depth" },
+    "AD": { "number": "R", "type": "Integer", "description": "Allelic Depth" },
     "FT": {
       "number": ".",
       "type": "String",
@@ -243,7 +243,7 @@
     "PL": {
       "number": "G",
       "type": "Integer",
-      "description": "Phred-scaled genotype likelihoods rounded to closest integer"
+      "description": "List of Phred-scaled genotype likelihoods"
     },
     "GP": {
       "number": ".",

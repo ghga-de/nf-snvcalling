@@ -28,7 +28,21 @@ if (params.runSNVAnnotation){
 }
 
 // If runIndelDeepAnnotation is true; at least one of the annotation files must be provided
-if ((params.runSNVDeepAnnotation) && (!params.enchancer_file && !params.cpgislands_file && !params.tfbscons_file && !params.encode_dnase_file && !params.mirnas_snornas_file && !params.mirna_sncrnas_file && !params.mirbase_file && !params.cosmic_file && !params.mir_targets_file && !params.cgi_mountains_file && !params.phastconselem_file && !params.encode_tfbs_file)) { 
+if ((params.runSNVDeepAnnotation) && 
+        (!params.enchancer_file && 
+        !params.cpgislands_file && 
+        !params.tfbscons_file && 
+        !params.encode_dnase_file && 
+        !params.mirnas_snornas_file && 
+        !params.mirna_sncrnas_file && 
+        !params.mirbase_file && 
+        !params.cosmic_file && 
+        !params.mir_targets_file && 
+        !params.cgi_mountains_file && 
+        !params.phastconselem_file && 
+        !params.encode_tfbs_file)
+        ) 
+    { 
     log.error "Please specify at least one annotation file to perform SNV Deep Annotation"
     exit 1
 }
@@ -37,7 +51,7 @@ if ((params.runSNVDeepAnnotation) && (!params.enchancer_file && !params.cpgislan
 // Check mandatory parameters
 //
 
-if (params.input)         { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 // Annovar only be checked if annovar is true
 if (params.annotation_tool.contains("annovar")){
     file(params.annovar_path, checkIfExists: true)
@@ -143,7 +157,8 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK         } from '../subworkflows/local/input_check'
+include { paramsSummaryMap    } from 'plugin/nf-schema'
+include { samplesheetToList   } from 'plugin/nf-schema'
 include { MPILEUP_SNV_CALL    } from '../subworkflows/local/mpileup_snv_call'
 include { SNV_ANNOTATION      } from '../subworkflows/local/snv_annotation'
 include { FILTER_SNVS         } from '../subworkflows/local/filter_snvs'
@@ -184,14 +199,18 @@ workflow SNVCALLING {
     ch_logs     = Channel.empty()
     ch_stdvcf   = Channel.empty()
     
-    //
-    // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-    //
-    INPUT_CHECK (
-        ch_input
-    )
-    ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    sample_ch   = INPUT_CHECK.out.ch_sample
+    // Check mandatory parameters
+    if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+
+    // Validate and convert to channel
+    Channel
+        .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
+        .map { meta, tumor, tumor_index, control, control_index ->    
+            def is_control_present = control ? 1 : 0
+            def new_meta = meta + [ iscontrol: is_control_present ]
+            return [ new_meta, tumor, tumor_index, control, control_index]
+        }
+        .set { sample_ch }
 
     if ( !params.chrom_sizes) {
         //
@@ -211,7 +230,8 @@ workflow SNVCALLING {
         //
         GET_CONTIGS(
             sample_ch,
-            contigs
+            contigs,
+            ref
             )
         ch_versions = ch_versions.mix(GET_CONTIGS.out.versions)
         GET_CONTIGS.out.contigs.filter{meta, contig -> WorkflowCommons.getNumLinesInFile(contig) > 0}
@@ -247,7 +267,8 @@ workflow SNVCALLING {
     
     if (params.runSNVAnnotation){ 
         SNV_ANNOTATION(
-            MPILEUP_SNV_CALL.out.vcf_ch, 
+            MPILEUP_SNV_CALL.out.vcf_ch,
+            sample_ch, 
             ref, 
             kgenome,dbsnpsnv,localcontrolwgs,localcontrolwes,gnomadgenomes,gnomadexomes,
             repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats,

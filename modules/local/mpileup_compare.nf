@@ -7,12 +7,12 @@ process MPILEUP_COMPARE {
         'docker://kubran/samtools:v1.9':'kubran/samtools:v1.9' }"
 
     input:
-    tuple val(meta), path(vcf), val(intervals)
+    tuple val(meta), path(vcf), val(intervals), path(control), path(bai)
     tuple path(fasta), path(fai)
 
     output:
     tuple val(meta), path("*.npileup.vcf")     , emit: vcf
-    path  "versions.yml"                        , emit: versions
+    path  "versions.yml"                       , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -23,14 +23,14 @@ process MPILEUP_COMPARE {
     def args_c = intervals == "contigs" ? "$args" : "$args -r ${intervals}"
     def ctrl_qual_cutoff = intervals == "contigs" ? "${params.ctrl_min_base_qual_contigs}" : "${params.ctrl_min_base_qual}"
 
-    if (meta.iscontrol == '1' && params.runCompareGermline)
+    if (meta.iscontrol == 1 && params.runCompareGermline)
     {
         """
         samtools mpileup \\
             $args_c \\
             -l $vcf \\
             -f $fasta \\
-            $meta.control_bam | \\
+            $control | \\
             sort -T . -k1,1V -k2,2n > ${prefix}.${intervals}.control.temp
         
         vcf_pileup_compare_allin1_basecount.pl $vcf \\

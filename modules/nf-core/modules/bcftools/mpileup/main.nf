@@ -25,7 +25,7 @@ process BCFTOOLS_MPILEUP {
     def args3    = task.ext.args3 ?: ''
     def prefix   = task.ext.prefix ?: "${meta.id}"
     def args_c   = interval_file ? "$args2 -R ${interval_file}" : "$args -r ${intervals}"
-    def ref_spec = params.fasta.contains("38") ? "$args3 --ploidy GRCh38": "$args3"
+    def ref_spec = ( params.genome ? (params.genome == 'hg38' || params.genome == 'GRCh38') : fasta.contains('38')) ? "$args3 --ploidy GRCh38" : "$args3"
 
     """
     bcftools \\

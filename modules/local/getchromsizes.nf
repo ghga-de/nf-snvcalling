@@ -17,7 +17,6 @@ process GETCHROMSIZES {
     task.ext.when == null || task.ext.when
 
     script:
-    def args = task.ext.args ?: ''
     """
     cut -f 1,2 $fai  > size
     head -n24 size > ${fasta}.sizes

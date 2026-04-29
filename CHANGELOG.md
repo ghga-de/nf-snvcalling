@@ -3,18 +3,26 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-**Full Changelog**: https://github.com/ghga-de/nf-snvcalling/compare/v1.0...v2.0.0
-## v1.0dev - [date]
+ ## v2.0.3 - dev
 
-Initial release of ghga-de/nf-snvcalling, created with the [nf-core](https://nf-co.re/) template.
+- add nf-schema and fix fasta.contain logic [#48](https://github.com/ghga-de/nf-snvcalling/pull/49)
+    - fix SM tag extraction [#48](https://github.com/ghga-de/nf-snvcalling/pull/49)
+- fix AD field error [#47](https://github.com/ghga-de/nf-snvcalling/pull/49)
 
-### `Added`
+## v2.0.2 - 12.11.2024
 
 ### `Fixed`
+- add cram/crai files to input list (assets/schema_input.json)
+- add only a warning about that indices do not exists in converttovcf.json (bin/convertToStdVCF.py)
+- change default arg for ENSEMBL VEP (conf/modules.config)
+- upgrade samtools version for cram handling (modules/local/grep_samplename.nf)
+- edit nextflow version to latest (nextflow.config)
 
-### `Dependencies`
 
-### `Deprecated`
+## v2.0.1 - 09.10.2024
+
+### `Added`
+ - nf-prov plugin is added.
 
 ## v2.0.0 - 24.06.2024
 
@@ -66,16 +74,13 @@ Initial release of ghga-de/nf-snvcalling, created with the [nf-core](https://nf-
 * 35 raw vcf is not sorted by @kubranarci in https://github.com/ghga-de/nf-snvcalling/pull/36
 
 
-## v2.0.1 - 09.10.2024
+**Full Changelog**: https://github.com/ghga-de/nf-snvcalling/compare/v1.0...v2.0.0
+## v1.0dev - [date]
+
+Initial release of ghga-de/nf-snvcalling, created with the [nf-core](https://nf-co.re/) template.
 
 ### `Added`
- - nf-prov plugin is added.
-
-## v2.0.2 - 12.11.2024
 
 ### `Fixed`
-- add cram/crai files to input list (assets/schema_input.json)
-- add only a warn about the indices does not exists in converttovcf.json (bin/convertToStdVCF.py)
-- change default arg for ENSEMBL VEP (conf/modules.config)
-- upgrade samtools version for cram handling (modules/local/grep_samplename.nf)
-- edit nextflow version to latest (nextflow.config)
+
+### `Dependencies`

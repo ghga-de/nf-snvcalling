@@ -9,7 +9,7 @@ process FILTER_PEOVERLAP {
         'docker://kubran/samtools:v1.9':'kubran/samtools:v1.9' }"
     
     input:
-    tuple val(meta),   path(vcf)
+    tuple val(meta),   path(vcf), path(tumor), path(tumor_bai)
     tuple path(fasta), path(fai)
 
     output:
@@ -29,12 +29,12 @@ process FILTER_PEOVERLAP {
     def args       = task.ext.args ?: ''
     def args2      = task.ext.args2 ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
-    def controlflag   = meta.iscontrol == "1" ? "" : "--nocontrol "
-    def confoptions   = params.fasta.contains("38") ? "${params.confidenceoptions} --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz": "${params.confidenceoptions}"
+    def controlflag   = meta.iscontrol == 1 ? "" : "--nocontrol "
+    def confoptions = ( params.genome ? (params.genome == 'hg38' || params.genome == 'GRCh38') : params.fasta.contains('38')) ? "${params.confidenceoptions} --refgenome GRCh38 ftp://ftp.sanger.ac.uk/pub/cancer/dockstore/human/GRCh38_hla_decoy_ebv/core_ref_GRCh38_hla_decoy_ebv.tar.gz" : "${params.confidenceoptions}"
 
     """
     cat < $vcf | filter_PEoverlap.py $controlflag\\
-        --alignmentFile=$meta.tumor_bam \\
+        --alignmentFile=$tumor \\
         --mapq=${params.mapqual} \\
         --baseq=${params.basequal} \\
         --qualityScore=${params.qualityscore} \\

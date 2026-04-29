@@ -18,7 +18,6 @@ process CONVERT_TO_VCF {
     task.ext.when == null || task.ext.when
 
     script:
-    def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def vcf_name = input.getExtension() == "gz" ? input.getBaseName() : input.getName()
     vcf_name = vcf_name.take(vcf_name.size() - 3)

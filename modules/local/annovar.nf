@@ -28,7 +28,6 @@ process ANNOVAR {
     task.ext.when == null || task.ext.when
 
     script:
-    def args        = task.ext.args ?: ''
     def prefix      = task.ext.prefix ?: "${meta.id}"
     def av_segdup   = "${prefix}.${params.buildver}_genomicSuperDups"
     def av_cytoband = "${prefix}.${params.buildver}_cytoBand"
