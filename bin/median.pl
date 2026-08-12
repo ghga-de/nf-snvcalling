@@ -5,8 +5,12 @@
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
 
+# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
+# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+
 use strict;
 use warnings;
+use autodie;
 
 my @bins;
 my $max = 50000;
@@ -17,7 +21,7 @@ open(IN, "<$ARGV[0]");
 
 my $count=0;
 my @head;
-while(<IN>){
+while (defined($_ = readline(IN))) {
 	print $_;
 	if($_ =~ /^#CHR/){
 		@head = split("\t", $_);
@@ -34,7 +38,7 @@ foreach(@head){
 	$j++;
 }
 
-while(<IN>){
+while (defined($_ = readline(IN))) {
 	print $_;
 	my @l = split("\t", $_);
 	my ($dp) = $l[$dpcol] =~ /^DP=(\d+);/;

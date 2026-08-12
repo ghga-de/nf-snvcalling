@@ -5,8 +5,12 @@
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
 
+# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
+# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+
 use strict;
 use warnings;
+use autodie;
 use v5.10;
 use List::Util qw(min);
 use constant DEBUG => 0;

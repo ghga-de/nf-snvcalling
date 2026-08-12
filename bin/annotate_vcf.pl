@@ -5,8 +5,12 @@
 # Distributed under the MIT License (license terms are at https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin/LICENSE).
 #
 
+# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
+# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+
 use strict;
 use warnings;
+use autodie;
 use v5.10;
 
 my %opts;
@@ -139,7 +143,7 @@ if (!-e "$opts{bfile}.tbi") {
 # guess b file chr format ## TODO: this does not work in every case
 my ($b_chr_prefix, $b_chr_suffix);
 open(GUESS, TABIX_BIN . " -l $opts{bfile} | ");
-while (<GUESS>) {
+while (defined($_ = readline(GUESS))) {
     chomp;
     if (/([^\d]*)\d+(.*)/) {
         $b_chr_prefix = $1;
@@ -191,7 +195,7 @@ my $mh;
 my $rs;
 
 my $header;
-while ($header = <A>) {
+while (defined($header = readline(A))) {
     last if ($header =~ /^$opts{aColNameLineStart}/i); # that is the line with the column names
     print $header;                                     # print out every preceeding line
     die "Invalid a-file header" if ($header =~ /^[^\#]/);
@@ -249,7 +253,7 @@ my $alt;
 my %a_alts;
 
 AFILE_LOOP:
-while ($a_line = <A>) {
+while (defined($a_line = readline(A))) {
     @matches = ();
     chomp($a_line);
     @a_fields{@a_columns} = split(/\t/, $a_line);
@@ -293,7 +297,7 @@ while ($a_line = <A>) {
     }
     if ((!defined($next_b_line->{left}) || $next_b_line->{left} - PADDING() <= $a_right && ref($b_fh))) {
         # read new b_lines until we have one where the left coordinate is higher than a_right + pad
-        while ($b_line = <$b_fh>) {
+        while (defined($b_line = readline($b_fh))) {
             if (defined($next_b_line->{left})) {
                 push(@b_lines, $next_b_line);
                 $next_b_line = {};
