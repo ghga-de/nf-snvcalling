@@ -17,11 +17,11 @@ my $max = 50000;
 my $median;
 my $outfile = $ARGV[1];
 
-open(IN, "<$ARGV[0]");
+open my $in_fh, '<', $ARGV[0];
 
 my $count=0;
 my @head;
-while (defined($_ = readline(IN))) {
+while (defined($_ = readline($in_fh))) {
 	print $_;
 	if($_ =~ /^#CHR/){
 		@head = split("\t", $_);
@@ -38,7 +38,7 @@ foreach(@head){
 	$j++;
 }
 
-while (defined($_ = readline(IN))) {
+while (defined($_ = readline($in_fh))) {
 	print $_;
 	my @l = split("\t", $_);
 	my ($dp) = $l[$dpcol] =~ /^DP=(\d+);/;
@@ -65,7 +65,7 @@ while($i < @bins){
 }
 
 $median = 5*$i;
-close IN;
-open(OUT, ">$outfile");
-print OUT $median, "\n";
-close OUT;
+close $in_fh;
+open my $out_fh, '>', $outfile;
+print $out_fh $median, "\n";
+close $out_fh;
