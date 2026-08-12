@@ -151,7 +151,14 @@ while (defined($_ = readline($guess_fh))) {
         last;
     }
 }
-close $guess_fh;
+{
+    no autodie 'close';
+    unless (close $guess_fh) {
+        my $signal = $? & 127;
+        my $status = $? >> 8;
+        warn sprintf("Tabix probe pipe returned signal=%d exit=%d for %s", $signal, $status, $opts{bfile});
+    }
+}
 $b_chr_prefix = '' if (!defined($b_chr_prefix));
 $b_chr_suffix = '' if (!defined($b_chr_suffix));
 
@@ -163,7 +170,14 @@ if (BFILETYPE ne 'gff3') {
     my $b_header_cmd = TABIX_BIN() . " -h $opts{bfile} $b_chr_prefix" . '1' . $b_chr_suffix . ":0-0 |";
     open(my $head_fh, $b_header_cmd);
     my @b_header = <$head_fh>;
-    close $head_fh;
+    {
+        no autodie 'close';
+        unless (close $head_fh) {
+            my $signal = $? & 127;
+            my $status = $? >> 8;
+            warn sprintf("Tabix header probe pipe returned signal=%d exit=%d for %s", $signal, $status, $opts{bfile});
+        }
+    }
 
     #### if I have a multi-line header print out all lines but the last
     #for (my $i=0; $i < @b_header-1; $i++) {
