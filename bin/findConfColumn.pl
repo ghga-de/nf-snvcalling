@@ -13,22 +13,33 @@ use warnings;
 use autodie;
 
 my $infile = $ARGV[0];
+my $in_fh;
 
-if($infile =~ /\.gz/){open(IN, "zcat $infile |") or die "Could not open the $infile to detect the confidence column\n";}
-else{open(IN, "<$infile") or die "Could not open the $infile to detect the confidence column\n";}
+if (!defined $infile || $infile eq '-') {
+    $in_fh = *STDIN;
+} elsif ($infile =~ /\.gz$/) {
+    open($in_fh, "zcat $infile |") or die "Could not open the $infile to detect the confidence column\n";
+} else {
+    open($in_fh, '<', $infile) or die "Could not open the $infile to detect the confidence column\n";
+}
 
 my $line;
-while (defined($_ = readline(IN))) {
-	chomp;
-	$line=$_;
-	last if($_ =~ /^#CHROM\s/);
+while (defined($_ = readline($in_fh))) {
+    chomp;
+    $line=$_;
+    last if($_ =~ /^#CHROM\s/);
 }
-close IN;
+
+if ($infile && $infile ne '-') {
+    no autodie 'close';
+    close $in_fh or warn "Could not close input handle for $infile: $?";
+}
+
+die "No #CHROM header found in $infile\n" unless defined $line;
 my $i = 0;
 my @line = split("\t", $line);
-while($i <= @line)
-{
-	last if($line[$i] =~ /^CONFIDENCE$/);
-	$i++;
+while($i <= $#line) {
+    last if($line[$i] =~ /^CONFIDENCE$/);
+    $i++;
 }
 print $i;
