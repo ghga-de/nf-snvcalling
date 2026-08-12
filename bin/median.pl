@@ -17,7 +17,12 @@ my $max = 50000;
 my $median;
 my $outfile = $ARGV[1];
 
-open my $in_fh, '<', $ARGV[0];
+my $in_fh;
+if (!defined $ARGV[0] || $ARGV[0] eq '-') {
+    $in_fh = *STDIN;
+} else {
+    open $in_fh, '<', $ARGV[0];
+}
 
 my $count=0;
 my @head;

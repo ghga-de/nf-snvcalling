@@ -195,8 +195,15 @@ my $chr_raw = '';
 my $mh;
 my $rs;
 
+my $a_fh;
+if ($opts{afile} eq '-') {
+    $a_fh = *STDIN;
+} else {
+    open $a_fh, '<', $opts{afile} or die "Could not open a-file $opts{afile}\n";
+}
+
 my $header;
-while (defined($header = readline(A))) {
+while (defined($header = readline($a_fh))) {
     last if ($header =~ /^$opts{aColNameLineStart}/i); # that is the line with the column names
     print $header;                                     # print out every preceeding line
     die "Invalid a-file header" if ($header =~ /^[^\#]/);
@@ -461,7 +468,9 @@ while (defined($a_line = readline(A))) {
     }
     say join "\t", @a_fields{@a_columns};
 } # AFILE_LOOP
-close A;
+if ($opts{afile} ne '-') {
+    close $a_fh;
+}
 if (ref($b_fh)) {
     no autodie 'close';
     unless (close $b_fh) {
