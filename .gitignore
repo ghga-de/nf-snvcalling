@@ -10,8 +10,17 @@
 __pycache__
 output/
 results/
+result/
+results2/
+results37/
+results_vep/
+results_annovar/
 test.xml
 test_output/
 tests/data/
 work/
+testdata_hg37/
 .github/CODEOWNERS-tmp
+bin/vcfparser.pyc
+singularity/
+snvs_*

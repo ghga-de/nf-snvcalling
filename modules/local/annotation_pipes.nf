@@ -23,14 +23,13 @@ process ANNOTATION_PIPES {
     tuple path(mirnas_sncrnas),path(mirnas_sncrnas_i)
 
     output:
-    tuple val(meta), path('*.deepanno.vcf.gz'), path('*.deepanno.vcf.gz.tbi') , emit: vcf
-    path  "versions.yml"                                                      , emit: versions
+    tuple val(meta), path('*.vcf.gz'), path('*.vcf.gz.tbi') , emit: vcf
+    path  "versions.yml"                                    , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
-    def args   = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
 
     def pipe  = [enchangers ? " | annotate_vcf.pl -a - -b ${enchangers} --bFileType=bed --columnName='Enhancers'" : '',
@@ -47,9 +46,9 @@ process ANNOTATION_PIPES {
                 mirnas_sncrnas ? " | annotate_vcf.pl -a - -b ${mirnas_sncrnas} --bFileType=bed --columnName='miRNAs_sncRNAs'" : ''
                 ].join(' ').trim() 
     """
-    zcat < $vcf $pipe > snvs_${prefix}.deepanno.vcf
-    bgzip -c snvs_${prefix}.deepanno.vcf > snvs_${prefix}.deepanno.vcf.gz
-    tabix snvs_${prefix}.deepanno.vcf.gz
+    zcat < $vcf $pipe > snvs_${prefix}.vcf
+    bgzip -c snvs_${prefix}.vcf > snvs_${prefix}.vcf.gz
+    tabix snvs_${prefix}.vcf.gz
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -19,7 +19,6 @@ process FILTER_BY_CRIT {
     task.ext.when == null || task.ext.when
 
     script:
-    def args          = task.ext.args ?: ''
     def prefix        = task.ext.prefix ?: "${meta.id}"
     // recurrance is not implemented!!
     def filter_values = [( params.gnomad_genomes && params.crit_gnomad_genomes_maxmaf ) ? "GNOMAD_GENOMES AF $params.crit_gnomad_genomes_maxmaf+": "",
@@ -30,7 +29,7 @@ process FILTER_BY_CRIT {
                         ].join(' ').trim() 
 
 // Filter variants only if there is no control, else do noting
-    if (meta.iscontrol == '1') {
+    if (meta.iscontrol == 1) {
         """
         mv $vcfgz ${prefix}_noFiltered.vcf.gz
         tabix ${prefix}_noFiltered.vcf.gz

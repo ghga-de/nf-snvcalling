@@ -4,11 +4,11 @@
 
 params.options = [:]
 
-include { BCFTOOLS_MPILEUP as BCFTOOLS_MPILEUP_1 } from '../../modules/nf-core/modules/bcftools/mpileup/main'  addParams( options: params.options )
-include { BCFTOOLS_MPILEUP as BCFTOOLS_MPILEUP_2 } from '../../modules/nf-core/modules/bcftools/mpileup/main'  addParams( options: params.options )
+include { BCFTOOLS_MPILEUP      } from '../../modules/nf-core/modules/bcftools/mpileup/main'  addParams( options: params.options )
 include { MPILEUP_COMPARE       } from '../../modules/local/mpileup_compare.nf'               addParams( options: params.options )
 include { SEQ_CONTEXT_ANNOTATOR } from '../../modules/local/seq_context_annotator.nf'         addParams( options: params.options )
 include { FILE_CONCATENATOR     } from '../../modules/local/file_concatenator.nf'             addParams( options: params.options )
+include { SORT_NONSTANDARD_VCF  } from '../../modules/local/sort_nonstandard_vcf.nf'          addParams( options: params.options )
 
 
 workflow MPILEUP_SNV_CALL {
@@ -16,33 +16,48 @@ workflow MPILEUP_SNV_CALL {
     sample_ch     // channel: [val(meta), tumor,tumor_bai, control, control_bai, tumorname, controlname]
     ref           // channel: [path(fasta), path(fai)]
     intervals     // channel: [[chr, region], [chr, region], ...]
-    contigs       // channel: [path(hla)]
+    contigs       // channel: [val(meta), path(contigs.bed)]
 
     main:
     versions = Channel.empty()
 
-    // Combine intervals with samples to create 'interval x sample' number of parallel run
+    // Combine intervals with samples to create 'interval x sample' number of parallel run and with contigs if exist
+
+    contigs.filter{ it[1].fileName.toString().contains("contigs.bed") }
+        .map { it -> [it[0], "contigs", it[1]] }
+        .set{contig_ch}
+
     intervals.take(24)
-            .set{intervals_ch}
+            .map{it -> [it[0],[]]}
+            .set{ch_intervals}
+
     sample_ch
-            .combine(intervals_ch)
-            .set { combined_inputs }
-    
+            .combine(ch_intervals)
+            .set { main_inputs }
+
+    sample_ch
+            .combine(contig_ch)
+            .filter{ it[0] == it[7] }
+            .map{ it -> [it[0], it[1], it[2], it[3], it[4], it[5], it[6], it[8], it[9] ] }
+            .set { extra_inputs }
+
+    main_inputs.mix(extra_inputs)
+            .set{combined_inputs}
+
     //
     // MODULE:BCFTOOLS_MPILEUP 
     //
     // RUN bcftools mpileup and bcftools call to call variants. This process is scattered by chr intervals
-    combined_inputs = combined_inputs.map {it -> tuple( it[0], it[1], it[2], it[3], it[4], it[5], it[6], it[7], [])} 
-    BCFTOOLS_MPILEUP_1 (
+    BCFTOOLS_MPILEUP (
         combined_inputs, 
         ref
     )
-    versions = versions.mix(BCFTOOLS_MPILEUP_1.out.versions)
+    versions = versions.mix(BCFTOOLS_MPILEUP.out.versions)
 
     // filter VCFs if there is no variant
-    BCFTOOLS_MPILEUP_1.out.vcf
-                    .join(BCFTOOLS_MPILEUP_1.out.intervals)
-                    .join(BCFTOOLS_MPILEUP_1.out.stats)
+    BCFTOOLS_MPILEUP.out.vcf
+                    .join(BCFTOOLS_MPILEUP.out.intervals)
+                    .join(BCFTOOLS_MPILEUP.out.stats)
                     .filter{meta, vcf, intervals, stats -> WorkflowCommons.getNumVariantsFromBCFToolsStats(stats) > 0 }
                     .set{ch_vcf_stats}
     ch_vcf_stats
@@ -56,33 +71,6 @@ workflow MPILEUP_SNV_CALL {
     ch_intervals = Channel.empty()
     ch_vcf = ch_vcf.mix(ch_vcf_1)
     ch_intervals = ch_intervals.mix(ch_intervals_1)
-
-    // If reference is hg38, run HLA and ALT contigs as seperate runs
-    if ((params.fasta.contains("38")) && (params.runcontigs =! "NONE")){
-        println "Running HLA and ALT contigs as seperate runs"
-        // Generate input set for HLA and ALT runs
-        hla_alt_inputs = sample_ch.combine(contigs)
-        hla_alt_inputs = hla_alt_inputs.map {it -> tuple( it[0], it[1], it[2], it[3], it[4], it[5], it[6], [], it[7])} 
-        BCFTOOLS_MPILEUP_2 (
-            hla_alt_inputs, 
-            ref
-        )
-        BCFTOOLS_MPILEUP_2.out.vcf
-                    .join(BCFTOOLS_MPILEUP_2.out.intervals)
-                    .join(BCFTOOLS_MPILEUP_2.out.stats)
-                    .filter{meta, vcf, intervals, stats -> WorkflowCommons.getNumVariantsFromBCFToolsStats(stats) > 0 }
-                    .set{ch_vcf_stats_hla_alt}
-
-        ch_vcf_stats_hla_alt
-            .map { meta, vcf, intervals, stats -> [meta, vcf]} 
-            .set {ch_vcf_2}
-        ch_vcf = ch_vcf.mix(ch_vcf_2)
-
-        ch_vcf_stats_hla_alt
-            .map { meta, vcf, intervals, stats -> [meta, intervals]} 
-            .set {ch_intervals_2}
-        ch_intervals = ch_intervals.mix(ch_intervals_2)
-    }
 
     //
     // MODULE:SEQ_CONTEXT_ANNOTATOR
@@ -107,13 +95,22 @@ workflow MPILEUP_SNV_CALL {
     ch_vcf_stats
         .map { meta, vcf, intervals, stats -> [meta, intervals]} 
         .set {ch_intervals} 
+
     //
     // MODULE:MPILEUP_COMPARE 
     //
     // RUN bcftools mpileup and vcf_pileup_compare_allin1_basecount.pl to compare germline variants.
     // This process only applies of there is control and runCompareGermline is true
+
+    sample_ch.map{ meta, tumor, tumor_bai, control, control_bai, tumorname, controlname-> [meta, control, control_bai]} 
+        .set{control_ch}
+
+    ch_input = ch_vcf
+        .join(ch_intervals, by: 0)
+        .combine(control_ch, by: 0)
+
     MPILEUP_COMPARE(
-        ch_vcf.join(ch_intervals, by: [0]), 
+        ch_input,
         ref
     )
     versions = versions.mix(MPILEUP_COMPARE.out.versions) 
@@ -134,7 +131,17 @@ workflow MPILEUP_SNV_CALL {
         combined_vcf
     )
     versions = versions.mix(FILE_CONCATENATOR.out.versions) 
-    vcf_ch=FILE_CONCATENATOR.out.vcf
+
+    // 
+    // MODULE: SORT_NONSTANDARD_VCF
+    //
+    // Sort raw file
+    SORT_NONSTANDARD_VCF(
+        FILE_CONCATENATOR.out.vcf
+    )
+    versions = versions.mix(SORT_NONSTANDARD_VCF.out.versions) 
+    vcf_ch=SORT_NONSTANDARD_VCF.out.output
+
 
     emit:
     vcf_ch

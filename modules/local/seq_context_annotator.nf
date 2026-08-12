@@ -25,7 +25,9 @@ process SEQ_CONTEXT_ANNOTATOR {
 
     """
     seqContext_annotator.pl fastaFromBed $vcf $fasta 10 | \\
-        rawSnvFilter.py --outf=${prefix}.${intervals}.bias.vcf $args
+        rawSnvFilter.py --outf=${prefix}.${intervals}.bias.vcf.temp $args
+
+    awk '/^#/ {print; next} {print | "sort -T . -k1,1V -k2,2n"}' ${prefix}.${intervals}.bias.vcf.temp > ${prefix}.${intervals}.bias.vcf
 
     bcftools stats ${prefix}.${intervals}.bias.vcf > ${prefix}.${intervals}.bias.bcftools_stats.txt
 

@@ -27,6 +27,7 @@ include { ENSEMBLVEP_DOWNLOAD    } from '../../modules/nf-core/modules/ensemblve
 workflow SNV_ANNOTATION {
     take:
     vcf_ch           // channel: [val(meta), vcf.gz, vcf.gz.tbi  ]
+    sample_ch        // channel: [val(meta), tumor,tumor_bai, control, control_bai]
     ref              // channel: [path(fasta), path(fai)]
     kgenome
     dbsnpsnv
@@ -70,7 +71,12 @@ workflow SNV_ANNOTATION {
     
     ANNOTATE_VCF (
         vcf_ch, 
-        kgenome,dbsnpsnv,localcontrolwgs,localcontrolwes,gnomadgenomes,gnomadexomes, 
+        kgenome,
+        dbsnpsnv,
+        localcontrolwgs,
+        localcontrolwes,
+        gnomadgenomes,
+        gnomadexomes, 
         chr_prefix
     )
     versions  = versions.mix(ANNOTATE_VCF.out.versions)
@@ -118,7 +124,13 @@ workflow SNV_ANNOTATION {
     // RUN annotate_vcf.pl : BED files are used to annotate variants
     SNV_RELIABILITY_PIPE(
         annotated_vcf, 
-        repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats
+        repeatmasker, 
+        dacblacklist, 
+        dukeexcluded, 
+        hiseqdepth, 
+        selfchain, 
+        mapability, 
+        simpletandemrepeats
     )
     versions = versions.mix(SNV_RELIABILITY_PIPE.out.versions)
 
@@ -133,11 +145,14 @@ workflow SNV_ANNOTATION {
 
     // If true runArtifactFilter creates a bias file will be used to plot errors
     if (params.runArtifactFilter){
+
+        sample_ch.map{ meta, tumor, tumor_bai, control, control_bai-> [meta, tumor, tumor_bai]} 
+            .set{tumor_ch}
         //
         // MODULE: FILTER_PEOVERLAP
         //
         FILTER_PEOVERLAP_1(
-            CONFIDENCE_ANNOTATION.out.vcf, 
+            CONFIDENCE_ANNOTATION.out.vcf.join(tumor_ch), 
             ref
         )
         versions    = versions.mix(FILTER_PEOVERLAP_1.out.versions)
@@ -281,11 +296,13 @@ workflow SNV_ANNOTATION {
     // IF runArticantfilter is false run only FILTER_PEOVERLAP
     else{
         println "QC filter not applied because runArticantfilter is set to ${params.runArticantfilter}"
+        sample_ch.map{ meta, tumor, tumor_bai, control, control_bai-> [meta, tumor, tumor_bai]} 
+            .set{tumor_ch}
         //
         // MODULE: FILTER_PEOVERLAP
         //
         FILTER_PEOVERLAP_2(
-            CONFIDENCE_ANNOTATION.out.vcf, 
+            CONFIDENCE_ANNOTATION.out.vcf.join(tumor_ch), 
             ref 
         )
         out_vcf     = FILTER_PEOVERLAP_2.out.vcf
@@ -312,7 +329,18 @@ workflow SNV_ANNOTATION {
     {
         ANNOTATION_PIPES (
             TABIX_BGZIPTABIX.out.gz_tbi, 
-            enchangers, cpgislands, tfbscons, encode_dnase, mirnas_snornas, cosmic, mirbase, mir_targets, cgi_mountains, phastconselem, encode_tfbs, mirnas_sncrnas
+            enchangers, 
+            cpgislands, 
+            tfbscons, 
+            encode_dnase, 
+            mirnas_snornas, 
+            cosmic, 
+            mirbase, 
+            mir_targets, 
+            cgi_mountains, 
+            phastconselem, 
+            encode_tfbs, 
+            mirnas_sncrnas
         )
         vcf_ch   = ANNOTATION_PIPES.out.vcf 
         versions = versions.mix(ANNOTATION_PIPES.out.versions)
@@ -320,6 +348,7 @@ workflow SNV_ANNOTATION {
     else{
         println "SNVDeep annotation not applied because runSNVDeepAnnotation is set to ${params.runSNVDeepAnnotation}"
     }
+
 
 emit:
 vcf_ch

@@ -25,7 +25,6 @@ process SNV_RELIABILITY_PIPE {
     task.ext.when == null || task.ext.when
 
     script:
-    def args       = task.ext.args ?: ''
     def prefix     = task.ext.prefix ?: "${meta.id}"
     def pipe       = [repeatmasker ? " | annotate_vcf.pl -a - -b ${repeatmasker} --bFileType=bed --columnName='REPEAT_MASKER'" : '',
                     dacblacklist ? " | annotate_vcf.pl -a - -b ${dacblacklist}  --bFileType=bed --columnName='DAC_BLACKLIST'" : '',

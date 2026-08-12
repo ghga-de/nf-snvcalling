@@ -28,7 +28,21 @@ if (params.runSNVAnnotation){
 }
 
 // If runIndelDeepAnnotation is true; at least one of the annotation files must be provided
-if ((params.runSNVDeepAnnotation) && (!params.enchancer_file && !params.cpgislands_file && !params.tfbscons_file && !params.encode_dnase_file && !params.mirnas_snornas_file && !params.mirna_sncrnas_file && !params.mirbase_file && !params.cosmic_file && !params.mir_targets_file && !params.cgi_mountains_file && !params.phastconselem_file && !params.encode_tfbs_file)) { 
+if ((params.runSNVDeepAnnotation) && 
+        (!params.enchancer_file && 
+        !params.cpgislands_file && 
+        !params.tfbscons_file && 
+        !params.encode_dnase_file && 
+        !params.mirnas_snornas_file && 
+        !params.mirna_sncrnas_file && 
+        !params.mirbase_file && 
+        !params.cosmic_file && 
+        !params.mir_targets_file && 
+        !params.cgi_mountains_file && 
+        !params.phastconselem_file && 
+        !params.encode_tfbs_file)
+        ) 
+    { 
     log.error "Please specify at least one annotation file to perform SNV Deep Annotation"
     exit 1
 }
@@ -37,7 +51,7 @@ if ((params.runSNVDeepAnnotation) && (!params.enchancer_file && !params.cpgislan
 // Check mandatory parameters
 //
 
-if (params.input)         { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 // Annovar only be checked if annovar is true
 if (params.annotation_tool.contains("annovar")){
     file(params.annovar_path, checkIfExists: true)
@@ -58,7 +72,8 @@ if (params.annotation_tool.contains("vep")){
 ref            = Channel.fromPath([params.fasta,params.fasta_fai], checkIfExists: true).collect()
 chr_prefix     = params.chr_prefix  ? Channel.value(params.chr_prefix) : Channel.value("")
 chrlength      = params.chrom_sizes ? Channel.fromPath(params.chrom_sizes, checkIfExists: true) : Channel.empty()   
-contigs        = params.contig_file ? Channel.fromPath(params.contig_file, checkIfExists: true) : Channel.empty()
+contigs        = params.contig_file ? Channel.fromPath(params.contig_file, checkIfExists: true).map{it -> ["contigs", it]} : Channel.value([[],[]])
+config         = Channel.fromPath("${projectDir}/assets/config/convertToStdVCF.json", checkIfExists: true).collect()
 
 // Annovar table folder
 
@@ -142,10 +157,12 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK         } from '../subworkflows/local/input_check'
+include { paramsSummaryMap    } from 'plugin/nf-schema'
+include { samplesheetToList   } from 'plugin/nf-schema'
 include { MPILEUP_SNV_CALL    } from '../subworkflows/local/mpileup_snv_call'
 include { SNV_ANNOTATION      } from '../subworkflows/local/snv_annotation'
 include { FILTER_SNVS         } from '../subworkflows/local/filter_snvs'
+include { OUTPUT_STANDARD_VCF } from '../subworkflows/local/output_standard_vcf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -180,15 +197,20 @@ workflow SNVCALLING {
 
     ch_versions = Channel.empty()
     ch_logs     = Channel.empty()
+    ch_stdvcf   = Channel.empty()
     
-    //
-    // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-    //
-    INPUT_CHECK (
-        ch_input
-    )
-    ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-    sample_ch   = INPUT_CHECK.out.ch_sample
+    // Check mandatory parameters
+    if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
+
+    // Validate and convert to channel
+    Channel
+        .fromList(samplesheetToList(params.input, "${projectDir}/assets/schema_input.json"))
+        .map { meta, tumor, tumor_index, control, control_index ->    
+            def is_control_present = control ? 1 : 0
+            def new_meta = meta + [ iscontrol: is_control_present ]
+            return [ new_meta, tumor, tumor_index, control, control_index]
+        }
+        .set { sample_ch }
 
     if ( !params.chrom_sizes) {
         //
@@ -202,17 +224,19 @@ workflow SNVCALLING {
     }
     interval_ch  = chrlength.splitCsv(sep: '\t', by:1)
 
-    if ((params.runcontigs != "NONE") && (!params.contig_file)) {
+    if (params.runcontigs != "NONE") {
         //
         // MODULE: Prepare contigs file if not provided
         //
         GET_CONTIGS(
-            sample_ch
+            sample_ch,
+            contigs,
+            ref
             )
         ch_versions = ch_versions.mix(GET_CONTIGS.out.versions)
-        contigs     = GET_CONTIGS.out.contigs
+        GET_CONTIGS.out.contigs.filter{meta, contig -> WorkflowCommons.getNumLinesInFile(contig) > 0}
+                .set{contigs}
     }
-
     //
     // MODULE: Extract sample name from BAM
     //
@@ -232,8 +256,8 @@ workflow SNVCALLING {
     MPILEUP_SNV_CALL(
         ch_sample, 
         ref, 
-        interval_ch, 
-        contigs
+        interval_ch,
+        contigs 
     )
     ch_versions = ch_versions.mix(MPILEUP_SNV_CALL.out.versions)
 
@@ -243,7 +267,8 @@ workflow SNVCALLING {
     
     if (params.runSNVAnnotation){ 
         SNV_ANNOTATION(
-            MPILEUP_SNV_CALL.out.vcf_ch, 
+            MPILEUP_SNV_CALL.out.vcf_ch,
+            sample_ch, 
             ref, 
             kgenome,dbsnpsnv,localcontrolwgs,localcontrolwes,gnomadgenomes,gnomadexomes,
             repeatmasker, dacblacklist, dukeexcluded, hiseqdepth, selfchain, mapability, simpletandemrepeats,
@@ -254,13 +279,16 @@ workflow SNVCALLING {
         )
         ch_versions = ch_versions.mix(SNV_ANNOTATION.out.versions)
 
+        vcf_ch     = SNV_ANNOTATION.out.vcf_ch
+        ch_stdvcf  = ch_stdvcf.mix(vcf_ch.map{ it -> tuple( it[0], it[1] )})
+        
+
         //
         // SUBWORKFLOW: FILTER_SNVS: Filters SNVs
         //
         // input_ch= meta, annotated vcf, index, altbasequal, refbasequal, altreadpos, refreadpos, 
                     //sequence_spesific_error_plot_1, sequencing_spesific_error_plot_1, sequence_spesific_error_plot_2
                     //sequencing_spesific_error_plot_2, base_score_distribution_plot_1, base_score_distribution_plot_2
-        vcf_ch     = SNV_ANNOTATION.out.vcf_ch
         vcf_ch.join(SNV_ANNOTATION.out.altbasequal)
                 .join(SNV_ANNOTATION.out.refbasequal)
                 .join(SNV_ANNOTATION.out.altreadpos)
@@ -273,9 +301,10 @@ workflow SNVCALLING {
                 input_ch, 
                 ref, 
                 chr_prefix, 
-                chrlength    
+                chrlength
             )
             ch_versions = ch_versions.mix(FILTER_SNVS.out.versions)
+            ch_stdvcf  = ch_stdvcf.mix(FILTER_SNVS.out.convert_snvs)
         }
         else{
             println "Skipping SNV filtering"
@@ -284,6 +313,17 @@ workflow SNVCALLING {
     else{
         println "Skipping SNV annotation and filtering"
     }
+
+
+    if (params.standard_vcf){
+        println "VCF output is standardizing.."
+
+        OUTPUT_STANDARD_VCF(
+            ch_stdvcf.combine(MPILEUP_SNV_CALL.out.vcf_ch, by:0),
+            config
+        )
+        ch_versions = ch_versions.mix(OUTPUT_STANDARD_VCF.out.versions)
+    }   
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
