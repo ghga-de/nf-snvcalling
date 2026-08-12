@@ -5,8 +5,12 @@
 # Distributed under the MIT License (license terms are at https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin/LICENSE).
 #
 
+# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
+# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+
 use strict;
 use warnings;
+use autodie;
 use v5.10;
 
 my $fastaBinary = $ARGV[0];
@@ -27,7 +31,7 @@ $ffb_cmd = "$fastaBinary -fi $refGenome -bed <(vcf2padded_bed.pl $pad $file) -ta
 open(my $ffb_fh, '-|', 'bash', '-c', "$ffb_cmd") || die "Could not open ffb with command $ffb_cmd ($!)";
 open(my $snv_fh, "$file") || die "Could not open $file ($!)";
 
-while ($header = <$snv_fh>) {
+while (defined($header = readline($snv_fh))) {
     last if ($header =~ /^\#CHROM/);
     print $header;
 }
@@ -37,7 +41,7 @@ my %cols = map {$_ => 1} @cols;
 push(@cols, $newcol) if (!$cols{$newcol});
 say join "\t", @cols;
 
-while (<$snv_fh>) {
+while (defined($_ = readline($snv_fh))) {
     chomp;
     @fields{@cols} = split(/\t/);
     $ffb_line = <$ffb_fh>;

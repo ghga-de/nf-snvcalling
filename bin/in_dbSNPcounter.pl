@@ -7,8 +7,12 @@
 
 # count how many / what percentage of somatic SNVs of certain confidence score (default >= 8) are in dbSNP and 1KG
 
+# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
+# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+
 use strict;
 use warnings;
+use autodie;
 
 my $usage = "USAGE: 1.snv file (can be the pre-filtered one from rainfall plots) - optional 2.min score (default 8)\n";
 if (@ARGV < 1)

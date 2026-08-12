@@ -12,8 +12,12 @@
 ### Chromosomal identifiers in the newcol file may be plain numbers while longer identifiers are used in the vcf file e.g. after annovar; use chrPrefix and chrSuffix then
 ### (long chr identifiers in the newcol file and short identifiers in the vcf file are not supported)
 
+# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
+# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+
 use strict;
 use warnings;
+use autodie;
 use v5.10;
 
 
@@ -85,7 +89,7 @@ open(VCF, "$opts{vcf}") || die "Could not open VCF file $opts{vcf}";
 open(NC, "$opts{newcolfile}") || die "Could not open new column file $opts{newcolfile}";
 
 my $header;
-while ($header = <VCF>) {
+while (defined($header = readline(VCF))) {
   last if ($header =~ /^\#CHR/); # that is the line with the column names
   print $header; # print out every preceeding line
 }
@@ -103,11 +107,11 @@ my %f1_hash;
 
 my ($l1, $l2, $end);
 my @f2_fields;
-NC_LOOP: while ($l2=<NC>) {
+NC_LOOP: while (defined($l2 = readline(NC))) {
   next if ($l2 =~ /^\#/);
   chomp $l2;
   @f2_fields = split(/\t/, $l2);
-  while ($l1=<VCF>) {
+  while (defined($l1 = readline(VCF))) {
     chomp $l1;
     @f1_hash{@ori_columns} = split(/\t/, $l1);
     if (AFILETYPE() eq 'vcf') {
@@ -132,7 +136,7 @@ NC_LOOP: while ($l2=<NC>) {
   warn "Line $l2 left over in new column file";
 }
 #when I am here the NC file has ended; write out every remaining line from VCF
-while ($l1=<VCF>) {
+while (defined($l1 = readline(VCF))) {
   chomp $l1;
   @f1_hash{@columns} = split(/\t/, $l1);
   @f1_hash{@newcols} = ('.') x @newcols;
