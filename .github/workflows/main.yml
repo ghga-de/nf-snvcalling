@@ -12,8 +12,14 @@ on:
 # Uncomment if we need an edge release of Nextflow again
 # env: NXF_EDGE: 1
 
+# Cancel any in-progress runs of this workflow for the same ref when a new run starts
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
+    if: ${{ !(github.event_name == 'push' && contains(github.event.head_commit.message, 'Merge pull request')) }}
     name: Run workflow tests
     runs-on: ubuntu-latest
     env:
