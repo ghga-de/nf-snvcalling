@@ -1,49 +1,48 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/ghga-de/nf-snvcalling/master/assets/schema_input.json",
-    "title": "ghga-de/nf-snvcalling pipeline - params.input schema",
-    "description": "Schema for the file provided with params.input",
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "sample": {
-                "type": "string",
-                "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces",
-                "meta": ["id"]
-            },
-            "tumor": {
-                "errorMessage": "Tumor alignment file cannot contain spaces, has to be a string, has to exist and must have extension '.bam or .cram'",
-                "type": "string",
-                "pattern": "^\\S+\\.(bam|cram)$",
-                "format": "file-path",
-                "exists": true
-            },
-            "tumor_index": {
-                "errorMessage": "Index file cannot contain spaces, has to be a string, has to exist and must have extension '.bai' or '.crai'",
-                "type": "string",
-                "pattern": "^\\S+\\.(bai|crai)$",
-                "format": "file-path",
-                "exists": true
-            },
-            "control": {
-                "errorMessage": "Control alignment file cannot contain spaces, has to be a string, has to exist and must have extension '.bam or .cram'",
-                "type": "string",
-                "pattern": "^\\S+\\.(bam|cram)$",
-                "format": "file-path",
-                "exists": true
-            },
-            "control_index": {
-                "errorMessage": "Index file cannot contain spaces, has to be a string, has to exist and must have extension '.bai' or '.crai'",
-                "type": "string",
-                "pattern": "^\\S+\\.(bai|crai)$",
-                "format": "file-path",
-                "exists": true
-            }
-        },
-        "required": ["sample", "tumor", "tumor_index"],
-        "uniqueEntries": ["sample"]
-
-    }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/ghga-de/nf-snvcalling/master/assets/schema_input.json",
+  "title": "ghga-de/nf-snvcalling pipeline - params.input schema",
+  "description": "Schema for the file provided with params.input",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "sample": {
+        "type": "string",
+        "pattern": "^\\S+$",
+        "errorMessage": "Sample name must be provided and cannot contain spaces",
+        "meta": ["id"]
+      },
+      "tumor": {
+        "errorMessage": "Tumor alignment file cannot contain spaces, has to be a string, has to exist and must have extension '.bam or .cram'",
+        "type": "string",
+        "pattern": "^\\S+\\.(bam|cram)$",
+        "format": "file-path",
+        "exists": true
+      },
+      "tumor_index": {
+        "errorMessage": "Index file cannot contain spaces, has to be a string, has to exist and must have extension '.bai' or '.crai'",
+        "type": "string",
+        "pattern": "^\\S+\\.(bai|crai)$",
+        "format": "file-path",
+        "exists": true
+      },
+      "control": {
+        "errorMessage": "Control alignment file cannot contain spaces, has to be a string, has to exist and must have extension '.bam or .cram'",
+        "type": "string",
+        "pattern": "^\\S+\\.(bam|cram)$",
+        "format": "file-path",
+        "exists": true
+      },
+      "control_index": {
+        "errorMessage": "Index file cannot contain spaces, has to be a string, has to exist and must have extension '.bai' or '.crai'",
+        "type": "string",
+        "pattern": "^\\S+\\.(bai|crai)$",
+        "format": "file-path",
+        "exists": true
+      }
+    },
+    "required": ["sample", "tumor", "tumor_index"],
+    "uniqueEntries": ["sample"]
+  }
 }

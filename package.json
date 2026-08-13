@@ -1,0 +1,9 @@
+{
+  "name": "nf-snvcalling-ci-lint",
+  "version": "0.0.0",
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.9.0",
+    "editorconfig-checker": "^3.0.0"
+  }
+}
