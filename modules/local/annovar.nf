@@ -4,7 +4,7 @@
 
 process ANNOVAR {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_annotation'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
