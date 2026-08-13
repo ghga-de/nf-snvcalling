@@ -659,6 +659,14 @@
           "fa_icon": "fas fa-ban",
           "hidden": true,
           "help_text": "Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`."
+        },
+        "contig_file": {
+          "type": "string",
+          "format": "file-path",
+          "mimetype": "text/plain",
+          "pattern": "^\\S+\\.bed$",
+          "fa_icon": "fas fa-annotation",
+          "description": "Contigs file to restrict the analysis to specific contigs. IF not provided, it will be generated according to the input BAM files using runcontig parameter."
         }
       }
     },

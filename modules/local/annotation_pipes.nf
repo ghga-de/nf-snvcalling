@@ -1,7 +1,7 @@
 //Annotate with polymorphisms (dbSNP, 1K genomes, ExAC, EVS, and local controls) and prepare annovar input file
 process ANNOTATION_PIPES {
     tag "$meta.id"
-    label 'process_single'
+    label 'process_annotation'
 
     conda     (params.enable_conda ? "" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
