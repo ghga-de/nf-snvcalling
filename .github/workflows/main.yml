@@ -33,6 +33,12 @@ jobs:
       - name: Check out pipeline code
         uses: actions/checkout@v3
 
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
       - name: Install Nextflow
         env:
           CAPSULE_LOG: none
