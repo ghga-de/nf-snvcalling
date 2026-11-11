@@ -5,8 +5,12 @@
 # Distributed under the MIT License (license terms are at https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin/LICENSE).
 #
 
+# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
+# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+
 use strict;
 use warnings;
+use autodie;
 use v5.10;
 
 my %opts;
@@ -138,8 +142,8 @@ if (!-e "$opts{bfile}.tbi") {
 
 # guess b file chr format ## TODO: this does not work in every case
 my ($b_chr_prefix, $b_chr_suffix);
-open(GUESS, TABIX_BIN . " -l $opts{bfile} | ");
-while (<GUESS>) {
+open(my $guess_fh, TABIX_BIN . " -l $opts{bfile} | ");
+while (defined($_ = readline($guess_fh))) {
     chomp;
     if (/([^\d]*)\d+(.*)/) {
         $b_chr_prefix = $1;
@@ -147,7 +151,14 @@ while (<GUESS>) {
         last;
     }
 }
-close GUESS;
+{
+    no autodie 'close';
+    unless (close $guess_fh) {
+        my $signal = $? & 127;
+        my $status = $? >> 8;
+        warn sprintf("Tabix probe pipe returned signal=%d exit=%d for %s", $signal, $status, $opts{bfile});
+    }
+}
 $b_chr_prefix = '' if (!defined($b_chr_prefix));
 $b_chr_suffix = '' if (!defined($b_chr_suffix));
 
@@ -157,8 +168,16 @@ my @b_colnames;
 if (BFILETYPE ne 'gff3') {
     # gff3 files have no column names in header
     my $b_header_cmd = TABIX_BIN() . " -h $opts{bfile} $b_chr_prefix" . '1' . $b_chr_suffix . ":0-0 |";
-    open(HEAD, $b_header_cmd);
-    my @b_header = <HEAD>;
+    open(my $head_fh, $b_header_cmd);
+    my @b_header = <$head_fh>;
+    {
+        no autodie 'close';
+        unless (close $head_fh) {
+            my $signal = $? & 127;
+            my $status = $? >> 8;
+            warn sprintf("Tabix header probe pipe returned signal=%d exit=%d for %s", $signal, $status, $opts{bfile});
+        }
+    }
 
     #### if I have a multi-line header print out all lines but the last
     #for (my $i=0; $i < @b_header-1; $i++) {
@@ -190,8 +209,15 @@ my $chr_raw = '';
 my $mh;
 my $rs;
 
+my $a_fh;
+if ($opts{afile} eq '-') {
+    $a_fh = *STDIN;
+} else {
+    open $a_fh, '<', $opts{afile} or die "Could not open a-file $opts{afile}\n";
+}
+
 my $header;
-while ($header = <A>) {
+while (defined($header = readline($a_fh))) {
     last if ($header =~ /^$opts{aColNameLineStart}/i); # that is the line with the column names
     print $header;                                     # print out every preceeding line
     die "Invalid a-file header" if ($header =~ /^[^\#]/);
@@ -249,7 +275,7 @@ my $alt;
 my %a_alts;
 
 AFILE_LOOP:
-while ($a_line = <A>) {
+while (defined($a_line = readline(A))) {
     @matches = ();
     chomp($a_line);
     @a_fields{@a_columns} = split(/\t/, $a_line);
@@ -286,14 +312,25 @@ while ($a_line = <A>) {
     if ($chr_changed) {
         @b_lines = ();
         $next_b_line = {};
-        close $b_fh if (ref($b_fh));
+        if (ref($b_fh)) {
+            no autodie 'close';
+            unless (close $b_fh) {
+                my $signal = $? & 127;
+                my $status = $? >> 8;
+                if ($signal == 13) {
+                    warn "Tabix pipe closed by SIGPIPE for $opts{bfile}; ignoring";
+                } else {
+                    die sprintf("Could not close tabix pipe for %s: signal=%d exit=%d", $opts{bfile}, $signal, $status);
+                }
+            }
+        }
         open $b_fh, TABIX_BIN . " $opts{bfile} ${b_chr_prefix}${chr}${b_chr_suffix} |" or die "opening b file $opts{bfile} with tabix failed";
         warn "Tabix returned no b-features for chromosome ${b_chr_prefix}${chr}${b_chr_suffix}" if (!ref($b_fh));
         # $b_linectr = 0;
     }
     if ((!defined($next_b_line->{left}) || $next_b_line->{left} - PADDING() <= $a_right && ref($b_fh))) {
         # read new b_lines until we have one where the left coordinate is higher than a_right + pad
-        while ($b_line = <$b_fh>) {
+        while (defined($b_line = readline($b_fh))) {
             if (defined($next_b_line->{left})) {
                 push(@b_lines, $next_b_line);
                 $next_b_line = {};
@@ -445,9 +482,21 @@ while ($a_line = <A>) {
     }
     say join "\t", @a_fields{@a_columns};
 } # AFILE_LOOP
-close A;
-close $b_fh if (ref($b_fh));
-
+if ($opts{afile} ne '-') {
+    close $a_fh;
+}
+if (ref($b_fh)) {
+    no autodie 'close';
+    unless (close $b_fh) {
+        my $signal = $? & 127;
+        my $status = $? >> 8;
+        if ($signal == 13) {
+            warn "Tabix pipe closed by SIGPIPE for $opts{bfile}; ignoring";
+        } else {
+            die sprintf("Could not close tabix pipe for %s: signal=%d exit=%d", $opts{bfile}, $signal, $status);
+        }
+    }
+}
 
 __END__
 

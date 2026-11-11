@@ -3,8 +3,12 @@
 # tumor variant frequency for high confidence somatic SNVs as input for MAF plots
 # output: PID (number!)	chrom	tumor variant frequency
 
+# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
+# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+
 use strict;
 use warnings;
+use autodie;
 
 if (@ARGV < 2)
 {
@@ -15,8 +19,7 @@ open (FH, $file) or die "Could not open $file: $!\n";
 
 ################################################################################
 my $header = "";
-while ($header = <FH>)
-{
+while (defined($header = readline(FH))) {
 	last if ($header =~ /^\#CHROM/); # that is the line with the column names
 }
 chomp $header;
@@ -67,8 +70,7 @@ my $depth = 0;
 # tumor variant frequency from DP4 fields (pos. 7 of vcf file)
 my $tumvarfrq = 0;
 
-while (<FH>)
-{
+while (defined($_ = readline(FH))) {
 	if ($_ =~ /^#/)
 	{
 		next;
