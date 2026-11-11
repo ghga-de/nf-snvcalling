@@ -5,12 +5,9 @@
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
 
-# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
-# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
 
 use strict;
 use warnings;
-use autodie;
 
 # empirical confidence classification
 
@@ -38,7 +35,8 @@ open (CF, $configfile) or die "Could not open $configfile: $!\n";
 
 my %labels = ();
 my @help = ();
-while (defined($_ = readline(CF))) {
+while (<CF>)
+{
 	if ($_ =~ /_COL=/)
 	{
 		chomp;
@@ -57,7 +55,8 @@ foreach my $key (keys %labels)
 open (FH, $file) or die "Could not open $file: $!\n";
 
 my $header = "";
-while (defined($header = readline(FH))) {
+while ($header = <FH>)
+{
 	last if ($header =~ /^\#CHROM/); # that is the line with the column names
 	print "$header";
 }
@@ -187,7 +186,8 @@ my $indbSNP = 0;
 my $precious = 0;
 my $class = "";	# for potential re-classification (e.g. low coverage in control and in dbSNP => probably germline)
 
-while (defined($_ = readline(FH))) {
+while (<FH>)
+{
 	$confidence=10;	# start with maximum value
 	# reset global variables
 	$in1KG = 0;

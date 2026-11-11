@@ -11,12 +11,8 @@
 #           somatic coding snvs -> snvs_PID_somtatic_coding_snvs_conf_?_to_10.vcf
 #           germline coding snvs -> snvs_PID_germline_coding_snvs_conf_?_to_10.vcf
 
-# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
-# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
-
 use strict;
 use warnings;
-use autodie;
 use Getopt::Long;
 
 my $infile;
@@ -41,12 +37,10 @@ GetOptions (	"infile=s"	 		=> \$infile,		# vcf file, can be bgzipped
 
 if($region ne "0" && (!-f $region || $infile !~ /\.gz$/ || !-f $infile.".tbi")){die "region-file: $region is not a valid file or, infile: $infile is not zipped or there is no index for the infile $infile.tbi\n";}
 if(!-f $infile){die "The provided infile: $infile is not a valid file\n";}
-my $in_fh;
-if($region ne "0"){print "Region file provided: $region\n";}
+if(-f $infile && $infile =~ /\.gz$/) { open(IN, "zcat $infile |") or die "Could not open the infile: $infile\n"; }
+else{open(IN, "<$infile") or die "Could not open the infile: $infile\n";}
 
-if($region ne "0"){open($in_fh, "$tabix $infile -B $region |") or die "Could not open the file with tabix and regions\n";}
-elsif($infile =~ /\.gz$/){ open($in_fh, "zcat $infile |") or die "Could not open the infile: $infile\n"; }
-else{open($in_fh, '<', $infile) or die "Could not open the infile: $infile\n";}
+if($region ne "0"){print "Region file provided: $region\n";}
 
 my $outsom = $pid."_somatic_snvs_conf_".$minconf."_to_10".$suffix.".vcf";
 my $outsomcod = $pid."_somatic_functional_snvs_conf_".$minconf."_to_10".$suffix.".vcf";
@@ -61,16 +55,14 @@ if($extractsyn == 1){open(SYN, ">$outsyn") or die "Could not open the file $outs
 if($extractNcRNA == 1){open(NCRNA, ">$outNcRNA") or die "Could not open the file $outNcRNA\n";}
 
 my $head;
-while (defined($_ = readline($in_fh))) {
+while(<IN>)
+{
 	chomp;
 	$head=$_;
 	last if($_ =~ /^#CHR/);
 }
 print STDERR "NOTE: The reading of the VCF will end with a broken pipe error, because we only read the header and then stop.\n";
-{
-	no autodie 'close';
-	close $in_fh;
-}
+close IN;
 
 my @header=split("\t", $head);
 my %col;
@@ -94,11 +86,12 @@ print GER $head, "\n";
 if($extractsyn == 1){print SYN $head, "\n";}
 if($extractNcRNA == 1){print NCRNA $head, "\n";}
 
-if($region ne "0"){open($in_fh, "$tabix $infile -B $region |") or die "Could not open the file with tabix and regions\n";}
-elsif($infile =~ /\.gz$/){open($in_fh, "zcat $infile |") or die "Could not open the infile: $infile\n";}
-else{open($in_fh, '<', $infile) or die "Could not open the infile: $infile\n";}
+if($region ne "0"){open(IN, "$tabix $infile -B $region |") or die "Could not open the file with tabix and regions\n";}
+elsif($infile =~ /\.gz$/){open(IN, "zcat $infile |") or die "Could not open the infile: $infile\n";}
+else{open(IN, "<$infile") or die "Could not open the infile: $infile\n";}
 
-while (defined($_ = readline($in_fh))) {
+while(<IN>)
+{
 	chomp;
 	next if($_ =~ /^#/);
 	my @line = split("\t", $_);
@@ -121,10 +114,7 @@ while (defined($_ = readline($in_fh))) {
 	}
 }
 
-{
-	no autodie 'close';
-	close $in_fh;
-}
+close IN;
 close SOM;
 close COD;
 close GER;

@@ -5,12 +5,10 @@
 # Distributed under the MIT License (license terms are at https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin/LICENSE).
 #
 
-# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
-# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+# Modified 2026-08-12 @kubranarci: tabix pipe exit status is checked on close (SIGPIPE from early close is tolerated)
 
 use strict;
 use warnings;
-use autodie;
 use v5.10;
 
 my %opts;
@@ -131,7 +129,6 @@ DEBUG && say "MINOVERLAPFRACTION: ", MINOVERLAPFRACTION(), "MAXBORDERDISTANCESUM
 #my $newcol = $opts{columnname};
 #my $pad = $opts{padding};
 
-open(A, "$opts{afile}") || die "Could not open a-file $opts{afile}\n";
 
 if (!-e $opts{bfile}) {
     die "The b-file $opts{bfile} does not exist, exiting!\n";
@@ -142,7 +139,7 @@ if (!-e "$opts{bfile}.tbi") {
 
 # guess b file chr format ## TODO: this does not work in every case
 my ($b_chr_prefix, $b_chr_suffix);
-open(my $guess_fh, TABIX_BIN . " -l $opts{bfile} | ");
+open(my $guess_fh, TABIX_BIN . " -l $opts{bfile} | ") or die "Could not run tabix -l on $opts{bfile}: $!\n";
 while (defined($_ = readline($guess_fh))) {
     chomp;
     if (/([^\d]*)\d+(.*)/) {
@@ -152,7 +149,6 @@ while (defined($_ = readline($guess_fh))) {
     }
 }
 {
-    no autodie 'close';
     unless (close $guess_fh) {
         my $signal = $? & 127;
         my $status = $? >> 8;
@@ -168,11 +164,10 @@ my @b_colnames;
 if (BFILETYPE ne 'gff3') {
     # gff3 files have no column names in header
     my $b_header_cmd = TABIX_BIN() . " -h $opts{bfile} $b_chr_prefix" . '1' . $b_chr_suffix . ":0-0 |";
-    open(my $head_fh, $b_header_cmd);
+    open(my $head_fh, $b_header_cmd) or die "Could not run $b_header_cmd: $!\n";
     my @b_header = <$head_fh>;
     {
-        no autodie 'close';
-        unless (close $head_fh) {
+            unless (close $head_fh) {
             my $signal = $? & 127;
             my $status = $? >> 8;
             warn sprintf("Tabix header probe pipe returned signal=%d exit=%d for %s", $signal, $status, $opts{bfile});
@@ -275,7 +270,7 @@ my $alt;
 my %a_alts;
 
 AFILE_LOOP:
-while (defined($a_line = readline(A))) {
+while (defined($a_line = readline($a_fh))) {
     @matches = ();
     chomp($a_line);
     @a_fields{@a_columns} = split(/\t/, $a_line);
@@ -313,8 +308,7 @@ while (defined($a_line = readline(A))) {
         @b_lines = ();
         $next_b_line = {};
         if (ref($b_fh)) {
-            no autodie 'close';
-            unless (close $b_fh) {
+                    unless (close $b_fh) {
                 my $signal = $? & 127;
                 my $status = $? >> 8;
                 if ($signal == 13) {
@@ -486,7 +480,6 @@ if ($opts{afile} ne '-') {
     close $a_fh;
 }
 if (ref($b_fh)) {
-    no autodie 'close';
     unless (close $b_fh) {
         my $signal = $? & 127;
         my $status = $? >> 8;

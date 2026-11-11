@@ -12,12 +12,8 @@
 # correct status: if only low quality bases support the variant, only 1 low-quality base for a different allele, ...
 # also include a general nucleotide counter
 
-# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
-# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
-
 use strict;
 use warnings;
-use autodie;
 use feature "switch";
 use Math::CDF qw(pbinom);
 
@@ -130,7 +126,8 @@ my $plus = 0;
 my $header = "";
 if (defined $makeheader && $makeheader ne "no")
 {
-	while (defined($header = readline(T))) {
+	while ($header = <T>)
+	{
 		last if ($header =~ /^\#CHROM/); # that is the line with the column names
 		print "$header";
 	}
@@ -148,7 +145,7 @@ my $current_t_chr = "";
 my %control_positions;
 
 # Read control file and store positions in a hash
-while (defined($lineC = readline(C))) {
+while ($lineC = <C>) {
 	chomp $lineC;
 	$ctrC++;
 	@ctrl = split(/\s+/, $lineC);
@@ -158,7 +155,7 @@ while (defined($lineC = readline(C))) {
 }
 
 # Process tumor file
-while (defined($lineT = readline(T))) {
+while ($lineT = <T>) {
 	$ctrT++;
 	chomp $lineT;
 	@tum = split(/\t/, $lineT);

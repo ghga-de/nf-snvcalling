@@ -5,28 +5,19 @@
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
 
-# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
-# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
-
 use strict;
 use warnings;
-use autodie;
 
 my @bins;
 my $max = 50000;
 my $median;
 my $outfile = $ARGV[1];
 
-my $in_fh;
-if (!defined $ARGV[0] || $ARGV[0] eq '-') {
-    $in_fh = *STDIN;
-} else {
-    open $in_fh, '<', $ARGV[0];
-}
+open(IN, "<$ARGV[0]");
 
 my $count=0;
 my @head;
-while (defined($_ = readline($in_fh))) {
+while(<IN>){
 	print $_;
 	if($_ =~ /^#CHR/){
 		@head = split("\t", $_);
@@ -43,7 +34,7 @@ foreach(@head){
 	$j++;
 }
 
-while (defined($_ = readline($in_fh))) {
+while(<IN>){
 	print $_;
 	my @l = split("\t", $_);
 	my ($dp) = $l[$dpcol] =~ /^DP=(\d+);/;
@@ -70,7 +61,7 @@ while($i < @bins){
 }
 
 $median = 5*$i;
-close $in_fh;
-open my $out_fh, '>', $outfile;
-print $out_fh $median, "\n";
-close $out_fh;
+close IN;
+open(OUT, ">$outfile");
+print OUT $median, "\n";
+close OUT;

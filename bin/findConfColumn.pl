@@ -5,12 +5,10 @@
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
 
-# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
-# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+# Modified 2026-08-12 @kubranarci: support '-' for STDIN, fail if no #CHROM header, fix off-by-one in column search
 
 use strict;
 use warnings;
-use autodie;
 
 my $infile = $ARGV[0];
 my $in_fh;
@@ -26,13 +24,15 @@ if (!defined $infile || $infile eq '-') {
 my $line;
 while (defined($_ = readline($in_fh))) {
     chomp;
-    $line=$_;
-    last if($_ =~ /^#CHROM\s/);
+    if ($_ =~ /^#CHROM\s/) {
+        $line = $_;
+        last;
+    }
 }
 
 if ($infile && $infile ne '-') {
-    no autodie 'close';
-    close $in_fh or warn "Could not close input handle for $infile: $?";
+    # zcat gets SIGPIPE when we stop after the header; only report other failures
+    close $in_fh or (($? & 127) == 13) or warn "Could not close input handle for $infile: exit status $?\n";
 }
 
 die "No #CHROM header found in $infile\n" unless defined $line;

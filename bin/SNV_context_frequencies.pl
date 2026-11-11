@@ -5,12 +5,8 @@
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
 
-# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
-# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
-
 use strict;
 use warnings;
-use autodie;
 use v5.10;
 
 if (@ARGV < 2)
@@ -23,7 +19,8 @@ my $minconfidence = shift;
 
 open (FH, $file) or die "Could not open $file: $!\n";
 my $header;
-while (defined($header = readline(FH))) {
+while ($header = <FH>)
+{
 	last if ($header =~ /^\#CHR/); # that is the line with the column names
 }
 
@@ -43,7 +40,8 @@ my %counts;
 say join "\t", (qw(REF ALT preceeding following type exonic value));
 my ($ref, $alt, $pre, $fo, $ty, $ex);
 
-while (defined($_ = readline(FH))) {
+while (<FH>)
+{
   chomp;
   # make hash of array with header lines => header names are keys
   @fields{@columns} = split(/\t/);
