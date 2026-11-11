@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - fix SM tag extraction [#48](https://github.com/ghga-de/nf-snvcalling/pull/49)
 - fix AD field error [#47](https://github.com/ghga-de/nf-snvcalling/pull/49)
 - Fixing error detection in perl scripts [#55](https://github.com/ghga-de/nf-snvcalling/pull/55)
+  - tabix pipe failures are now detected in `annotate_vcf.pl`; `findConfColumn.pl` fails if no `#CHROM` header is found
+  - the general autodie/readline rewrite of the other scripts was reverted (no behaviour change)
 - Removing email options coming from nf-core template and some fixes around linting
+- `contig_file` accepts `.bed` and `.tsv`
+- New `process_annotation` resource label for ANNOTATE_VCF, ANNOTATION_PIPES, ANNOVAR and FILTER_PEOVERLAP
+- CI: workflows run on `main` (was `master`); Java 17 and Prettier 3.9.0 pinned
 
 ## v2.0.2 - 12.11.2024
 
