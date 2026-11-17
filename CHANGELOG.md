@@ -3,21 +3,33 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v2.0.3 - dev
+## v2.0.3
 
-- add nf-schema and fix fasta.contain logic [#48](https://github.com/ghga-de/nf-snvcalling/pull/49)
-  - fix SM tag extraction [#48](https://github.com/ghga-de/nf-snvcalling/pull/49)
-- fix AD field error [#47](https://github.com/ghga-de/nf-snvcalling/pull/49)
-- Fixing error detection in perl scripts [#55](https://github.com/ghga-de/nf-snvcalling/pull/55)
-  - tabix pipe failures are now detected in `annotate_vcf.pl`; `findConfColumn.pl` fails if no `#CHROM` header is found
-  - the general autodie/readline rewrite of the other scripts was reverted (no behaviour change)
-- Removing email options coming from nf-core template and some fixes around linting
-- Removing unused Perl scripts (not called by any module):
+### `Added`
+
+- nf-schema for parameter and samplesheet validation, fix `fasta.contain` logic [#48](https://github.com/ghga-de/nf-snvcalling/pull/49)
+- `contig_file` parameter (`.bed` or `.tsv`) to restrict the analysis to specific contigs
+- `process_annotation` resource label (8 CPUs, 12 GB, 32 h) for ANNOTATE_VCF, ANNOTATION_PIPES, ANNOVAR and FILTER_PEOVERLAP; replaces the overrides in the DKFZ cluster configs
+
+### `Fixed`
+
+- SM tag extraction [#48](https://github.com/ghga-de/nf-snvcalling/pull/49)
+- AD field error [#47](https://github.com/ghga-de/nf-snvcalling/pull/49)
+- Error detection in Perl scripts [#43](https://github.com/ghga-de/nf-snvcalling/issues/43), [#55](https://github.com/ghga-de/nf-snvcalling/pull/55): read errors are checked after each read loop and failed `zcat`/`tabix` pipes are detected on close, so a truncated or unreadable input stops the script instead of producing partial output
+- `annotate_vcf.pl`: the a-file is opened once (with `-a file.vcf` the header lines were processed as variants)
+- `snv_extractor_v1.pl`: the header is found when `--region` is used
+- `findConfColumn.pl`: fails if there is no `#CHROM` header or no `CONFIDENCE` column (before, it printed a column index past the end of the line)
+
+### `Removed`
+
+- Email options and templates from the nf-core template (including `max_multiqc_email_size`)
+- Unused Perl scripts (not called by any module or script):
   - `bin/confidenceAnnotation_SNVs.pl`, `bin/confidenceAnnotation_SNVsNoGermline.pl`, `bin/confidenceREAnnotation_SNVs.pl` (replaced by `bin/confidenceAnnotation_SNVs.py`)
   - `bin/mpileupOutputSplitter.pl`, `bin/vcfAmbiguousIndelStripper.pl`
-- `contig_file` accepts `.bed` and `.tsv`
-- New `process_annotation` resource label for ANNOTATE_VCF, ANNOTATION_PIPES, ANNOVAR and FILTER_PEOVERLAP
-- CI: workflows run on `main` (was `master`); Java 17 and Prettier 3.9.0 pinned
+
+### `Changed`
+
+- CI: workflows run on `main` (was `master`), Java 17 and Prettier 3.9.0 are pinned, linting fixes
 
 ## v2.0.2 - 12.11.2024
 
