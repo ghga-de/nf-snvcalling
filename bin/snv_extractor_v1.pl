@@ -11,12 +11,13 @@
 #           somatic coding snvs -> snvs_PID_somtatic_coding_snvs_conf_?_to_10.vcf
 #           germline coding snvs -> snvs_PID_germline_coding_snvs_conf_?_to_10.vcf
 
-# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
-# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+# Fixed 2026-08-12 @kubranarci: I/O error detection (issue #43): autodie for open/close, and an explicit
+# read-error check after each read loop (<FH> returns undef on a read error just like at EOF)
 
 use strict;
 use warnings;
 use autodie;
+use IO::Handle;
 use Getopt::Long;
 
 my $infile;
@@ -44,7 +45,7 @@ if(!-f $infile){die "The provided infile: $infile is not a valid file\n";}
 my $in_fh;
 if($region ne "0"){print "Region file provided: $region\n";}
 
-if($region ne "0"){open($in_fh, "$tabix $infile -B $region |") or die "Could not open the file with tabix and regions\n";}
+if($region ne "0"){open($in_fh, "$tabix -h $infile -B $region |") or die "Could not open the file with tabix and regions\n";}
 elsif($infile =~ /\.gz$/){ open($in_fh, "zcat $infile |") or die "Could not open the infile: $infile\n"; }
 else{open($in_fh, '<', $infile) or die "Could not open the infile: $infile\n";}
 
@@ -61,11 +62,12 @@ if($extractsyn == 1){open(SYN, ">$outsyn") or die "Could not open the file $outs
 if($extractNcRNA == 1){open(NCRNA, ">$outNcRNA") or die "Could not open the file $outNcRNA\n";}
 
 my $head;
-while (defined($_ = readline($in_fh))) {
+while (<$in_fh>) {
 	chomp;
 	$head=$_;
 	last if($_ =~ /^#CHR/);
 }
+die "Error reading $infile: $!\n" if $in_fh->error;  # issue #43
 print STDERR "NOTE: The reading of the VCF will end with a broken pipe error, because we only read the header and then stop.\n";
 {
 	no autodie 'close';
@@ -98,7 +100,7 @@ if($region ne "0"){open($in_fh, "$tabix $infile -B $region |") or die "Could not
 elsif($infile =~ /\.gz$/){open($in_fh, "zcat $infile |") or die "Could not open the infile: $infile\n";}
 else{open($in_fh, '<', $infile) or die "Could not open the infile: $infile\n";}
 
-while (defined($_ = readline($in_fh))) {
+while (<$in_fh>) {
 	chomp;
 	next if($_ =~ /^#/);
 	my @line = split("\t", $_);
@@ -120,10 +122,11 @@ while (defined($_ = readline($in_fh))) {
 		print GER $_, "\n";
 	}
 }
-
+die "Error reading $infile: $!\n" if $in_fh->error;  # issue #43
+# the whole file was read, so a failed zcat/tabix (e.g. truncated .vcf.gz) is reported here
 {
 	no autodie 'close';
-	close $in_fh;
+	close $in_fh or die "Error reading $infile: " . ($! || "exit status " . ($? >> 8)) . "\n";
 }
 close SOM;
 close COD;

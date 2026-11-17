@@ -5,12 +5,13 @@
 # Distributed under the MIT License (license terms are at https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin/LICENSE).
 #
 
-# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
-# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+# Fixed 2026-08-12 @kubranarci: I/O error detection (issue #43): autodie for open/close, and an explicit
+# read-error check after each read loop (<FH> returns undef on a read error just like at EOF)
 
 use strict;
 use warnings;
 use autodie;
+use IO::Handle;
 use v5.10;
 
 my %opts;
@@ -131,7 +132,6 @@ DEBUG && say "MINOVERLAPFRACTION: ", MINOVERLAPFRACTION(), "MAXBORDERDISTANCESUM
 #my $newcol = $opts{columnname};
 #my $pad = $opts{padding};
 
-open(A, "$opts{afile}") || die "Could not open a-file $opts{afile}\n";
 
 if (!-e $opts{bfile}) {
     die "The b-file $opts{bfile} does not exist, exiting!\n";
@@ -143,7 +143,7 @@ if (!-e "$opts{bfile}.tbi") {
 # guess b file chr format ## TODO: this does not work in every case
 my ($b_chr_prefix, $b_chr_suffix);
 open(my $guess_fh, TABIX_BIN . " -l $opts{bfile} | ");
-while (defined($_ = readline($guess_fh))) {
+while (<$guess_fh>) {
     chomp;
     if (/([^\d]*)\d+(.*)/) {
         $b_chr_prefix = $1;
@@ -151,6 +151,7 @@ while (defined($_ = readline($guess_fh))) {
         last;
     }
 }
+die "Error reading tabix -l output for $opts{bfile}: $!\n" if $guess_fh->error;  # issue #43
 {
     no autodie 'close';
     unless (close $guess_fh) {
@@ -217,11 +218,12 @@ if ($opts{afile} eq '-') {
 }
 
 my $header;
-while (defined($header = readline($a_fh))) {
+while ($header = <$a_fh>) {
     last if ($header =~ /^$opts{aColNameLineStart}/i); # that is the line with the column names
     print $header;                                     # print out every preceeding line
     die "Invalid a-file header" if ($header =~ /^[^\#]/);
 }
+die "Error reading a-file $opts{afile}: $!\n" if $a_fh->error;  # issue #43
 
 chomp $header;
 my $poundkey_rm = 1 if ($header =~ s/^\#//);
@@ -275,7 +277,7 @@ my $alt;
 my %a_alts;
 
 AFILE_LOOP:
-while (defined($a_line = readline(A))) {
+while ($a_line = <$a_fh>) {
     @matches = ();
     chomp($a_line);
     @a_fields{@a_columns} = split(/\t/, $a_line);
@@ -330,7 +332,7 @@ while (defined($a_line = readline(A))) {
     }
     if ((!defined($next_b_line->{left}) || $next_b_line->{left} - PADDING() <= $a_right && ref($b_fh))) {
         # read new b_lines until we have one where the left coordinate is higher than a_right + pad
-        while (defined($b_line = readline($b_fh))) {
+        while ($b_line = <$b_fh>) {
             if (defined($next_b_line->{left})) {
                 push(@b_lines, $next_b_line);
                 $next_b_line = {};
@@ -384,6 +386,7 @@ while (defined($a_line = readline(A))) {
             }
             last if ($next_b_line->{left} - PADDING() > $a_right);
         }
+        die "Error reading b-file $opts{bfile}: $!\n" if $b_fh->error;  # issue #43
         if (defined($next_b_line->{left}) && $next_b_line->{left} - PADDING() <= $a_right) {
             # the while loop terminated because eof at b_fh
             push(@b_lines, $next_b_line);
@@ -482,6 +485,7 @@ while (defined($a_line = readline(A))) {
     }
     say join "\t", @a_fields{@a_columns};
 } # AFILE_LOOP
+die "Error reading a-file $opts{afile}: $!\n" if $a_fh->error;  # issue #43
 if ($opts{afile} ne '-') {
     close $a_fh;
 }

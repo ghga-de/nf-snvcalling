@@ -1,12 +1,13 @@
 #!/usr/bin/env perl
 
 
-# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
-# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+# Fixed 2026-08-12 @kubranarci: I/O error detection (issue #43): autodie for open/close, and an explicit
+# read-error check after each read loop (<FH> returns undef on a read error just like at EOF)
 
 use strict;
 use warnings;
 use autodie;
+use IO::Handle;
 use Pod::Usage;
 
 my @files = @ARGV;
@@ -25,33 +26,37 @@ if ($ARGV[0] eq '--help') {
 ### First file: print header lines and set colnames
 open(IN, $files[0]) || die "Could not open file $files[0] ($!)";
 
-while (defined($line = readline(IN))) {
+while ($line = <IN>) {
   print $line;
   last if ($line !~ /^\#/);
   $colnames = $line;
 }
+die "Error reading $files[0]: $!\n" if (\*IN)->error;  # issue #43
 die "No header found in 1st file ($files[0])" if (! defined($colnames));
 
 
-while (defined($_ = readline(IN))) {
+while (<IN>) {
   print;
 }
+die "Error reading $files[0]: $!\n" if (\*IN)->error;  # issue #43
 close IN;
 
 ### Additional Files: do not print header; check if colnames match
 foreach my $file (@files[1..$#files]) {
   open(IN, $file) || die "Could not open file $file ($!)";
-  while (defined($line = readline(IN))) {
+  while ($line = <IN>) {
     last if ($line !~ /^\#/);
     $current_colnames = $line;
   }
+  die "Error reading $file: $!\n" if (\*IN)->error;  # issue #43
   die "No header found in file $file" if (! defined($current_colnames));
   die "Columns in file $file do not match\n 1st file: $colnames\n Current file: $current_colnames\n" if ($colnames ne $current_colnames);
   print $line;
 
-  while (defined($_ = readline(IN))) {
+  while (<IN>) {
     print;
   }
+  die "Error reading $file: $!\n" if (\*IN)->error;  # issue #43
   close IN;
 }
 

@@ -12,12 +12,13 @@
 # correct status: if only low quality bases support the variant, only 1 low-quality base for a different allele, ...
 # also include a general nucleotide counter
 
-# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
-# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+# Fixed 2026-08-12 @kubranarci: I/O error detection (issue #43): autodie for open/close, and an explicit
+# read-error check after each read loop (<FH> returns undef on a read error just like at EOF)
 
 use strict;
 use warnings;
 use autodie;
+use IO::Handle;
 use feature "switch";
 use Math::CDF qw(pbinom);
 
@@ -130,10 +131,11 @@ my $plus = 0;
 my $header = "";
 if (defined $makeheader && $makeheader ne "no")
 {
-	while (defined($header = readline(T))) {
+	while ($header = <T>) {
 		last if ($header =~ /^\#CHROM/); # that is the line with the column names
 		print "$header";
 	}
+	die "Error reading $tumor: $!\n" if (\*T)->error;  # issue #43
 	chomp $header;
 	print "$header\tINFO_$ctrlname(VAF=variant_allele_fraction;TSR=total_variant_supporting_reads_incl_lowqual)\tANNOTATION_$ctrlname\n";
 }
@@ -148,7 +150,7 @@ my $current_t_chr = "";
 my %control_positions;
 
 # Read control file and store positions in a hash
-while (defined($lineC = readline(C))) {
+while ($lineC = <C>) {
 	chomp $lineC;
 	$ctrC++;
 	@ctrl = split(/\s+/, $lineC);
@@ -156,9 +158,10 @@ while (defined($lineC = readline(C))) {
 	my $c_coord = $ctrl[1];
 	$control_positions{"$c_chr:$c_coord"} = $lineC;
 }
+die "Error reading $control: $!\n" if (\*C)->error;  # issue #43
 
 # Process tumor file
-while (defined($lineT = readline(T))) {
+while ($lineT = <T>) {
 	$ctrT++;
 	chomp $lineT;
 	@tum = split(/\t/, $lineT);
@@ -176,6 +179,7 @@ while (defined($lineT = readline(T))) {
 		print $lineT, "\tDP=0;DP5=0,0,0,0,0;DP5all=0,0,0,0,0;ACGTNacgtnHQ=0,0,0,0,0,0,0,0,0,0;ACGTNacgtn=0,0,0,0,0,0,0,0,0,0;VAF=0;TSR=0\t$notcovered\n";
 	}
 }
+die "Error reading $tumor: $!\n" if (\*T)->error;  # issue #43
 close C;
 close T;
 # if there are lines left in control pileup, these are not interesting anyways

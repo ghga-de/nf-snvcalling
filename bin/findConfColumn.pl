@@ -5,17 +5,20 @@
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
 
-# Fixed 2026-08-12 @kubranarci: Added autodie and guarded I/O reads with defined(readline())
-# Changed behavior: Unguarded <FH> loops now detect read errors; I/O failures raise exceptions instead of silently returning undef
+# Fixed 2026-08-12 @kubranarci: I/O error detection (issue #43): autodie for open/close, and an explicit
+# read-error check after each read loop (<FH> returns undef on a read error just like at EOF)
 
 use strict;
 use warnings;
 use autodie;
+use IO::Handle;
 
-my $infile = $ARGV[0];
+my $infile     = $ARGV[0];
+my $from_stdin = (!defined $infile || $infile eq '-');
+my $src        = $from_stdin ? 'STDIN' : $infile;
+
 my $in_fh;
-
-if (!defined $infile || $infile eq '-') {
+if ($from_stdin) {
     $in_fh = *STDIN;
 } elsif ($infile =~ /\.gz$/) {
     open($in_fh, "zcat $infile |") or die "Could not open the $infile to detect the confidence column\n";
@@ -24,22 +27,22 @@ if (!defined $infile || $infile eq '-') {
 }
 
 my $line;
-while (defined($_ = readline($in_fh))) {
+my $found = 0;
+while (<$in_fh>) {
     chomp;
-    $line=$_;
-    last if($_ =~ /^#CHROM\s/);
+    $line = $_;
+    if (/^#CHROM\s/) { $found = 1; last }
 }
+die "Error reading $src: $!\n" if $in_fh->error;  # issue #43
 
-if ($infile && $infile ne '-') {
+unless ($from_stdin) {
     no autodie 'close';
-    close $in_fh or warn "Could not close input handle for $infile: $?";
+    close $in_fh or warn "Could not close input handle for $src: $?";
 }
 
-die "No #CHROM header found in $infile\n" unless defined $line;
-my $i = 0;
+die "No #CHROM header found in $src\n" unless $found;
+
 my @line = split("\t", $line);
-while($i <= $#line) {
-    last if($line[$i] =~ /^CONFIDENCE$/);
-    $i++;
-}
+my ($i) = grep { $line[$_] eq 'CONFIDENCE' } 0 .. $#line;
+die "No CONFIDENCE column found in $src\n" unless defined $i;
 print $i;
