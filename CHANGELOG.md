@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - tabix pipe failures are now detected in `annotate_vcf.pl`; `findConfColumn.pl` fails if no `#CHROM` header is found
   - the general autodie/readline rewrite of the other scripts was reverted (no behaviour change)
 - Removing email options coming from nf-core template and some fixes around linting
+- Removing unused Perl scripts (not called by any module):
+  - `bin/confidenceAnnotation_SNVs.pl`, `bin/confidenceAnnotation_SNVsNoGermline.pl`, `bin/confidenceREAnnotation_SNVs.pl` (replaced by `bin/confidenceAnnotation_SNVs.py`)
+  - `bin/mpileupOutputSplitter.pl`, `bin/vcfAmbiguousIndelStripper.pl`
 - `contig_file` accepts `.bed` and `.tsv`
 - New `process_annotation` resource label for ANNOTATE_VCF, ANNOTATION_PIPES, ANNOVAR and FILTER_PEOVERLAP
 - CI: workflows run on `main` (was `master`); Java 17 and Prettier 3.9.0 pinned
