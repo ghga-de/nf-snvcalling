@@ -12,8 +12,13 @@
 ### Chromosomal identifiers in the newcol file may be plain numbers while longer identifiers are used in the vcf file e.g. after annovar; use chrPrefix and chrSuffix then
 ### (long chr identifiers in the newcol file and short identifiers in the vcf file are not supported)
 
+# Fixed 2026-08-12 @kubranarci: I/O error detection (issue #43): autodie for open/close, and an explicit
+# read-error check after each read loop (<FH> returns undef on a read error just like at EOF)
+
 use strict;
 use warnings;
+use autodie;
+use IO::Handle;
 use v5.10;
 
 
@@ -89,6 +94,7 @@ while ($header = <VCF>) {
   last if ($header =~ /^\#CHR/); # that is the line with the column names
   print $header; # print out every preceeding line
 }
+die "Error reading VCF file $opts{vcf}: $!\n" if (\*VCF)->error;  # issue #43
 chomp($header);
 my @columns = split(/\t/, $header);
 my @ori_columns = @columns;
@@ -103,11 +109,11 @@ my %f1_hash;
 
 my ($l1, $l2, $end);
 my @f2_fields;
-NC_LOOP: while ($l2=<NC>) {
+NC_LOOP: while ($l2 = <NC>) {
   next if ($l2 =~ /^\#/);
   chomp $l2;
   @f2_fields = split(/\t/, $l2);
-  while ($l1=<VCF>) {
+  while ($l1 = <VCF>) {
     chomp $l1;
     @f1_hash{@ori_columns} = split(/\t/, $l1);
     if (AFILETYPE() eq 'vcf') {
@@ -129,14 +135,17 @@ NC_LOOP: while ($l2=<NC>) {
       # warn "No new column line found for vcf line $l1";
     }
   }
+  die "Error reading VCF file $opts{vcf}: $!\n" if (\*VCF)->error;  # issue #43
   warn "Line $l2 left over in new column file";
 }
+die "Error reading new column file $opts{newcolfile}: $!\n" if (\*NC)->error;  # issue #43
 #when I am here the NC file has ended; write out every remaining line from VCF
-while ($l1=<VCF>) {
+while ($l1 = <VCF>) {
   chomp $l1;
   @f1_hash{@columns} = split(/\t/, $l1);
   @f1_hash{@newcols} = ('.') x @newcols;
   say join "\t", @f1_hash{@columns};
 }
+die "Error reading VCF file $opts{vcf}: $!\n" if (\*VCF)->error;  # issue #43
 close VCF or die "Could not close VCF file $opts{vcf}";
 close NC or die "Could not close new col file $opts{newcolfile}";

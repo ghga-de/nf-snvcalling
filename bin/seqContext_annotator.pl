@@ -5,8 +5,13 @@
 # Distributed under the MIT License (license terms are at https://github.com/DKFZ-ODCF/COWorkflowsBasePlugin/LICENSE).
 #
 
+# Fixed 2026-08-12 @kubranarci: I/O error detection (issue #43): autodie for open/close, and an explicit
+# read-error check after each read loop (<FH> returns undef on a read error just like at EOF)
+
 use strict;
 use warnings;
+use autodie;
+use IO::Handle;
 use v5.10;
 
 my $fastaBinary = $ARGV[0];
@@ -31,6 +36,7 @@ while ($header = <$snv_fh>) {
     last if ($header =~ /^\#CHROM/);
     print $header;
 }
+die "Error reading $file: $!\n" if $snv_fh->error;  # issue #43
 chomp $header;
 @cols = split(/\t/, $header);
 my %cols = map {$_ => 1} @cols;
@@ -47,5 +53,6 @@ while (<$snv_fh>) {
     $fields{$newcol} = join ',', substr($seq, 0, $pad), substr($seq, -$pad);
     say join "\t", @fields{@cols};
 }
+die "Error reading $file: $!\n" if $snv_fh->error;  # issue #43
 close $snv_fh;
 close($ffb_fh) || die "Could not close fastaFromBed filehandle (broken pipe?) ($!)";

@@ -128,17 +128,17 @@
       "number": "0",
       "type": "Flag",
       "description": "TSR ?"
-    },  
+    },
     "PBINOM_ctrl": {
       "number": "0",
       "type": "Flag",
       "description": "PBINOM ?"
-    },      
+    },
     "VAF_ctrl": {
       "number": "0",
       "type": "Flag",
       "description": "Variant allele frequency in tumor < ' + str(args.newpun) + ' times allele frequency in control"
-    },     
+    },
     "BI": {
       "number": "0",
       "type": "Flag",
@@ -312,7 +312,7 @@
       "description": "High frequency in GnomAD(>0.1%) or in local control database (>0.05%)"
     }
   },
-  
+
   "__comment_INFO": "See VCF 4.2, section 1.4.2. Keys starting with double underscore are commented out.",
   "INFO": {
     "__comment_vcf4.2": "Fields defined by the standard.",
@@ -388,7 +388,7 @@
       "number": ".",
       "type": "String",
       "description": "Consequence annotations from Ensembl VEP. Format: Allele|Consequence|IMPACT|SYMBOL|Gene|Feature_type|Feature|BIOTYPE|EXON|INTRON|HGVSc|HGVSp|cDNA_position|CDS_position|Protein_position|Amino_acids|Codons|Existing_variation|DISTANCE|STRAND|FLAGS|SYMBOL_SOURCE|HGNC_ID"
-    },    
+    },
     "__START": {
       "number": ".",
       "type": "Integer",
@@ -413,27 +413,27 @@
       "number": "1",
       "type": "Float",
       "description": "Segregation based metric."
-    },  
+    },
     "MQSB": {
       "number": "1",
       "type": "Float",
       "description": "Mann-Whitney U test of Mapping Quality vs Strand Bias (bigger is better)"
-    }, 
+    },
     "BQB": {
       "number": "1",
       "type": "Float",
       "description": "Mann-Whitney U test of Base Quality Bias (bigger is better)"
-    },  
+    },
     "RPB": {
       "number": "1",
       "type": "Float",
       "description": "Mann-Whitney U test of Read Position Bias (bigger is better)"
-    }, 
+    },
     "VDB": {
       "number": "1",
       "type": "Float",
       "description": "Variant Distance Bias for filtering splice-site artefacts in RNA-seq data (bigger is better)"
-    }, 
+    },
     "IMF": {
       "number": "1",
       "type": "Float",
@@ -443,7 +443,7 @@
       "number": "1",
       "type": "Integer",
       "description": "Maximum number of reads supporting an indel"
-    },  
+    },
     "INDEL": {
       "number": "0",
       "type": "Flag",
@@ -463,27 +463,27 @@
       "number": "1",
       "type": "Float",
       "description": "Fraction of reads around this variant that failed filters."
-    },    
+    },
     "HapScore": {
       "number": ".",
       "type": "Integer",
       "description": "Haplotype score measuring the number of haplotypes the variant is segregating into in a window."
-    },   
+    },
     "Size": {
       "number": ".",
       "type": "Integer",
       "description": "Size of reference call block"
-    }, 
+    },
     "TC": {
       "number": "1",
       "type": "Integer",
       "description": "Total coverage at this locus"
-    }, 
+    },
     "NR": {
       "number": ".",
       "type": "Integer",
       "description": "Total number of reverse reads containing this variant"
-    }, 
+    },
     "TCF": {
       "number": "1",
       "type": "Integer",
@@ -533,12 +533,12 @@
       "number": "1",
       "type": "Float",
       "description": "Median minimum base quality for bases around variant"
-    }, 
+    },
     "FR": {
       "number": ".",
       "type": "Float",
       "description": "Estimated population frequency of variant"
-    },   
+    },
     "Control_AF": {
       "number": "1",
       "type": "Float",
@@ -613,22 +613,22 @@
       "number": "1",
       "type": "Float",
       "description": "Chi^2 based HWE test P-value based on G3"
-    },   
+    },
     "G3": {
       "number": "3",
       "type": "Float",
       "description": "ML estimate of genotype frequencies"
-    }, 
+    },
     "PV4": {
       "number": "4",
       "type": "Float",
       "description": "P-values for strand bias, baseQ bias, mapQ bias and tail distance bias"
-    },  
+    },
     "FQ": {
       "number": "1",
       "type": "Float",
       "description": "Phred probability of all samples being the same"
-    },    
+    },
     "DP5_ctrl": {
       "number": "5",
       "type": "Integer",
@@ -638,7 +638,7 @@
       "number": "5",
       "type": "Integer",
       "description": "Counts of ?"
-    },    
+    },
     "MQ_ctrl": {
       "number": "1",
       "type": "Float",
@@ -693,7 +693,7 @@
       "type": "String",
       "description": "SEGDUP column from Annovar tool",
       "new_info_id": "SEGDUP"
-    },    
+    },
     "CYTOBAND": {
       "number": ".",
       "type": "String",

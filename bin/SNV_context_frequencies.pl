@@ -5,8 +5,13 @@
 # Distributed under the MIT License (https://opensource.org/licenses/MIT).
 #
 
+# Fixed 2026-08-12 @kubranarci: I/O error detection (issue #43): autodie for open/close, and an explicit
+# read-error check after each read loop (<FH> returns undef on a read error just like at EOF)
+
 use strict;
 use warnings;
+use autodie;
+use IO::Handle;
 use v5.10;
 
 if (@ARGV < 2)
@@ -19,10 +24,10 @@ my $minconfidence = shift;
 
 open (FH, $file) or die "Could not open $file: $!\n";
 my $header;
-while ($header = <FH>)
-{
+while ($header = <FH>) {
 	last if ($header =~ /^\#CHR/); # that is the line with the column names
 }
+die "Error reading $file: $!\n" if (\*FH)->error;  # issue #43
 
 chomp($header);
 my @columns = split(/\t/, $header);
@@ -40,8 +45,7 @@ my %counts;
 say join "\t", (qw(REF ALT preceeding following type exonic value));
 my ($ref, $alt, $pre, $fo, $ty, $ex);
 
-while (<FH>)
-{
+while (<FH>) {
   chomp;
   # make hash of array with header lines => header names are keys
   @fields{@columns} = split(/\t/);
@@ -71,6 +75,7 @@ while (<FH>)
   }
   $counts{join ':', @fields{(qw(REF ALT preceeding following type exonic))}}++;
 }
+die "Error reading $file: $!\n" if (\*FH)->error;  # issue #43
 close FH;
 for $ref ('T','C') {
   for $alt ('A','C','G','T') {

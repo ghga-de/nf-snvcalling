@@ -7,8 +7,13 @@
 
 # count how many / what percentage of somatic SNVs of certain confidence score (default >= 8) are in dbSNP and 1KG
 
+# Fixed 2026-08-12 @kubranarci: I/O error detection (issue #43): autodie for open/close, and an explicit
+# read-error check after each read loop (<FH> returns undef on a read error just like at EOF)
+
 use strict;
 use warnings;
+use autodie;
+use IO::Handle;
 
 my $usage = "USAGE: 1.snv file (can be the pre-filtered one from rainfall plots) - optional 2.min score (default 8)\n";
 if (@ARGV < 1)
@@ -104,6 +109,7 @@ while(!eof($FH)){
 		}
 	}
 }
+die "Error reading $file: $!\n" if $FH->error;  # issue #43
 close $FH;
 
 if ($scored > 0)

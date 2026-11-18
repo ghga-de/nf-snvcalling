@@ -3,8 +3,13 @@
 # tumor variant frequency for high confidence somatic SNVs as input for MAF plots
 # output: PID (number!)	chrom	tumor variant frequency
 
+# Fixed 2026-08-12 @kubranarci: I/O error detection (issue #43): autodie for open/close, and an explicit
+# read-error check after each read loop (<FH> returns undef on a read error just like at EOF)
+
 use strict;
 use warnings;
+use autodie;
+use IO::Handle;
 
 if (@ARGV < 2)
 {
@@ -15,10 +20,10 @@ open (FH, $file) or die "Could not open $file: $!\n";
 
 ################################################################################
 my $header = "";
-while ($header = <FH>)
-{
+while ($header = <FH>) {
 	last if ($header =~ /^\#CHROM/); # that is the line with the column names
 }
+die "Error reading $file: $!\n" if (\*FH)->error;  # issue #43
 chomp $header;
 
 my $CONFIDENCE = 28;
@@ -67,8 +72,7 @@ my $depth = 0;
 # tumor variant frequency from DP4 fields (pos. 7 of vcf file)
 my $tumvarfrq = 0;
 
-while (<FH>)
-{
+while (<FH>) {
 	if ($_ =~ /^#/)
 	{
 		next;
@@ -93,5 +97,6 @@ while (<FH>)
 		}
 	}
 }
+die "Error reading $file: $!\n" if (\*FH)->error;  # issue #43
 close FH;
 exit;
