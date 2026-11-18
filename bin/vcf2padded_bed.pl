@@ -14,9 +14,13 @@ use autodie;
 use IO::Handle;
 use v5.10;
 
-my $pad = shift;
+my $pad  = shift;
+my $file = shift;
+open my $in, '<', $file;
+
 my (@fields, $chr, $start, $end);
-while (<>) {
+
+while (<$in>) {
     next if (/^\#/);
     @fields = split(/\t/);
     $chr = $fields[0];
@@ -24,4 +28,5 @@ while (<>) {
     $end = $fields[1] + length($fields[3]) + $pad - 1; # TODO: prevent exceeding contig border
     say join "\t", $chr, $start, $end;
 }
-die "Error reading input: $!\n" if (\*STDIN)->error;  # issue #43
+die "Error reading $file: $!\n" if $in->error;  # issue #43
+close $in;
