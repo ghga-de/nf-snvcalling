@@ -19,13 +19,14 @@ infile = cmdArgs[1]
 snvnum = as.numeric(cmdArgs[2])
 outfile = cmdArgs[3]
 pid = cmdArgs[4]
-nr_in_dbSNP = as.numeric(cmdArgs[5])
+# "NA" when the SNVs were not annotated with dbSNP
+nr_in_dbSNP = suppressWarnings(as.numeric(cmdArgs[5]))
 
 maf=read.table(infile,sep="\t",as.is=TRUE)
 
 pdf(outfile, width=7, height=7)
 
-if(nr_in_dbSNP > 3){
+if(!is.na(nr_in_dbSNP) && nr_in_dbSNP > 3){
 
 	dens_in_dbSNP <- density(x = maf[maf[,1]==1,3])
 	dens_in_all <- density(x = maf[,3])
@@ -52,12 +53,19 @@ if(nr_in_dbSNP > 3){
 #        maxy <- max(dens_in_dbSNP$y)
 #    }
 
-    plot(dens_in_all, ylim = c(0,maxy), col = "red", cex.lab=1.5, cex.axis=1.5, lwd=3, xlab=paste("Mutant allele frequency from ", snvnum, " SNVs and ", nr_in_dbSNP,     " in dbSNP", sep=""), xlim=c(0, 1.0),main="")
-#    lines(dens_in_all,col = "blue", lwd = 3)
+    # too few (or no) SNVs in dbSNP for a density curve: plot all SNVs and give the dbSNP count in the labels (#62)
+    if (is.na(nr_in_dbSNP)) {
+        xlab_dbsnp <- "(no dbSNP annotation)"
+        title_dbsnp <- "dbSNP not annotated"
+    } else {
+        xlab_dbsnp <- paste("and ", nr_in_dbSNP, " in dbSNP", sep="")
+        title_dbsnp <- paste(perc_in_dbSNP, "% in dbSNP", sep=" ")
+    }
+    plot(dens_in_all, ylim = c(0,maxy), col = "blue", cex.lab=1.5, cex.axis=1.5, lwd=3, xlab=paste("Mutant allele frequency from ", snvnum, " SNVs ", xlab_dbsnp, sep=""), xlim=c(0, 1.0),main="")
     abline(v=0.5,col="black",lty=2)
-    title(main=paste(pid, perc_in_dbSNP, "% in dbSNP", sep=" "), cex.main = 1.5)
+    title(main=paste(pid, title_dbsnp, sep=" "), cex.main = 1.5)
 
-    legend("topright", c("ALL","IN dbSNP"), fill=c("blue","red"), cex = 0.7, lwd=1, bty="n")
+    legend("topright", c("ALL"), fill=c("blue"), cex = 0.7, lwd=1, bty="n")
 }
 
 dev.off()

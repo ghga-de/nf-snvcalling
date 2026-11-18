@@ -97,11 +97,11 @@ while(!eof($FH)){
 			if ($help[$CONFIDENCE] >= $minscore)
 			{
 				$scored++;
-				if ($help[$DBSBP] =~ /MATCH=exact/)
+				if (defined $DBSBP && $help[$DBSBP] =~ /MATCH=exact/)
 				{
 					$dbSNP++;
 				}
-				if ($help[$KG] =~ /MATCH=exact/)
+				if (defined $KG && $help[$KG] =~ /MATCH=exact/)
 				{
 					$oneKG++;
 				}
@@ -116,6 +116,9 @@ if ($scored > 0)
 {
 	$perc_dbSNP = sprintf ("%.2f", ($dbSNP/$scored*100));
 	$perc_1KG = sprintf ("%.2f", ($oneKG/$scored*100));
+	# without the annotation column the counts are unknown, not 0 (#62)
+	unless (defined $DBSBP) { warn "No DBSNP column in $file; dbSNP counts reported as NA\n"; $dbSNP = "NA"; $perc_dbSNP = "NA"; }
+	unless (defined $KG) { warn "No 1K_GENOMES column in $file; 1000 Genomes counts reported as NA\n"; $oneKG = "NA"; $perc_1KG = "NA"; }
 	print "file\tall\tSomatic\tS_with_minscore$minscore\tS_in_dbSNP\tS_in_1KG\tperc_dbSNP\tperc_1KG\n";
 	print "$file\t$all\t$somatic\t$scored\t$dbSNP\t$oneKG\t$perc_dbSNP\t$perc_1KG\n";
 }
