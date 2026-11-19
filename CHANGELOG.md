@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Diagnostics plot shows the dbSNP count also when it is 0, the QC JSON is written and valid, and the THA flag file is only written for affected samples [#62](https://github.com/ghga-de/nf-snvcalling/issues/62)
 - Whitespace in INFO values of the standardised VCF is replaced with `_` (e.g. `EXONICCL=nonsynonymous_SNV`), so GATK/htsjdk can read it [#60](https://github.com/ghga-de/nf-snvcalling/issues/60)
 - Region annotations are kept in the standardised VCF: `MAPABILITY` (`MAP`), `REPEAT_MASKER` (`RMSK`), `DAC_BLACKLIST` (`DACBL`), `DUKE_EXCLUDED` (`DUKE`), `HISEQDEPTH` (`HSDEPTH`) [#59](https://github.com/ghga-de/nf-snvcalling/issues/59)
+- `SEQUENCE_CONTEXT` is no longer shifted to the wrong variant or empty when a variant is at a contig border or on a contig missing from the reference; missing bases are `N` [#45](https://github.com/ghga-de/nf-snvcalling/issues/45)
 
 ## v2.0.4
 
