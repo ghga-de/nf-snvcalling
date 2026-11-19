@@ -9,8 +9,8 @@
 .screenrc
 __pycache__
 output/
-results/
-result/
+results*/*
+result*/*
 results2/
 results37/
 results_vep/
@@ -24,3 +24,4 @@ testdata_hg37/
 bin/vcfparser.pyc
 singularity/
 snvs_*
+*.patch

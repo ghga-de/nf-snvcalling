@@ -66,20 +66,21 @@ echo "snvindbSNP is ${snvindbSNP}"
 export TEMP=$(mktemp -d)
 export TMPDIR=$TEMP
 
-if [ "$snvindbSNP" != "0" ]; then
-	if [ "$snvnum" != "0" ]; then
-		MAF_plots.r ${prefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt ${snvnum} ${prefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf ${prefix} ${snvindbSNP}
-		[[ "$?" != 0 ]] && echo "There was a non-zero exit code in MAF plotting" && exit 7
-		echo "MAF plots done"
+# The MAF plot is made whenever there are SNVs, also when none of them is in dbSNP (#62):
+# the plot then shows "0 in dbSNP" instead of an empty page.
+# snvindbSNP is "NA" when the input has no DBSNP column (no dbSNP annotation).
+if [ "$snvnum" != "0" ]; then
+	MAF_plots.r ${prefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.txt ${snvnum} ${prefix}_MAF_conf_${MIN_CONFIDENCE_SCORE}_to_10.pdf ${prefix} ${snvindbSNP}
+	echo "MAF plots done"
+	# QC value: fraction of SNVs in dbSNP
+	if [[ "$snvindbSNP" =~ ^[0-9]+$ ]]; then
+		SNV_IN_DBSNP_RATIO=$(awk -v a="$snvindbSNP" -v b="$snvnum" 'BEGIN { printf "%.5f", a / b }')
 	else
-		gs -sDEVICE=pdfwrite -o empty.pdf -c showpage
-	# calculate SNV_IN_DBSNP_RATIO snvindbSNP/snvnum (QC value)
+		SNV_IN_DBSNP_RATIO="NA"
 	fi
-	##SNV_IN_DBSNP_RATIO=$( (expr $snvindbSNP / $snvnum) | bc -l)
-	SNV_IN_DBSNP_RATIO=$(echo "scale=5; $snvindbSNP / $snvnum" | bc)
 	echo "SNV_IN_DBSNP_RATIO is ${SNV_IN_DBSNP_RATIO}"
 else
-	SNV_IN_DBSNP_RATIO="NA" # no output produced, don't include in "convert" later
+	SNV_IN_DBSNP_RATIO="NA"
 	gs -sDEVICE=pdfwrite -o empty.pdf -c showpage
 fi
 rm -rf $TEMP
@@ -89,24 +90,30 @@ echo "check 1"
 THA_SCORE=`determine_THA_score.R -i ${filenameSomaticSnvs}`
 echo $THA_SCORE
 [[ "$?" != 0 ]] && echo "There was a non-zero exit code in THA score determination script." && exit 24
-[[ $(echo "${THA_SCORE} > ${THA_SCORE_THRESHOLD}" | bc -l) ]] && echo -e "THA score\t${THA_SCORE}\n" >${prefix}_is_THA_affected.txt
+# write the THA flag only for a numeric score above the threshold
+# (before, [[ $(... | bc) ]] was always true, so the file was written for every sample)
+if [[ "${THA_SCORE}" =~ ^[0-9.eE+-]+$ ]] && (( $(echo "${THA_SCORE} > ${THA_SCORE_THRESHOLD}" | bc -l) )); then
+	echo -e "THA score\t${THA_SCORE}\n" >${prefix}_is_THA_affected.txt
+fi
 
 echo "check 2"
 
-if ["$json_report" = true]; then
+if [ "$json_report" = true ]; then
 	# determine fraction of SNVs called as "synonymous SNV" among all exonic SNVs (QC value)
 	EXONIC_CLASSIFICATION_COLUMN_INDEX=`cat ${filenameSomaticSnvs} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "EXONIC_CLASSIFICATION"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
 	export EXONIC_CLASSIFICATION_COLUMN_INDEX=$((${EXONIC_CLASSIFICATION_COLUMN_INDEX}-1))
 	ANNOVAR_FUNCTION_COLUMN_INDEX=`cat ${filenameSomaticSnvs} | grep -v '^##' | grep '^#' | perl -ne 'use List::Util qw(first); chomp; my @colnames = split(/\t/, $_); my $columnIndex = first { $colnames[$_] eq "ANNOVAR_FUNCTION"} 0..$#colnames; $columnIndex += 1; print "$columnIndex\n";'`
 	export ANNOVAR_FUNCTION_COLUMN_INDEX=$((${ANNOVAR_FUNCTION_COLUMN_INDEX}-1))
-	SYNONYMOUS_RATIO=`grep -v '^#' ${filenameSomaticSnvs} | perl -F'\t' -ae 'BEGIN { my $total=0; my $synonymous=0; } if ($F[$ENV{"ANNOVAR_FUNCTION_COLUMN_INDEX"}] eq "exonic" ) {$total++; if ($F[$ENV{"EXONIC_CLASSIFICATION_COLUMN_INDEX"}] eq "synonymous SNV") {$synonymous++;}} END { print $synonymous/$total; }'`
+	SYNONYMOUS_RATIO=`grep -v '^#' ${filenameSomaticSnvs} | perl -F'\t' -ae 'BEGIN { my $total=0; my $synonymous=0; } if ($F[$ENV{"ANNOVAR_FUNCTION_COLUMN_INDEX"}] eq "exonic" ) {$total++; if ($F[$ENV{"EXONIC_CLASSIFICATION_COLUMN_INDEX"}] eq "synonymous SNV") {$synonymous++;}} END { print $total ? $synonymous/$total : "NA"; }'`
 	echo "JSON REPORT WILL BE WRITTEN"
+	# JSON number, or null for NA/empty values (#62)
+	jnum() { if [[ "${1:-}" =~ ^-?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$ ]]; then echo "$1"; else echo null; fi; }
 	echo -e "{" >${prefix}_QC_values${rerun}.json
-	echo -e "\t\"snvnum\": ${snvnum:-NA}," >>${prefix}_QC_values${rerun}.json
-	echo -e "\t\"snvindbSNP\": ${snvindbSNP:-NA}," >>${prefix}_QC_values${rerun}.json
-	echo -e "\t\"snvInDbsnpRatio\": ${SNV_IN_DBSNP_RATIO:-NA}," >>${prefix}_QC_values${rerun}.json
-	echo -e "\t\"synonymousRatio\": ${SYNONYMOUS_RATIO:-NA}," >>${prefix}_QC_values${rerun}.json
-	echo -e "\t\"thaScore\": ${THA_SCORE:-NA}" >>${prefix}_QC_values${rerun}.json
+	echo -e "\t\"snvnum\": $(jnum "${snvnum:-}")," >>${prefix}_QC_values${rerun}.json
+	echo -e "\t\"snvindbSNP\": $(jnum "${snvindbSNP:-}")," >>${prefix}_QC_values${rerun}.json
+	echo -e "\t\"snvInDbsnpRatio\": $(jnum "${SNV_IN_DBSNP_RATIO:-}")," >>${prefix}_QC_values${rerun}.json
+	echo -e "\t\"synonymousRatio\": $(jnum "${SYNONYMOUS_RATIO:-}")," >>${prefix}_QC_values${rerun}.json
+	echo -e "\t\"thaScore\": $(jnum "${THA_SCORE:-}")" >>${prefix}_QC_values${rerun}.json
 	echo -e "}" >>${prefix}_QC_values${rerun}.json
 	echo "done"
 else
