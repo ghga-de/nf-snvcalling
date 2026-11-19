@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Fixed`
 
+- Diagnostics plot shows the dbSNP count also when it is 0, the QC JSON is written and valid, and the THA flag file is only written for affected samples [#62](https://github.com/ghga-de/nf-snvcalling/issues/62)
+- Whitespace in INFO values of the standardised VCF is replaced with `_` (e.g. `EXONICCL=nonsynonymous_SNV`), so GATK/htsjdk can read it [#60](https://github.com/ghga-de/nf-snvcalling/issues/60)
+
 ## v2.0.4
 
 ### `Added`
