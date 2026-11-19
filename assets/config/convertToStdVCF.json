@@ -724,6 +724,36 @@
       "description": "UCSC SeLf Chain regions",
       "new_info_id": "SCH"
     },
+    "MAPABILITY": {
+      "number": ".",
+      "type": "String",
+      "description": "Mappability score(s) of the region (UCSC, '&'-separated), used for the mappability penalty in the confidence annotation",
+      "new_info_id": "MAP"
+    },
+    "REPEAT_MASKER": {
+      "number": ".",
+      "type": "String",
+      "description": "RepeatMasker annotation of the region (UCSC), used for the repeat penalty in the confidence annotation",
+      "new_info_id": "RMSK"
+    },
+    "DAC_BLACKLIST": {
+      "number": ".",
+      "type": "String",
+      "description": "ENCODE DAC blacklist region (UCSC, hs37d5 only), used for the blacklist penalty in the confidence annotation",
+      "new_info_id": "DACBL"
+    },
+    "DUKE_EXCLUDED": {
+      "number": ".",
+      "type": "String",
+      "description": "Duke excluded region (UCSC, hs37d5 only), used for the blacklist penalty in the confidence annotation",
+      "new_info_id": "DUKE"
+    },
+    "HISEQDEPTH": {
+      "number": ".",
+      "type": "String",
+      "description": "Region with high HiSeq depth (hs37d5 only), used for the HiSeqDepth penalty in the confidence annotation",
+      "new_info_id": "HSDEPTH"
+    },
     "SIMPLE_TANDEMREPEATS": {
       "number": "1",
       "type": "String",
