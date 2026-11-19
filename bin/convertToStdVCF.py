@@ -11,6 +11,7 @@ from __future__ import print_function
 import gzip
 import json
 import os
+import re
 import sys
 import textwrap
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
@@ -95,8 +96,10 @@ def convert_dict_to_str(dict_to_convert, pair_separator, key_val_separator):
     :return: string that was created from the dictionary
     """
 
+    # VCF 4.2 INFO values may not contain whitespace or semicolons; annotations such as
+    # ANNOVAR's "nonsynonymous SNV" become "nonsynonymous_SNV" (#60)
     return pair_separator.join(
-        key + key_val_separator + val.replace(";", ",")
+        key + key_val_separator + re.sub(r"\s+", "_", val.replace(";", ",").strip())
         for (key,val)
         in dict_to_convert.iteritems())
 
