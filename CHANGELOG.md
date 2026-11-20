@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## v2.0.5dev
 
+### `Added`
+
+- nf-test pipeline test (`tests/main.nf.test`) on the test BAMs with snapshots of the stable outputs (published files, variants of every VCF), one for CI and one for the DKFZ cluster; CI runs it instead of a plain `nextflow run` [#42](https://github.com/ghga-de/nf-snvcalling/issues/42)
+
 ### `Fixed`
 
 - Diagnostics plot shows the dbSNP count also when it is 0, the QC JSON is written and valid, and the THA flag file is only written for affected samples [#62](https://github.com/ghga-de/nf-snvcalling/issues/62)
