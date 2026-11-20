@@ -1,0 +1,44 @@
+nextflow_pipeline {
+
+    name "Pipeline test with the test BAMs (testdata/)"
+    script "../main.nf"
+    tag "pipeline"
+
+    // One test per environment, because the annotation sources (and so the results) differ;
+    // each test has its own snapshot in main.nf.test.snap:
+    //   GitHub Actions:  nf-test test --tag ci   --profile test,docker
+    //   DKFZ cluster:    nf-test test --tag dkfz --profile dkfz_cluster_hg38,singularity
+    // After an intended change of the results, update the snapshot with --update-snapshot.
+
+    test("test BAMs - CI (test profile, VEP)") {
+        tag "ci"
+        when {
+            params {
+                input      = TestOutputs.samplesheet(outputDir, baseDir)
+                outdir     = "${outputDir}/results"
+                runcontigs = "NONE"
+            }
+        }
+        then {
+            assert workflow.success
+            TestOutputs.checkOutputs(outputDir)
+            assert snapshot(TestOutputs.stableOutputs(outputDir)).match()
+        }
+    }
+
+    test("test BAMs - DKFZ cluster (dkfz_cluster_hg38, ANNOVAR)") {
+        tag "dkfz"
+        when {
+            params {
+                input      = TestOutputs.samplesheet(outputDir, baseDir)
+                outdir     = "${outputDir}/results"
+                runcontigs = "NONE"
+            }
+        }
+        then {
+            assert workflow.success
+            TestOutputs.checkOutputs(outputDir)
+            assert snapshot(TestOutputs.stableOutputs(outputDir)).match()
+        }
+    }
+}
