@@ -291,3 +291,19 @@ We recommend adding the following line to your environment to limit this (typica
 ```console
 NXF_OPTS='-Xms1g -Xmx4g'
 ```
+
+## Pipeline test (nf-test)
+
+`tests/main.nf.test` runs the pipeline on the test BAMs in `testdata/`. It checks the main outputs (the somatic SNVs and their `SEQUENCE_CONTEXT`, the standardised VCF and the merged diagnostics plots) and compares the stable outputs with a snapshot (`tests/main.nf.test.snap`):
+
+- the names of all published files of the sample
+- the md5 of the variant lines of every published VCF (headers are left out, they contain dates and paths)
+
+The annotation sources differ between GitHub Actions (VEP, small test annotation files) and the DKFZ cluster (ANNOVAR, full DKFZ annotation files), so there is one test, and one snapshot, per environment:
+
+```bash
+nf-test test --tag ci --profile test,docker                       # GitHub Actions
+nf-test test --tag dkfz --profile dkfz_cluster_hg38,singularity   # DKFZ cluster
+```
+
+The first run creates the snapshot; commit `tests/main.nf.test.snap`. Later runs fail if a stable output changes. After an intended change, update the snapshot with `--update-snapshot` and commit it with the change. The CI snapshot is uploaded as the `nf-test-snapshot` artifact of each GitHub Actions run.

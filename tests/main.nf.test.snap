@@ -1,0 +1,78 @@
+{
+    "test BAMs - DKFZ cluster (dkfz_cluster_hg38, ANNOVAR)": {
+        "content": [
+            {
+                "files": [
+                    "snvs_test.vcf.gz",
+                    "snvs_test.vcf.gz.tbi",
+                    "snvs_test_QC_values.tsv",
+                    "snvs_test_allSNVdiagnosticsPlots.pdf",
+                    "snvs_test_alternative_allele_base_qualities.txt",
+                    "snvs_test_alternative_allele_read_positions.txt",
+                    "snvs_test_base_score_bias_after_filter_once.pdf",
+                    "snvs_test_base_score_bias_before_filter.pdf",
+                    "snvs_test_base_score_bias_plot_conf_8_to_10.pdf",
+                    "snvs_test_base_score_distribution.pdf",
+                    "snvs_test_germline_functional_snvs_conf_8_to_10.vcf",
+                    "snvs_test_intermutation_distance_conf_8_to_10.pdf",
+                    "snvs_test_perChromFreq_conf_8_to_10.pdf",
+                    "snvs_test_purityEST.txt",
+                    "snvs_test_raw.vcf.gz",
+                    "snvs_test_raw.vcf.gz.tbi",
+                    "snvs_test_reference_allele_base_qualities.txt",
+                    "snvs_test_reference_allele_read_positions.txt",
+                    "snvs_test_sequence_error_matrix_first.txt",
+                    "snvs_test_sequence_error_matrix_second.txt",
+                    "snvs_test_sequence_specific_error_Matrix_conf_8_to_10.txt",
+                    "snvs_test_sequencing_error_matrix_first.txt",
+                    "snvs_test_sequencing_error_matrix_second.txt",
+                    "snvs_test_sequencing_specific_error_Matrix_conf_8_to_10.txt",
+                    "snvs_test_snvs_with_context_conf_8_to_10.pdf",
+                    "snvs_test_somatic_functional_ncRNA_snvs_conf_8_to_10.vcf",
+                    "snvs_test_somatic_functional_snvs_conf_8_to_10.vcf",
+                    "snvs_test_somatic_snvs_conf_8_to_10.vcf",
+                    "snvs_test_tripletSpecific_base_score_distribution.BQD_CoV.pdf",
+                    "snvs_test_tripletSpecific_base_score_distribution.BQD_combined.pdf",
+                    "snvs_test_tripletSpecific_base_score_distribution.BQD_individual_CHROMcolored.pdf",
+                    "snvs_test_tripletSpecific_base_score_distribution.BQD_individual_ReadPosColored_Q50.pdf",
+                    "snvs_test_tripletSpecific_base_score_distribution.BQD_individual_ReadPosColored_Q60.pdf",
+                    "snvs_test_tripletSpecific_base_score_distribution.BQD_individual_ReadPosColored_Q70.pdf",
+                    "snvs_test_tripletSpecific_base_score_distribution.BQD_individual_ReadPosColored_Q80.pdf",
+                    "snvs_test_tripletSpecific_base_score_distribution.BQD_individual_VAFcolored.pdf",
+                    "standard_vcf/snvs_test.std.sorted.vcf.gz",
+                    "standard_vcf/snvs_test_germline_functional_snvs_conf_8_to_10.std.sorted.vcf.gz",
+                    "standard_vcf/snvs_test_somatic_functional_snvs_conf_8_to_10.std.sorted.vcf.gz",
+                    "standard_vcf/snvs_test_somatic_snvs_conf_8_to_10.std.sorted.vcf.gz",
+                    "standard_vcf/test_noFiltered.std.sorted.vcf.gz",
+                    "test.withMAF.vcf",
+                    "test_MAF_conf_8_to_10.pdf",
+                    "test_MAF_conf_8_to_10.txt",
+                    "test_QC_values.json",
+                    "test_peoverlap.vcf",
+                    "test_somatic_snvs_for_bias.vcf"
+                ],
+                "vcf_variant_md5": {
+                    "snvs_test.vcf.gz": "971b7f777b8d6a58971563a680433cfb",
+                    "snvs_test_germline_functional_snvs_conf_8_to_10.vcf": "69c66a714546247ead5caa2a8f740076",
+                    "snvs_test_raw.vcf.gz": "caf102263e4106a7e5c721f848ee1b26",
+                    "snvs_test_somatic_functional_ncRNA_snvs_conf_8_to_10.vcf": "d41d8cd98f00b204e9800998ecf8427e",
+                    "snvs_test_somatic_functional_snvs_conf_8_to_10.vcf": "f90c8a629737639cddd3b6bd33d8c590",
+                    "snvs_test_somatic_snvs_conf_8_to_10.vcf": "033655e33a46b5567061322ea043ca9a",
+                    "standard_vcf/snvs_test.std.sorted.vcf.gz": "1f042ce8b5550487a67310edd3496194",
+                    "standard_vcf/snvs_test_germline_functional_snvs_conf_8_to_10.std.sorted.vcf.gz": "3728f82de686fe910df4b287c2a786c9",
+                    "standard_vcf/snvs_test_somatic_functional_snvs_conf_8_to_10.std.sorted.vcf.gz": "582f931b6d848602cd6d0670c264bcb6",
+                    "standard_vcf/snvs_test_somatic_snvs_conf_8_to_10.std.sorted.vcf.gz": "d931b5496485fbafb2bef3d86edd22f9",
+                    "standard_vcf/test_noFiltered.std.sorted.vcf.gz": "1f042ce8b5550487a67310edd3496194",
+                    "test.withMAF.vcf": "d36741cec67d52d99a05720caa770832",
+                    "test_peoverlap.vcf": "d78689649eaa086c1d05b8f1dfba233f",
+                    "test_somatic_snvs_for_bias.vcf": "1d79ce222725bb87eba695c7f13f9a59"
+                }
+            }
+        ],
+        "timestamp": "2026-11-20T15:28:57.525358506",
+        "meta": {
+            "nf-test": "0.9.4",
+            "nextflow": "25.10.4"
+        }
+    }
+}

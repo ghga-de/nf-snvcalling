@@ -45,12 +45,25 @@ jobs:
         run: |
           wget -qO- get.nextflow.io | bash
           sudo mv nextflow /usr/local/bin/
+      - name: Install nf-test
+        run: |
+          wget -qO- https://get.nf-test.com | bash -s 0.9.2
+          sudo mv nf-test /usr/local/bin/
       - name: HELPTEXT Run with the help flag
         run: |
           nextflow run ${GITHUB_WORKSPACE} --help
       - name: DELAY to try address some odd behaviour with what appears to be a conflict between parallel htslib jobs leading to CI hangs
         run: |
           if [[ $NXF_VER = '' ]]; then sleep 1200; fi
-      - name: BASIC Run the basic pipeline  with docker
+      - name: BASIC Run the pipeline test (tests/main.nf.test) with docker
         run: |
-          nextflow run ${GITHUB_WORKSPACE} -profile test,docker
+          nf-test test --tag ci --profile test,docker --verbose
+      # Without a committed CI snapshot, the run above creates one: download it from the
+      # run's artifacts and commit it as tests/main.nf.test.snap
+      - name: Upload snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nf-test-snapshot
+          path: tests/main.nf.test.snap
+          if-no-files-found: ignore
